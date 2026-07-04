@@ -1,0 +1,80 @@
+spring:
+  application:
+    name: pms-backend
+
+  # ── Base de données ────────────────────────────────────────────
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pms_db}
+    username: ${DB_USERNAME:pms_user}
+    password: ${DB_PASSWORD:pms_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+
+  # ── JPA / Hibernate ───────────────────────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: validate          # Flyway gère le schéma (ADR-019)
+    show-sql: false
+    open-in-view: false           # Évite les requêtes en dehors des transactions
+    properties:
+      hibernate:
+        format_sql: false
+        default_schema: public
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+
+  # ── Flyway (ADR-019) ──────────────────────────────────────────
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    out-of-order: false
+
+  # ── Cache (contexte de sécurité — ADR-017) ────────────────────
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=2000,expireAfterWrite=5m
+
+  # ── JSON ──────────────────────────────────────────────────────
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+
+  # ── MVC ───────────────────────────────────────────────────────
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+
+# ── Serveur ───────────────────────────────────────────────────────
+server:
+  port: 8090
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+# ── Configuration PMS ─────────────────────────────────────────────
+pms:
+  jwt:
+    # Clé secrète HS512 (64 octets en base64) — remplacer en production
+    secret: ${JWT_SECRET:cG1zX3NlY3JldF9rZXlfZGV2ZWxvcG1lbnRfb25seV9ub3RfZm9yX3Byb2R1Y3Rpb25fdXNlX211c3RfYmVfcmVwbGFjZWQ=}
+    access-token-expiration: 900        # 15 minutes (en secondes)
+    refresh-token-expiration: 604800    # 7 jours (en secondes)
+  security:
+    bcrypt-strength: 12
+
+# ── Logging ───────────────────────────────────────────────────────
+logging:
+  level:
+    root: INFO
+    com.pms: INFO

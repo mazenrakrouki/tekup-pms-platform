@@ -1,0 +1,345 @@
+\chapter{Analyse et spécification des besoins}
+
+\section*{Introduction}
+Ce chapitre formalise l'analyse métier du système PMS. Il identifie les acteurs, recense les
+besoins fonctionnels et non fonctionnels, présente les règles de gestion ainsi que le modèle
+d'autorisation dynamique qui structure toute la plateforme, et détaille le modèle financier et les
+indicateurs de performance (KPI) extraits de la réalité métier. Cette spécification constitue le
+socle des phases de conception ultérieures.
+
+\section{Identification des acteurs}
+Le système repose sur quatre rôles principaux, complétés par des acteurs secondaires (le système
+lui-même et l'outil externe de suivi des temps KIMAI).
+
+\begin{longtable}{|m{3cm}|m{6.5cm}|m{5cm}|}
+\hline
+\textbf{Acteur} & \textbf{Mission} & \textbf{Limite (ne peut pas)} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Administrateur & Administration technique et fonctionnelle~: utilisateurs, rôles, permissions, TCC,
+paramétrage. & Piloter les projets~; accéder aux données financières des projets. \\
+\hline
+Directeur & Gouvernance stratégique~: création des projets, budgets, affectation des chefs de
+projet, supervision du portefeuille, KPI exécutifs. & Gérer les opérations quotidiennes (délégué,
+non interdit). \\
+\hline
+Chef de Projet & Utilisateur opérationnel principal~: équipes, plan de charge, facturation,
+missions, suivi des coûts et de la rentabilité. & Gérer les utilisateurs, les rôles, le TCC et le
+paramétrage. \\
+\hline
+Développeur & Saisie des charges réelles~; consultation de ses affectations et missions. & Accéder
+à toute donnée financière (budget, marge, EAC, facturation). \\
+\hline
+\caption{Acteurs du système PMS et leurs limites}
+\label{tab:acteurs}
+\end{longtable}
+
+\section{Besoins fonctionnels}
+Les besoins fonctionnels sont organisés par module. Ils synthétisent les exigences du document SRS
+(FR-001 à FR-053) et les cas d'utilisation (UC-001 à UC-020).
+
+\begin{longtable}{|m{3.5cm}|m{11cm}|}
+\hline
+\textbf{Module} & \textbf{Principaux besoins fonctionnels} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Authentification & Connexion par e-mail / mot de passe, génération de jetons JWT et de
+rafraîchissement, changement obligatoire du mot de passe à la première connexion, déconnexion. \\
+\hline
+Gestion des utilisateurs & Création par l'administrateur, génération automatique d'un mot de passe
+temporaire, modification, activation / désactivation, attribution d'un rôle. \\
+\hline
+Rôles et permissions & Gestion des rôles, des permissions et des associations rôle--permission. \\
+\hline
+Gestion des projets & Création, modification, changement de statut, définition du budget,
+affectation d'un chef de projet, consultation du portefeuille. \\
+\hline
+Gestion des équipes & Affectation et retrait de développeurs, consultation des disponibilités,
+historisation des affectations. \\
+\hline
+Gestion du TCC & Saisie du coût chargé par ressource et par année, historisation, calcul du coût
+journalier. \\
+\hline
+Plan de charge & Planification mensuelle en jours-homme, totaux planifiés, calcul de l'ETC et des
+prévisions. \\
+\hline
+Charges réelles & Saisie des jours-homme réalisés (projets affectés uniquement), validation,
+historisation, import depuis KIMAI. \\
+\hline
+Facturation & Création des jalons (pourcentage, montant, dates), suivi des statuts, calcul de
+l'avancement. \\
+\hline
+Missions & Création des missions, saisie des frais, calcul automatique du coût total. \\
+\hline
+KPI et reporting & Calcul des indicateurs financiers, tableaux de bord projet et portefeuille,
+génération et export de rapports. \\
+\hline
+Gouvernance (avenants, risques, livrables, parties prenantes, changements) & Registres de suivi de
+la vie du projet, conformément au classeur Excel. \\
+\hline
+\caption{Besoins fonctionnels par module}
+\label{tab:besoins-fonctionnels}
+\end{longtable}
+
+\section{Besoins non fonctionnels}
+\begin{itemize}
+    \item \textbf{Performance}~: réponse en moins de deux secondes pour les opérations courantes
+    (NFR-001).
+    \item \textbf{Sécurité}~: authentification JWT obligatoire, mots de passe chiffrés (NFR-002).
+    \item \textbf{Autorisation}~: contrôle d'accès basé sur les permissions (RBAC dynamique,
+    NFR-003).
+    \item \textbf{Maintenabilité}~: architecture propre, modulaire et orientée fonctionnalités
+    (NFR-006).
+    \item \textbf{Évolutivité}~: support de la croissance et intégration future (ERP, RH,
+    comptabilité) sans refonte du cœur (NFR-005, BR-065).
+    \item \textbf{Auditabilité}~: conservation de l'historique et suppression logique (NFR-008).
+    \item \textbf{Ergonomie}~: interface intuitive, responsive et en langue française (NFR-007).
+\end{itemize}
+
+\section{Règles de gestion}
+Les règles de gestion proviennent du document BRS (65 règles, BR-001 à BR-065), enrichies par les
+règles extraites du fichier Excel. Les plus structurantes sont synthétisées ci-dessous.
+
+\begin{longtable}{|m{3.5cm}|m{11cm}|}
+\hline
+\textbf{Domaine} & \textbf{Règles principales} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Utilisateurs & Création réservée à l'administrateur~; pas d'auto-inscription~; un seul rôle par
+utilisateur~; e-mail unique~; mot de passe temporaire puis changement à la première connexion. \\
+\hline
+Projets & Création réservée au directeur~; exactement un directeur et un chef de projet actif par
+projet~; statut parmi \{DRAFT, ACTIVE, ON\_HOLD, COMPLETED, CANCELLED\}~; code projet unique~;
+budget strictement positif~; date de début antérieure à la date de fin. \\
+\hline
+Équipes & Un développeur peut appartenir à plusieurs projets~; le retrait conserve l'historique~;
+l'affectation enregistre son auteur et sa date~; les développeurs inactifs ne peuvent être
+affectés. \\
+\hline
+TCC & Géré par l'administrateur~; une valeur par ressource et par année~; valeur historique
+immuable après validation financière. \\
+\hline
+Charges & Charges exprimées en jours-homme, jamais négatives~; saisie réservée aux projets
+affectés~; historique préservé (aucune suppression). \\
+\hline
+Facturation & Jalon rattaché à un projet~; statut parmi \{PENDING, INVOICED, PAID\}~; montant
+positif~; somme des pourcentages des jalons inférieure ou égale à 100~\%. \\
+\hline
+Missions & Mission rattachée à un projet et à un employé~; date de début antérieure à la date de
+fin~; coût total calculé automatiquement. \\
+\hline
+KPI et sécurité & KPI financiers visibles uniquement par le directeur et le chef de projet~;
+calculs automatiques~; RBAC appliqué par permissions~; mots de passe chiffrés. \\
+\hline
+\caption{Synthèse des règles de gestion}
+\label{tab:regles-gestion}
+\end{longtable}
+
+\section{Le modèle d'autorisation dynamique}
+\label{sec:rbac}
+L'exigence architecturale centrale du projet est de \textbf{ne jamais coupler directement un rôle à
+un module}. Un tel couplage (\og{}~ROLE~$\rightarrow$~MODULE~\fg{}) imposerait de modifier le code
+source à chaque évolution des responsabilités. Le système adopte donc un modèle dynamique à trois
+niveaux~:
+\[
+\text{ROLE} \;\rightarrow\; \text{PERMISSION} \;\rightarrow\; \text{MODULE}
+\]
+
+Les rôles sont des ensembles de permissions. L'autorisation côté serveur, la visibilité côté client
+et la \textbf{génération dynamique des menus} reposent toutes sur les permissions, jamais sur le nom
+du rôle. Le tableau~\ref{tab:permissions} présente l'attribution par défaut des principales
+permissions.
+
+\begin{longtable}{|m{6cm}|m{8.5cm}|}
+\hline
+\textbf{Permission (extrait)} & \textbf{Rôles porteurs par défaut} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+\texttt{MANAGE\_USERS}, \texttt{MANAGE\_ROLES}, \texttt{MANAGE\_PERMISSIONS} & Administrateur \\
+\hline
+\texttt{MANAGE\_TCC}, \texttt{MANAGE\_PARAMETERS} & Administrateur \\
+\hline
+\texttt{CREATE\_PROJECT}, \texttt{EDIT\_PROJECT}, \texttt{CHANGE\_PROJECT\_STATUS},
+\texttt{MANAGE\_PROJECT\_BUDGET}, \texttt{ASSIGN\_PROJECT\_MANAGER} & Directeur \\
+\hline
+\texttt{ASSIGN\_DEVELOPER}, \texttt{REMOVE\_DEVELOPER} & Directeur \emph{et} Chef de Projet \\
+\hline
+\texttt{MANAGE\_WORKLOAD\_PLAN}, \texttt{MANAGE\_BILLING}, \texttt{MANAGE\_MISSIONS} & Chef de
+Projet \\
+\hline
+\texttt{VIEW\_FINANCIALS}, \texttt{VIEW\_KPI} & Directeur (tous projets), Chef de Projet (projets
+gérés) \\
+\hline
+\texttt{VIEW\_EXECUTIVE\_DASHBOARD} & Directeur \\
+\hline
+\texttt{SUBMIT\_ACTUAL\_WORKLOAD} & Développeur \\
+\hline
+\caption{Extrait de la matrice Rôle--Permission par défaut}
+\label{tab:permissions}
+\end{longtable}
+
+\subsection{Illustration~: l'affectation des développeurs}
+Les documents de spécification (plan de projet, SRS, cas d'utilisation) indiquent que seul le chef
+de projet peut affecter des développeurs. Le besoin métier validé exige cependant que le
+\emph{directeur} puisse également le faire. Plutôt que de modifier le code, il suffit d'attribuer la
+permission \texttt{ASSIGN\_DEVELOPER} au rôle \texttt{DIRECTEUR}~:
+\begin{center}
+Aujourd'hui~: \texttt{CHEF\_DE\_PROJET} $\rightarrow$ \texttt{ASSIGN\_DEVELOPER} \\
+Demain~: on ajoute \texttt{DIRECTEUR} $\rightarrow$ \texttt{ASSIGN\_DEVELOPER}
+\end{center}
+Ce changement s'opère par une simple mise à jour de configuration en base de données, sans aucune
+modification du \emph{backend}, du \emph{frontend} ni de la logique métier. Cet exemple illustre
+concrètement la valeur du modèle d'autorisation dynamique.
+
+\section{Le modèle financier et les indicateurs de performance}
+Le cœur métier de la plateforme réside dans son modèle financier, fidèle à la réalité extraite du
+classeur Excel (onglets \emph{TCC}, \emph{Coût Prévisionnel}, \emph{Coût réel Actualisé},
+\emph{Avancement de facturation}, \emph{Missions} et \emph{Glossaire}). Les constantes métier
+(taux de frais généraux, jours ouvrés, provisions) sont paramétrables et jamais codées en dur.
+
+\begin{longtable}{|m{4cm}|m{10.5cm}|}
+\hline
+\textbf{Indicateur} & \textbf{Définition / Calcul} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+TCC journalier & (coût annuel chargé $\times$ (1 + taux de frais généraux)) / jours ouvrés de
+l'année. Dans l'Excel~: facteur $\times 1{,}7$ (frais généraux $\approx 70$~\%) et 22 jours (2024)
+ou 20 jours (2025). \\
+\hline
+Coût Prévisionnel & somme, par mois, des jours-homme planifiés $\times$ TCC. \\
+\hline
+ETC (reste à faire) & somme des jours-homme restants $\times$ TCC. \\
+\hline
+Coût Actuel & somme des jours-homme consommés $\times$ TCC. \\
+\hline
+EAC & Coût Actuel $+$ ETC. \\
+\hline
+Earned Value (EV~\%) & taux d'avancement réel du projet. \\
+\hline
+Cumul CA Production & total du contrat $\times$ EV~\%. \\
+\hline
+FAE / Stock & Cumul CA Production $-$ total facturé. \\
+\hline
+RAF (jours-homme) & charge planifiée restante $-$ charge consommée. \\
+\hline
+Dérive (jours-homme) & charges vendues $-$ charges consommées $-$ RAF. \\
+\hline
+Marge nette vendue~\% & (prix de vente $-$ coût total) / prix de vente. \\
+\hline
+Marge nette actuelle & Cumul CA Production $-$ Coût Actuel. \\
+\hline
+Marge nette EAC & Budget total $-$ (Coût Actuel $+$ Coût Prévisionnel), soit Budget $-$ EAC. \\
+\hline
+Avancement de facturation~\% & cumul facturé / total du contrat. \\
+\hline
+Coût de mission & perdiem (séjour $\times$ indemnité $\times$ taux de change) $+$ billet $+$ timbre
+($+$ transport, séjour). \\
+\hline
+\caption{Modèle financier et indicateurs de performance (modèle Excel complet)}
+\label{tab:kpi}
+\end{longtable}
+
+\subsection{KPI par rôle}
+Le développeur ne dispose d'aucun indicateur financier~: il ne consulte que ses propres charges. Il
+en fournit néanmoins la mesure brute, car sa saisie des jours-homme réels alimente la chaîne
+Coût Actuel $\rightarrow$ EAC $\rightarrow$ Marge. Le chef de projet exploite l'ensemble des KPI des
+projets qu'il gère afin de piloter leur rentabilité, tandis que le directeur dispose d'une vue
+consolidée du portefeuille via un tableau de bord exécutif. L'administrateur, enfin, n'accède à
+aucun KPI projet mais administre les intrants (TCC, paramètres) dont ils dépendent.
+
+\section{Processus métier global}
+Le déroulement nominal de la plateforme enchaîne~: création des comptes par l'administrateur~;
+première connexion et changement de mot de passe~; création d'un projet et affectation d'un chef de
+projet par le directeur~; constitution de l'équipe~; planification de la charge~; définition des
+jalons de facturation et des missions~; saisie des charges réelles par les développeurs (ou import
+KIMAI)~; calcul automatique des KPI~; supervision du portefeuille par le directeur.
+
+\section{Analyse du classeur Excel existant}
+La source métier principale est le classeur de revue de projet
+(\textit{DEV\_Fiche\_revue\_projet}), composé de \textbf{21 onglets} et de \textbf{2\,088 formules}.
+Chaque onglet a été analysé (objet, propriétaire métier, règles, calculs) et rattaché à un module
+de la future plateforme. Le tableau~\ref{tab:excel-onglets} en présente la synthèse.
+
+\begin{longtable}{|m{4cm}|m{4cm}|m{6cm}|}
+\hline
+\textbf{Onglet} & \textbf{Propriétaire métier} & \textbf{Module PMS} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Fiche Doc & Qualité / Direction & Gestion de projet (métadonnées) \\ \hline
+Fiche identification & Directeur & Gestion de projet \\ \hline
+TCC & Administrateur & Gestion du TCC \\ \hline
+Missions & Chef de projet & Gestion des missions \\ \hline
+Avancement\_Facturation & Chef de projet & Facturation \\ \hline
+Recap Facturation (2) & Chef de projet & Facturation \\ \hline
+Coût Prévisionnel & Chef de projet & Plan de charge + KPI \\ \hline
+Coût réel Actualisé & Développeur / Chef de projet & Charges réelles + KPI \\ \hline
+Recap Facturation & Chef de projet & Facturation \\ \hline
+S. Contractuelle & Directeur / Chef de projet & Gestion de projet + Facturation \\ \hline
+Situation actuelle & Chef de projet & KPI / Livrables \\ \hline
+Parties Prenantes & Chef de projet & Parties prenantes + Équipe \\ \hline
+Livrables projet & Chef de projet & Livrables \\ \hline
+Base des Risques & Chef de projet & Registre des risques \\ \hline
+Liste des actions & Chef de projet & Actions / Risques \\ \hline
+Registre Changement & Chef de projet & Registre des changements \\ \hline
+Avenants & Directeur / Chef de projet & Avenants \\ \hline
+Statistiques & Système (calcul) & Moteur de KPI \\ \hline
+Dashboard & Système / Directeur, CP & Tableaux de bord \\ \hline
+Glossaire & Référence & KPI (définitions) \\ \hline
+Paramètres & Administrateur & Configuration / Échelles de risque \\ \hline
+\caption{Analyse des 21 onglets du classeur Excel et rattachement aux modules PMS}
+\label{tab:excel-onglets}
+\end{longtable}
+
+\subsection{Couverture des formules}
+Les 2\,088 formules du classeur reposent sur un vocabulaire \emph{fini}, ce qui permet de garantir
+que chacune est rattachée à un calcul futur du système. Les catégories ci-dessous sont exhaustives.
+
+\begin{longtable}{|m{6.5cm}|m{2cm}|m{5.5cm}|}
+\hline
+\textbf{Catégorie de formule} & \textbf{Nombre} & \textbf{Calcul PMS associé} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Fonctions de date (DATE, YEAR, MONTH, DAY, EDATE, TODAY) & 460 & Calendrier projet/sprint, sélection du mois courant, durées \\ \hline
+Agrégation SUM & 92 & Totaux mensuels et cumuls (coûts, facturation, charges) \\ \hline
+HLOOKUP (sélection du mois) & 31 & Instantané KPI du mois sélectionné \\ \hline
+IF / ISBLANK / IFERROR & 36 & Statuts conditionnels, valeurs sûres \\ \hline
+AVERAGE / MAX / COUNTA & 7 & Moyennes, maximum, comptage de livrables \\ \hline
+Arithmétique de coûts (JH $\times$ TCC, sommes, écarts) & 1\,421 & Coût prévisionnel, coût actuel, ETC, EAC, coût mission \\ \hline
+Pourcentages & 13 & Marges, avancement de facturation, PPR, Delivery \% \\ \hline
+Références inter-onglets & 1\,426 & Jointures relationnelles (charges $\leftrightarrow$ TCC $\leftrightarrow$ projet) \\ \hline
+Références cassées (\#REF!, \#VALUE!) & 169 & Non reproduites : recalcul propre à partir de données normalisées \\ \hline
+\caption{Cartographie des formules Excel vers les calculs du futur système}
+\label{tab:formules}
+\end{longtable}
+
+\noindent\textbf{Résultat de la vérification :} chacune des 2\,088 formules relève d'une catégorie
+de logique métier vivante (rattachée à un calcul PMS) ou d'un artefact cassé que la plateforme
+remplace par un recalcul propre. \emph{Aucune formule n'est laissée sans correspondance.}
+
+\section*{Conclusion}
+Ce chapitre a spécifié les acteurs, les besoins, les règles de gestion, le modèle d'autorisation
+dynamique, le modèle financier et l'analyse complète du classeur Excel existant. Ces éléments
+définissent sans ambiguïté le \emph{quoi} du système, strictement sur le plan métier. Les chapitres
+suivants aborderont le \emph{comment}~: l'architecture technique, la conception de la base de
+données, la modélisation UML puis la réalisation des modules.

@@ -1,0 +1,49 @@
+@startuml package_diagram
+title Architecture Modulaire — 10 Modules Fonctionnels
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #EAF2FF
+skinparam packageBorderColor #1F4E79
+skinparam packageFontColor #1F4E79
+skinparam packageFontSize 13
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #555555
+skinparam ArrowThickness 1.5
+
+package "Authentification\net RBAC"   as AUTH
+package "Gestion des\nUtilisateurs"   as USER
+package "Gestion des\nProjets"        as PROJ
+package "Gestion des\nÉquipes"        as TEAM
+package "Taux de Charge\nChargé (TCC)" as TCC
+package "Plan de Charge"              as PLAN
+package "Charges Réelles"             as ACTUAL
+package "Facturation"                 as BILL
+package "Missions et\nDéplacements"   as MISS
+package "KPI et\nReporting"           as KPI
+
+USER   ..> AUTH   : dépend de
+PROJ   ..> AUTH   : dépend de
+TEAM   ..> PROJ   : dépend de
+TEAM   ..> USER   : dépend de
+PLAN   ..> PROJ   : dépend de
+PLAN   ..> TEAM   : dépend de
+ACTUAL ..> PLAN   : dépend de
+BILL   ..> PROJ   : dépend de
+MISS   ..> PROJ   : dépend de
+TCC    ..> USER   : dépend de
+
+KPI    <.. PLAN   : alimente
+KPI    <.. ACTUAL : alimente
+KPI    <.. BILL   : alimente
+KPI    <.. MISS   : alimente
+KPI    <.. TCC    : alimente
+
+note bottom of KPI
+  Le moteur KPI consolide toutes
+  les données pour calculer les
+  indicateurs de pilotage.
+end note
+
+@enduml

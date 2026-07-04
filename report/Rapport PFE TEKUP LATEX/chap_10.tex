@@ -1,0 +1,150 @@
+\chapter{Tests, sécurité et déploiement}
+
+\section*{Introduction}
+Ce dernier chapitre d'implémentation présente la démarche de qualité logicielle adoptée pour la
+plateforme PMS~: la stratégie de tests automatisés, la validation rigoureuse du contrôle d'accès
+dynamique, la revue de sécurité au regard des risques de l'OWASP, et enfin la préparation au
+déploiement.
+
+\section{Stratégie de tests}
+
+La priorité a été donnée aux \textbf{tests d'intégration} de niveau contrôleur, qui valident le
+comportement réel de l'API --- routage, sérialisation, sécurité, règles métier et persistance ---
+plutôt qu'à une multiplication de tests unitaires sur des composants isolés. Chaque test démarre un
+contexte Spring complet avec une base \textbf{H2 en mémoire} et le profil \texttt{test}, et exerce
+l'API via \texttt{MockMvc}.
+
+Deux profils utilisateurs sont préparés par la fabrique \texttt{TestFixtures}~:
+\begin{itemize}
+  \item un \textbf{super-administrateur} doté de toutes les permissions, y compris la capacité
+        d'accès portefeuille \texttt{VIEW\_ALL\_PROJECTS}~;
+  \item un \textbf{lecteur} ne disposant que des permissions \texttt{VIEW\_*}, utilisé pour prouver
+        que les opérations d'écriture sont bien refusées (\texttt{403}).
+\end{itemize}
+
+\begin{longtable}{|m{5.2cm}|m{1.8cm}|m{6.4cm}|}
+\hline
+\textbf{Suite de tests} & \textbf{Nombre} & \textbf{Portée principale} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+\texttt{AuthControllerTest} & 7 & Connexion, rafraîchissement, déconnexion, changement de mot de passe \\
+\hline
+\texttt{ProjectControllerTest} & 9 & CRUD, 401, \textbf{403 RBAC}, 404, 409 \\
+\hline
+\texttt{TeamControllerTest} & 6 & Affectation, doublon (409), retrait (204), historique \\
+\hline
+\texttt{WorkloadControllerTest} & 7 & Plan de charge, charge réelle, validation, idempotence \\
+\hline
+\texttt{BillingControllerTest} & 8 & Jalons, paiements, avenants \\
+\hline
+\texttt{KpiControllerTest} & 6 & KPI temps réel, instantanés, 201 + Location, 409, 404 \\
+\hline
+\texttt{GovernanceControllerTest} & 8 & Risques, machine à états des livrables, demandes de changement \\
+\hline
+\textbf{Total} & \textbf{51} & \textbf{51 / 51 réussis --- BUILD SUCCESS} \\
+\hline
+\caption{Couverture des tests d'intégration backend}
+\label{tab:tests}
+\end{longtable}
+
+\noindent Les tests vérifient non seulement les chemins nominaux mais aussi, systématiquement, les
+chemins d'erreur~: absence de jeton (\texttt{401}), permission insuffisante (\texttt{403}), entité
+introuvable (\texttt{404}), doublon ou transition d'état invalide (\texttt{409}).
+
+\section{Validation du contrôle d'accès dynamique}
+
+Le contrôle d'accès étant le c\oe ur du projet, il a fait l'objet d'une validation dédiée en trois
+temps.
+
+\paragraph{Audit de la matrice d'autorisation.} La matrice rôle~$\rightarrow$~permission a été
+\textbf{reconstruite à partir des règles métier} (et non du code existant), révélant plusieurs
+incohérences de la version initiale~: un administrateur doté de droits opérationnels et financiers,
+un développeur ayant accès aux indicateurs financiers (violation de BR-050), un directeur gérant la
+facturation. La correction a réduit l'administrateur de 22 à 5 permissions et réaligné chaque rôle
+sur sa responsabilité métier.
+
+\paragraph{Une correction sans code.} Conformément à l'ADR-001, cette correction s'est faite par une
+\textbf{unique migration de données} (\texttt{V12}) modifiant les associations rôle--permission,
+\textbf{sans aucune ligne de code backend ou frontend}. C'est la démonstration la plus probante de la
+valeur du RBAC dynamique~: un changement de politique d'autorisation est un changement de
+configuration, pas de programme.
+
+\paragraph{Vérification par rôle et par périmètre.} Deux campagnes de tests bout-en-bout ont confirmé
+le résultat~: une grille \textbf{par rôle} (22~contrôles, chacun vérifiant un accès autorisé ou un
+refus \texttt{403}) et une grille \textbf{de périmètre} (13~contrôles vérifiant que le directeur voit
+tout, tandis que le chef de projet et le développeur sont restreints à leurs projets). Les deux
+campagnes sont passées intégralement.
+
+\section{Revue de sécurité (OWASP)}
+
+La sécurité a été pensée dès la conception (ADR-001, ADR-010, ADR-017, ADR-021) puis revue au regard
+des principaux risques de l'OWASP Top~10.
+
+\begin{longtable}{|m{4.6cm}|m{9.4cm}|}
+\hline
+\textbf{Risque OWASP} & \textbf{Mesure dans PMS} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+A01 --- Contrôle d'accès défaillant & RBAC dynamique par permission \emph{et} périmètre de données
+(permission~$\wedge$~scope)~; double application backend (\texttt{@PreAuthorize} + intercepteur de
+périmètre) et frontend~; re-vérification de chaque identifiant fourni par le client. \\
+\hline
+A02 --- Défaillances cryptographiques & Mots de passe hachés en \textbf{BCrypt} (coût~12)~; jetons
+JWT signés (HMAC-SHA512)~; aucun secret transporté dans les jetons. \\
+\hline
+A03 --- Injection & Accès aux données via JPA / requêtes paramétrées (aucune concaténation SQL)~;
+schéma géré par Flyway~; validation des entrées par \emph{Bean Validation}. \\
+\hline
+A05 --- Mauvaise configuration & CORS restreint aux origines connues~; profils \texttt{dev}/\texttt{prod}
+séparés~; \texttt{ddl-auto=validate} interdisant toute génération de schéma implicite. \\
+\hline
+A07 --- Défaillances d'authentification & Changement de mot de passe forcé au premier accès~;
+révocation immédiate par \emph{token-version} (désactivation, changement de rôle/permission,
+déconnexion)~; jeton d'accès de courte durée + rafraîchissement rotatif. \\
+\hline
+A09 --- Journalisation \& traçabilité & Champs d'audit (\texttt{createdBy/At}, \texttt{modifiedBy/At})
+et suppression douce sur les entités majeures (ADR-009), préservant l'historique. \\
+\hline
+\caption{Couverture des principaux risques OWASP}
+\label{tab:owasp}
+\end{longtable}
+
+\noindent Côté frontend, Angular échappe par défaut les interpolations, neutralisant les attaques
+XSS (A03) les plus courantes. L'authentification étant portée par un en-tête \texttt{Authorization}
+(et non par un cookie de session pour le jeton d'accès), la surface CSRF sur l'API est fortement
+réduite~; le jeton de rafraîchissement, lui, est destiné à un cookie \texttt{HttpOnly~/~Secure}.
+
+\section{Déploiement}
+
+Le déploiement retenu est \textbf{natif}, sans conteneur (ADR-014), aligné sur l'environnement de la
+machine de développement~:
+
+\begin{itemize}
+  \item \textbf{Base de données}~: service \textbf{PostgreSQL~17}~; le schéma est appliqué
+        automatiquement au démarrage par les migrations \textbf{Flyway} versionnées
+        (\texttt{V1}\dots\texttt{V15}).
+  \item \textbf{Backend}~: application \textbf{Spring Boot} (Java~21) empaquetée en \texttt{jar}
+        exécutable~; configuration externalisée par variables d'environnement et profils
+        \texttt{dev}/\texttt{prod}.
+  \item \textbf{Frontend}~: build de production Angular (\texttt{ng build}) générant des fichiers
+        statiques servis par un serveur web, l'adresse de l'API étant paramétrée par fichier
+        d'environnement.
+\end{itemize}
+
+\noindent La séparation stricte du schéma (Flyway, source de vérité) et des entités
+(\texttt{ddl-auto=validate}) garantit qu'aucune dérive ne peut survenir entre le code et la base~:
+un écart fait échouer le démarrage plutôt que de corrompre silencieusement les données.
+
+\section*{Conclusion}
+La plateforme PMS est validée par 51~tests d'intégration et deux campagnes de vérification du
+contrôle d'accès, sécurisée selon les bonnes pratiques de l'OWASP, et prête à un déploiement natif
+reproductible. La qualité n'est pas un ajout final mais une propriété construite phase après phase~:
+permissions dynamiques, périmètre de données, suppression douce, migrations versionnées et tests
+systématiques forment un ensemble cohérent. La conclusion générale dresse le bilan du travail
+accompli et ouvre sur les perspectives d'évolution.

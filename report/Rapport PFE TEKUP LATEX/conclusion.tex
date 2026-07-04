@@ -2,3 +2,40 @@
 \addcontentsline{toc}{chapter}{Conclusion générale}
 \markboth{\textbf{Conclusion générale}}{}
 
+Le présent projet de fin d'études répondait à un besoin concret~: remplacer un processus de suivi de
+projets reposant sur des classeurs Excel dispersés --- source d'erreurs de calcul, de références
+rompues et d'un manque de visibilité sur la rentabilité réelle --- par une \textbf{plateforme web
+centralisée}, fiable et gouvernée. Le classeur de revue de projet réel, riche de plus de deux mille
+formules, a constitué la source métier de référence tout au long du travail.
+
+Au terme de ce projet, la plateforme PMS couvre l'intégralité du cycle de gestion~: authentification
+et gestion des utilisateurs, définition des projets et de leur \textbf{fiche d'identification},
+constitution des équipes, planification et saisie des charges, moteur d'indicateurs financiers
+(coûts, EAC, marges, taux de consommation), facturation par jalons avec paiements et avenants,
+gestion des missions et de leurs composantes de coût, et gouvernance de projet (risques, livrables,
+parties prenantes, demandes de changement). L'ensemble repose sur un backend \textbf{Spring Boot}
+exposant plus de soixante-quinze points d'accès REST, une base \textbf{PostgreSQL} versionnée par
+Flyway, et un frontend \textbf{Angular} entièrement aligné sur le modèle métier.
+
+Trois apports se dégagent. D'abord, la \textbf{fidélité au modèle métier}~: la fiche d'identification
+et les grandeurs dérivées reproduisent exactement les valeurs du classeur de référence (budget
+converti, provision pour risques, durée), ce qui valide la transposition du modèle Excel en un
+système relationnel cohérent. Ensuite, et c'est l'apport central, le \textbf{contrôle d'accès
+dynamique}~: l'autorisation est modélisée comme un couple permission~$\wedge$~périmètre, piloté par
+des capacités et jamais par des noms de rôle. La capacité de ce modèle à absorber un changement de
+politique a été démontrée de façon probante --- la correction complète de la matrice d'autorisation
+s'est faite par une \textbf{simple migration de données, sans aucune modification de code}. Enfin, la
+\textbf{démarche d'ingénierie}~: un déroulement par phases validées, des décisions d'architecture
+tracées (ADR) et une priorité de sources de vérité explicite ont garanti la cohérence entre l'analyse
+métier, la conception et l'implémentation, le tout consolidé par cinquante et un tests d'intégration.
+
+Plusieurs \textbf{perspectives} prolongent naturellement ce travail. L'intégration de l'outil de
+pointage \textsc{KIMAI} automatiserait l'import des charges réelles. La gestion multi-devises pourrait
+être complétée par une table de taux de change datés afin d'auditer chaque conversion. Le moteur
+d'indicateurs gagnerait à exposer des courbes d'évolution mensuelle, à l'image des tableaux de bord du
+classeur d'origine. Enfin, des tests de bout en bout côté interface et une option de déploiement
+conteneurisé renforceraient encore la robustesse et la portabilité de la solution.
+
+Au-delà du logiciel produit, ce projet aura été l'occasion de mettre en \oe uvre, sur un cas métier
+réaliste et exigeant, une chaîne complète d'ingénierie logicielle --- de l'analyse des besoins à la
+validation --- en plaçant la valeur métier et la qualité au centre de chaque décision.

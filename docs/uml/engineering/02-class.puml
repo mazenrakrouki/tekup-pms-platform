@@ -1,0 +1,98 @@
+@startuml class_diagram
+' PMS - Vue d'ensemble du modele de domaine.
+' Entites metier essentielles regroupees par domaine. Source de verite : schema.sql.
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #FAFAFA
+skinparam classBorderColor #555555
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F4F8FB
+skinparam packageBorderColor #1F4E79
+skinparam packageFontColor #1F4E79
+skinparam defaultFontName Helvetica
+hide circle
+hide empty members
+
+package "Securite" {
+  class User {
+    email
+    active
+    firstLogin
+  }
+  class Role {
+    name
+  }
+  class Permission {
+    code
+    module
+  }
+  User "*" -- "1" Role
+  Role "*" -- "*" Permission
+}
+
+package "Projet" {
+  class Project {
+    code
+    name
+    budget
+    status
+    startDate
+    endDate
+  }
+  class Resource {
+    fullName
+    profile
+  }
+  class TCC {
+    year
+    annualCost
+  }
+  Resource "1" -- "*" TCC
+}
+
+package "Charges" {
+  class WorkloadPlan {
+    month
+    plannedDays
+  }
+  class ActualWorkload {
+    month
+    realDays
+    source
+  }
+}
+
+package "Financier" {
+  class BillingMilestone {
+    percent
+    amount
+    status
+  }
+  class Mission {
+    totalCost
+  }
+}
+
+package "Pilotage" {
+  class KpiSnapshot {
+    month
+    eac
+    marginEac
+  }
+}
+
+' --- Relations inter-domaines ---
+Resource "0..1" --> "1" User : peut etre
+Project "*" --> "1" User : directeur
+
+Project "1" --> "*" WorkloadPlan
+WorkloadPlan "*" --> "1" Resource
+Project "1" --> "*" ActualWorkload
+ActualWorkload "*" --> "1" Resource
+
+Project "1" --> "*" BillingMilestone
+Project "1" --> "*" Mission
+Project "1" --> "*" KpiSnapshot
+
+@enduml

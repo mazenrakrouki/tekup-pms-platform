@@ -1,0 +1,253 @@
+\chapter{Implémentation --- Socle technique}
+
+\section*{Introduction}
+Ce chapitre décrit la mise en \oe{}uvre des trois premiers modules backend de la plateforme PMS~:
+l'authentification et le contrôle d'accès basé sur les rôles dynamiques (phases~5 et~6), la gestion
+des utilisateurs et des ressources humaines (phase~6), et le cycle de vie des projets (phase~7).
+Ces modules constituent le \textbf{socle technique} sur lequel reposent tous les modules métier
+décrits dans les chapitres suivants.
+
+L'implémentation utilise Java~21, Spring Boot~3.3.6, Spring Security, l'ORM JPA/Hibernate, les
+migrations de schéma Flyway, le mappeur MapStruct~1.5.5 et PostgreSQL~17 en base de données de
+production. Chaque décision clé est tracée vers son ADR correspondant.
+
+\section{Architecture de l'application Spring Boot}
+
+\subsection{Structure des modules}
+
+L'application suit une architecture de \textbf{monolithe modulaire} (ADR-016)~: le code est organisé
+en paquetages fonctionnels indépendants, chacun exposant sa propre couche Contrôleur~→
+Service~→~Référentiel~→~Domaine. Les modules sont~: \texttt{auth}, \texttt{user}, \texttt{project},
+\texttt{team}, \texttt{workload}, \texttt{kpi}, \texttt{billing}, \texttt{mission},
+\texttt{governance} et \texttt{shared}.
+
+\subsection{Entité de base et audit automatique}
+
+Toutes les entités métier héritent de \texttt{BaseEntity}, qui centralise~:
+
+\begin{itemize}
+  \item la clé primaire auto-générée (\texttt{@GeneratedValue}),
+  \item les horodatages \texttt{createdAt} / \texttt{updatedAt} via \texttt{@PrePersist} /
+        \texttt{@PreUpdate},
+  \item le marqueur \texttt{deleted} (suppression douce, ADR-009).
+\end{itemize}
+
+La suppression douce garantit la traçabilité complète~: aucune donnée n'est physiquement effacée.
+Tous les référentiels filtrent implicitement sur \texttt{deleted = false}.
+
+\subsection{Migrations Flyway}
+
+La structure de la base de données est gérée exclusivement par Flyway (ADR-019)~:
+\texttt{spring.jpa.hibernate.ddl-auto=validate} interdit tout DDL implicite d'Hibernate. Les onze
+migrations versionnées (\texttt{V1} à \texttt{V11}) sont idempotentes et constituent la
+documentation vivante du schéma.
+
+\section{Authentification et sécurité JWT}
+
+\subsection{Principe d'émission des jetons}
+
+À la connexion (\texttt{POST /api/auth/login}), le service d'authentification~:
+
+\begin{enumerate}
+  \item vérifie l'e-mail et compare le mot de passe fourni avec le haché BCrypt (force~12),
+  \item vérifie que le compte est actif (\texttt{active = true}),
+  \item émet un \textbf{jeton d'accès JWT} à courte durée de vie (signé \texttt{HMAC-SHA512}),
+        contenant l'e-mail, la version du jeton (\texttt{tokenVersion}) et la liste des codes de
+        permission~,
+  \item place un \textbf{jeton de rafraîchissement} opaque dans un cookie \texttt{HttpOnly} /
+        \texttt{Secure} / \texttt{SameSite=Strict}.
+\end{enumerate}
+
+La séparation des deux jetons (accès en mémoire, rafraîchissement en cookie) protège contre les
+attaques de type XSS~: le jeton de rafraîchissement, le plus puissant, n'est jamais accessible
+depuis JavaScript.
+
+\subsection{Révocation instantanée par version de jeton}
+
+La mécanique de révocation est fondée sur un champ \texttt{token\_version} persisté dans la table
+\texttt{users} (ADR-017). À chaque émission, la version courante est incluse dans le jeton JWT.
+Le filtre \texttt{JwtAuthenticationFilter} compare, à chaque requête, la version présente dans
+le jeton avec la valeur lue dans le cache Caffeine (\texttt{email:tokenVersion}). Si les valeurs
+diffèrent, la requête est rejetée avec \texttt{401 Unauthorized}.
+
+\begin{itemize}
+  \item Lors d'une déconnexion, \texttt{token\_version} est incrémenté en base et
+        le cache est immédiatement invalide pour cette identité.
+  \item Lors d'un changement de mot de passe, la même incrémentation invalide toutes les sessions
+        actives sur d'autres appareils.
+\end{itemize}
+
+Le cache Caffeine évite un accès en base à chaque requête et garantit la cohérence sans état
+distribué.
+
+\subsection{Changement de mot de passe à la première connexion}
+
+Lors de la création d'un compte, l'Administrateur définit un mot de passe temporaire. Le champ
+\texttt{first\_login} est positionné à \texttt{true}. Le jeton JWT émis à la première connexion
+possède un droit restreint~: seul l'appel \texttt{POST /api/auth/change-password} est autorisé.
+Une fois le mot de passe modifié, \texttt{first\_login} est mis à \texttt{false} et un nouveau
+jeton sans restriction est émis (ADR-010).
+
+\section{Contrôle d'accès basé sur les rôles dynamiques (ADR-001)}
+
+\subsection{Modèle Permission-Rôle-Utilisateur}
+
+Le RBAC est \textbf{entièrement dynamique}~: les permissions ne sont pas codées en dur dans
+l'application. La table \texttt{role\_permissions} associe un ensemble de permissions à un rôle.
+Un utilisateur n'a qu'un seul rôle actif, mais ce rôle peut être reconfiguré à tout moment par
+l'Administrateur sans redéploiement.
+
+La migration \texttt{V2\_\_seed\_rbac.sql} initialise les quatre rôles par défaut (Administrateur,
+Directeur, Chef de Projet, Développeur) avec dix-huit codes de permission répartis en sept modules
+(\texttt{ADMIN}, \texttt{PROJET}, \texttt{EQUIPE}, \texttt{CHARGE}, \texttt{FACTURATION},
+\texttt{KPI}, \texttt{GOV}).
+
+\subsection{Propagation vers Spring Security}
+
+Au démarrage de la session, \texttt{JwtAuthenticationFilter} charge les codes de permission depuis
+le jeton JWT et les convertit en objets \texttt{SimpleGrantedAuthority}. Chaque point d'entrée REST
+est protégé par une annotation de la forme~:
+
+\begin{verbatim}
+@PreAuthorize("hasAuthority('CREATE_PROJECT')")
+\end{verbatim}
+
+La règle absolue est~: aucune vérification de \emph{nom de rôle} dans le code applicatif. Seuls les
+codes de permission sont utilisés.
+
+\subsection{Menu dynamique}
+
+L'endpoint \texttt{GET /api/me/context} renvoie, pour l'utilisateur authentifié, la liste de ses
+permissions ainsi que les informations de profil. Le frontend Angular utilise cette réponse pour
+construire dynamiquement le menu de navigation~: un élément n'est affiché que si l'utilisateur
+possède le code de permission requis.
+
+\subsection{Endpoint \texttt{GET /api/me/context}}
+
+\begin{longtable}{|m{4.5cm}|m{10cm}|}
+\hline
+\textbf{Champ de la réponse} & \textbf{Description} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+\texttt{userId} & Identifiant de l'utilisateur \\
+\hline
+\texttt{email} & Adresse e-mail \\
+\hline
+\texttt{firstName}, \texttt{lastName} & Prénom et nom \\
+\hline
+\texttt{roleName} & Nom du rôle actif \\
+\hline
+\texttt{permissions} & Liste des codes de permission (\texttt{String[]}) \\
+\hline
+\texttt{firstLogin} & Vrai si le mot de passe doit être changé \\
+\hline
+\caption{Structure de la réponse \texttt{GET /api/me/context}}
+\label{tab:mecontext}
+\end{longtable}
+
+\section{Gestion des utilisateurs et des ressources}
+
+\subsection{Utilisateurs}
+
+Le module \texttt{user} expose un CRUD complet protégé par la permission \texttt{MANAGE\_USERS}.
+Les points clés d'implémentation sont~:
+
+\begin{itemize}
+  \item La \textbf{création} génère un hachage BCrypt du mot de passe temporaire fourni et positionne
+        \texttt{first\_login = true}.
+  \item L'\textbf{activation / désactivation} (\texttt{PUT /api/users/{id}/activate} et
+        \texttt{/deactivate}) fait basculer le champ \texttt{active}. Un utilisateur désactivé ne
+        peut pas s'authentifier.
+  \item L'\textbf{attribution de rôle} charge l'entité \texttt{Role} et la lie à l'utilisateur~; la
+        session en cours du titulaire reste valide jusqu'à expiration du jeton (révocation possible
+        via déconnexion forcée).
+\end{itemize}
+
+\subsection{Ressources humaines}
+
+La distinction \textbf{Utilisateur vs Ressource} est formalisée dans ADR-022. Une \texttt{Resource}
+représente une personne physiquement active dans un projet (son coût, son taux journalier, son TCC)
+et peut exister \emph{sans} compte utilisateur (consultants, sous-traitants externes). Le lien
+\texttt{user\_id} est optionnel.
+
+Chaque ressource porte~:
+\begin{itemize}
+  \item \texttt{tarifJournalier} (coût direct journalier en TND),
+  \item \texttt{tauxTcc} (taux de charges indirectes, défaut 70\%, paramétrable, ADR-008),
+  \item des entrées \texttt{TCC} annuelles qui permettent de recalculer le coût complet au fil du
+        temps (ADR-002).
+\end{itemize}
+
+\subsection{Mappers MapStruct}
+
+Conformément à ADR-018, tout mapping entité~↔~DTO est géré par des interfaces MapStruct
+(\texttt{UserMapper}, \texttt{ResourceMapper}). Les classes sont générées à la compilation~; aucune
+réflexion n'est utilisée à l'exécution, ce qui garantit à la fois la performance et la visibilité
+des erreurs à la compilation.
+
+\section{Cycle de vie des projets}
+
+\subsection{États et transitions}
+
+Un projet suit un cycle de vie linéaire à six états~:
+
+\begin{center}
+\texttt{PROSPECT} → \texttt{EN\_COURS} → \texttt{EN\_PAUSE} → \texttt{TERMINE} → \texttt{ANNULE}
+\end{center}
+
+\noindent accompagné d'un état \texttt{ARCHIVE} atteignable depuis \texttt{TERMINE}. Les transitions
+invalides sont rejetées en service avec une \texttt{IllegalStateException} traduite en
+\texttt{400 Bad Request}.
+
+\subsection{Budget effectif}
+
+Le budget de référence d'un projet est son \texttt{initialBudget}. Dès lors qu'un avenant
+(\texttt{Avenant}) est approuvé, le service recalcule le \texttt{revisedBudget} (budget révisé). Le
+\textbf{budget effectif} utilisé par le moteur de KPI est~:
+
+\begin{verbatim}
+effectiveBudget = (revisedBudget != null) ? revisedBudget : initialBudget
+\end{verbatim}
+
+\subsection{Affectation du chef de projet}
+
+L'endpoint \texttt{PUT /api/projects/{id}/assign-chef} (permission \texttt{ASSIGN\_CHEF\_PROJET})
+crée une ligne dans \texttt{project\_manager\_assignments} avec \texttt{startDate} = aujourd'hui.
+Si un chef de projet est déjà actif, son \texttt{endDate} est clôturée à hier~: l'historique est
+intégralement préservé.
+
+\subsection{Endpoints du module Projets}
+
+\begin{longtable}{|m{2cm}|m{5.5cm}|m{3.5cm}|m{3cm}|}
+\hline
+\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Réponse} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+GET & \texttt{/api/projects} & \texttt{VIEW\_PROJECT} & 200 liste \\
+\hline
+GET & \texttt{/api/projects/\{id\}} & \texttt{VIEW\_PROJECT} & 200 / 404 \\
+\hline
+POST & \texttt{/api/projects} & \texttt{CREATE\_PROJECT} & 201 + Location \\
+\hline
+PUT & \texttt{/api/projects/\{id\}} & \texttt{EDIT\_PROJECT} & 200 mis à jour \\
+\hline
+DELETE & \texttt{/api/projects/\{id\}} & \texttt{DELETE\_PROJECT} & 204 \\
+\hline
+PUT & \texttt{/api/projects/\{id\}/assign-chef} & \texttt{ASSIGN\_CHEF\_PROJET} & 200 \\
+\hline
+\caption{Endpoints REST du module Projets}
+\label{tab:projects-api}
+\end{longtable}
+
+\section*{Conclusion}
+Le socle technique de la plateforme PMS est constitué de trois modules qui instaurent les invariants
+de sécurité et de gouvernance des données valables pour l'ensemble de l'application~: la révocation
+instantanée des jetons par version, le RBAC strictement basé sur les codes de permission (jamais sur
+les noms de rôle), la suppression douce systématique et le budget effectif dynamique par avenants.
+Le chapitre suivant décrit les modules opérationnels~: équipes, charges de travail et moteur de KPI.

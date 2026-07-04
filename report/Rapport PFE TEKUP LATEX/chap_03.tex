@@ -1,0 +1,170 @@
+\chapter{Conception architecturale}
+
+\section*{Introduction}
+Après avoir spécifié les besoins métier au chapitre précédent, ce chapitre présente l'architecture
+technique retenue pour y répondre de manière maintenable, sécurisée et évolutive. Il décrit le style
+architectural, l'architecture globale en trois niveaux, l'architecture de sécurité, le mécanisme
+central de contrôle d'accès dynamique, les architectures \emph{backend} et \emph{frontend}, le moteur
+de calcul des indicateurs (KPI) ainsi que la stratégie de déploiement. Aucune ligne de code n'est
+produite à ce stade~: cette phase se conclut par une validation avant la conception de la base de
+données.
+
+\section{Style architectural}
+La plateforme adopte un \textbf{monolithe modulaire en couches}. Il s'agit d'une application
+Spring~Boot unique, partitionnée en \textbf{modules fonctionnels} (authentification, utilisateurs,
+rôles, permissions, projets, équipes, TCC, plan de charge, charges réelles, facturation, missions,
+KPI, risques, livrables, etc.), chacun organisé selon les couches
+\textit{Contrôleur~$\rightarrow$~Service~$\rightarrow$~Référentiel~$\rightarrow$~Domaine}.
+
+Ce choix privilégie la \emph{simplicité} (principe directeur du projet)~: une seule base de données,
+une cohérence forte des données financières, une application simple à construire, à tester et à
+défendre, tout en conservant des frontières de modules nettes qui préservent la maintenabilité et
+laissent ouverte une éventuelle extraction de services ultérieure. L'approche microservices a été
+écartée comme une sur-ingénierie au regard des besoins.
+
+\section{Architecture globale}
+L'architecture s'organise en trois niveaux~:
+
+\begin{itemize}
+    \item \textbf{Niveau client}~: une application monopage (SPA) Angular~21 (Bootstrap~5,
+    Chart.js, langue française) assurant l'authentification, le menu dynamique construit à partir des
+    permissions, et les tableaux de bord.
+    \item \textbf{Niveau serveur}~: une API REST Spring~Boot~3.3 (Java~21) — le monolithe modulaire —
+    comprenant la couche web (contrôleurs, filtre JWT, gardes d'autorisation), la couche service
+    (logique métier, moteur de KPI, conversion de devises, paramètres) et la couche d'accès aux
+    données (Spring~Data~JPA).
+    \item \textbf{Niveau données}~: une base PostgreSQL~17 (service Windows installé).
+\end{itemize}
+
+\noindent La communication client/serveur s'effectue en HTTPS via REST, chaque requête portant un
+jeton JWT. L'outil externe de suivi des temps KIMAI alimente, par import, les charges réelles.
+
+\begin{longtable}{|m{3.5cm}|m{11cm}|}
+\hline
+\textbf{Couche} & \textbf{Responsabilité} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Contrôleur & Points d'entrée REST, DTO de requête/réponse, validation~; aucune logique métier. \\ \hline
+Service & Logique métier, transactions, orchestration, moteur de KPI. \\ \hline
+Référentiel & Accès aux données via Spring Data JPA. \\ \hline
+Domaine & Entités, énumérations et règles de domaine. \\ \hline
+Transversal & Audit, suppression logique, validation, gestion des exceptions, journalisation asynchrone. \\ \hline
+\caption{Couches de l'architecture backend}
+\label{tab:couches}
+\end{longtable}
+
+\section{Architecture de sécurité}
+L'authentification repose sur des jetons \textbf{JWT}. À la connexion, le serveur vérifie le mot de
+passe (haché en BCrypt) puis émet un \textbf{jeton d'accès} à durée de vie courte et un \textbf{jeton
+de rafraîchissement}. Si l'attribut \texttt{firstLogin} est vrai, l'utilisateur est contraint de
+changer son mot de passe avant tout autre accès (UC-002). Les requêtes suivantes portent l'en-tête
+\texttt{Authorization: Bearer}. À l'expiration, le point de terminaison de rafraîchissement délivre un
+nouveau jeton d'accès.
+
+\textbf{Modèle de jeton (révocation par version).} Le jeton d'accès ne porte que l'\emph{identité}
+(\texttt{userId}, rôle, \texttt{token\_version})~; il ne contient pas les permissions. À chaque
+requête, le serveur vérifie la signature puis charge le \textbf{contexte de sécurité} de
+l'utilisateur depuis un petit cache en mémoire (\texttt{active}, \texttt{token\_version},
+permissions), rejette le jeton si l'utilisateur est désactivé ou si la version est obsolète, et
+autorise l'opération à partir des permissions du contexte. Ce cache étant invalidé lors des
+événements de sécurité, \textbf{toute modification de permission comme toute révocation prend effet
+immédiatement} — sans attendre l'expiration du jeton. L'authentification reste sans état~; seule
+cette vérification d'autorisation, légère et adossée au cache, est avec état~: le système n'est donc
+\emph{pas} entièrement sans état, et c'est un choix délibéré (BR-007). La \texttt{token\_version} est
+incrémentée lors d'une désactivation, d'une déconnexion forcée, d'un changement de mot de passe, de
+rôle ou de permissions. Le jeton d'accès est conservé en mémoire côté client, le jeton de
+rafraîchissement (renouvelé) dans un cookie \texttt{HttpOnly} sécurisé. La connexion est en outre
+protégée contre les attaques par force brute (BR-058).
+
+\section{Le contrôle d'accès dynamique (RBAC)}
+Le mécanisme central de la plateforme applique le modèle
+\textbf{Rôle~$\rightarrow$~Permission~$\rightarrow$~Module}, jamais un couplage direct rôle/module.
+L'autorisation s'appuie sur les \emph{permissions} à trois niveaux.
+
+\begin{itemize}
+    \item \textbf{Backend — sécurité de méthode.} Chaque opération protégée déclare la permission
+    requise, par exemple \texttt{@PreAuthorize("hasAuthority('ASSIGN\_DEVELOPER')")}. Le filtre JWT
+    alimente le contexte de sécurité avec les autorités issues du jeton. Aucun code ne teste un nom
+    de rôle.
+    \item \textbf{Menu dynamique.} Le point de terminaison \texttt{GET /api/me/context} renvoie les
+    permissions et le menu autorisé~; le frontend construit la navigation à partir de cette réponse,
+    jamais en dur.
+    \item \textbf{Portée des données.} Certaines règles sont \emph{restreintes}~: le chef de projet ne
+    voit les finances que de ses projets gérés (BR-063), le développeur uniquement ses propres
+    charges (BR-064). Une couche de portée applique ce filtre d'appartenance \emph{après} la
+    vérification de permission.
+\end{itemize}
+
+\noindent \textbf{Illustration (D4).} La permission \texttt{ASSIGN\_DEVELOPER} est attribuée par
+défaut au \textsc{Directeur} \emph{et} au \textsc{Chef de Projet}. Pour l'accorder demain à un autre
+rôle, l'administrateur ajoute une seule ligne d'association rôle--permission~: la garde
+\texttt{@PreAuthorize}, le menu et la directive frontend en tiennent compte aussitôt, \textbf{sans
+aucune modification de code}. C'est le bénéfice concret de l'architecture dynamique.
+
+\section{Architecture backend}
+Le packaging est \textbf{orienté fonctionnalités} (\texttt{com.pms.<module>}). Les contrôleurs
+n'accèdent jamais directement aux référentiels~; les entités ne franchissent pas la frontière de
+l'API (ce sont des DTO qui circulent). La conversion entité~$\leftrightarrow$~DTO est assurée
+exclusivement par \textbf{MapStruct} (mappeurs générés à la compilation, typés et sans réflexion)~;
+le mappage manuel est proscrit. Les préoccupations transversales sont mutualisées~: audit
+(\texttt{createdBy/At}, \texttt{modifiedBy/At}) et suppression logique via une entité de base~;
+validation par Bean Validation et invariants métier dans les services~; gestion centralisée des
+exceptions renvoyant un corps d'erreur homogène~; journalisation \textbf{asynchrone et structurée}
+(non bloquante), conforme aux exigences non fonctionnelles.
+
+\section{Le moteur de calcul des indicateurs (KPI)}
+Le calcul des indicateurs financiers adopte une \textbf{approche hybride}~: recalcul à la
+modification et stockage d'instantanés (\textit{snapshots}).
+
+\begin{itemize}
+    \item Un \texttt{KpiSnapshot} est stocké \textbf{par projet et par mois}~; il contient l'ensemble
+    des indicateurs (EV~\%, ETC, EAC, coût actuel, coût prévisionnel, cumul CA production, FAE, RAF,
+    dérive, les trois marges, budget restant, avancement de facturation, Delivery~\%).
+    \item Les indicateurs sont \textbf{recalculés} dès qu'évoluent le plan de charge, les charges
+    réelles, la facturation, les coûts de mission, les taux TCC ou le budget/avenants.
+    \item Les tableaux de bord \textbf{lisent les instantanés} plutôt que de tout recalculer, ce qui
+    garantit des temps de réponse courts (NFR-001).
+    \item La conservation des instantanés mensuels permet les \textbf{courbes d'évolution des KPI},
+    à l'image de la feuille « Evolution KPIs » du classeur Excel.
+\end{itemize}
+
+\noindent Toutes les valeurs monétaires transitent par le service de conversion de devises, et toutes
+les constantes (frais généraux, jours ouvrés, PPR, heures par jour) proviennent du magasin de
+paramètres avant agrégation. Le coût de main-d'œuvre ($\sum$ JH $\times$ TCC) et les autres coûts
+(missions, frais) constituent deux flux distincts~: le coût total réel et les marges agrègent les
+deux, sans confondre les missions avec le coût de main-d'œuvre.
+
+\section{Multi-devises et paramètres configurables}
+La plateforme gère plusieurs devises (FCFA, TND, EUR). Un service de conversion centralisé applique
+des taux de change \textbf{datés}~; la devise de restitution (TND) est elle-même un paramètre. Aucun
+facteur de conversion n'est codé en dur. De même, un \textbf{magasin de paramètres} (clé~$\rightarrow$
+valeur typée) fournit à l'exécution le taux de frais généraux (0,70), les jours ouvrés par année
+(22~/~20), les heures par jour (8), le taux de PPR (5~\%), le plafond de facturation (100~\%) et les
+échelles de risque. Ces paramètres sont administrés via la permission \texttt{MANAGE\_PARAMETERS}.
+
+\section{Architecture frontend}
+L'application Angular~21 est structurée par fonctionnalités, avec des composants autonomes
+(\textit{standalone}). Un intercepteur HTTP ajoute le jeton et gère le rafraîchissement~; des gardes
+de routes protègent l'accès (authentification, première connexion, permission requise)~; une
+\textbf{directive de permission} masque les éléments d'interface non autorisés
+(\texttt{*hasPermission}). Le menu latéral est construit dynamiquement à partir du contexte renvoyé
+par le serveur. Les tableaux de bord exploitent Chart.js et sont adaptés à chaque profil~: vue projet
+pour le chef de projet, vue exécutive du portefeuille pour le directeur, vue personnelle (sans
+finances) pour le développeur. L'interface est en français et responsive (Bootstrap~5).
+
+\section{Déploiement}
+Le déploiement est \textbf{natif}, sur l'outillage déjà installé, sans conteneur~: la base sur le
+service PostgreSQL~17 existant, le backend lancé via \texttt{mvnw} (Java~21, Maven~3.9.16) et le
+frontend via \texttt{ng serve} (Angular~21, Node~22). Deux profils Spring (\texttt{dev}, \texttt{prod})
+distinguent les configurations~; les paramètres sensibles sont externalisés via des variables
+d'environnement. Le schéma de base de données est traité à la phase suivante.
+
+\section*{Conclusion}
+Ce chapitre a défini une architecture concrétisant le contrôle d'accès dynamique
+\og{}~Rôle~$\rightarrow$~Permission~$\rightarrow$~Module~\fg{}, le modèle financier complet via un
+moteur de KPI à instantanés performant, la gestion multi-devises et les paramètres configurables, le
+tout dans un monolithe modulaire exécutable nativement. Le chapitre suivant traduira ce domaine en un
+schéma PostgreSQL concret lors de la conception de la base de données.

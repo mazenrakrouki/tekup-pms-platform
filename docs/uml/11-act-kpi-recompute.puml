@@ -1,0 +1,48 @@
+@startuml act_kpi_recompute
+title Diagramme d'Activité — Calcul des Indicateurs KPI
+
+skinparam shadowing false
+skinparam activityBackgroundColor #D6E4F0
+skinparam activityBorderColor #2C5F8A
+skinparam activityFontName Helvetica
+skinparam activityFontSize 12
+skinparam defaultFontName Helvetica
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+
+start
+
+:Événement déclencheur
+(saisie de charges, modification d'un jalon,
+ajout d'une mission ou d'un avenant);
+
+note right : Le recalcul est automatique\naprès toute modification\nimpactant les coûts du projet.
+
+:Charger les données du projet
+(Taux de Charge Chargé, plan de charge prévisionnel,
+charges réelles saisies, jalons de facturation, missions);
+
+:Calculer le coût réel de la main-d'œuvre
+(Σ jours réels × Taux journalier de la ressource);
+
+:Calculer les autres coûts engagés
+(missions, déplacements, frais divers);
+
+:Estimer le coût final du projet (EAC)
+(coûts réels + estimation des coûts restants);
+
+if (EAC > Budget initial ?) then (oui)
+  :Signaler la dérive budgétaire;
+else (non)
+  :Calculer la marge prévisionnelle
+  ((Budget − EAC) / Budget);
+endif
+
+:Mettre à jour le tableau de bord KPI
+(marge, coût final estimé, budget restant,
+progression de la facturation);
+
+stop
+
+@enduml

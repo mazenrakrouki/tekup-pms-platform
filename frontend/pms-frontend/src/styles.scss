@@ -1,0 +1,80 @@
+@import 'bootstrap/scss/bootstrap';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+:root {
+  --pms-primary: #0d6efd;
+  --pms-sidebar-bg: #1e2a3a;
+  --pms-sidebar-text: #cdd3da;
+  --pms-sidebar-width: 250px;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: #f5f7fa;
+}
+
+.sidebar {
+  width: var(--pms-sidebar-width);
+  min-height: 100vh;
+  background: var(--pms-sidebar-bg);
+  color: var(--pms-sidebar-text);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+
+  .sidebar-brand {
+    padding: 1.25rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .nav-link {
+    color: var(--pms-sidebar-text);
+    padding: 0.6rem 1.5rem;
+    border-radius: 0;
+    font-size: 0.9rem;
+    transition: background 0.15s;
+
+    &:hover, &.active {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+    }
+
+    i { width: 1.2rem; }
+  }
+
+  .nav-section-title {
+    padding: 1rem 1.5rem 0.25rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.35);
+  }
+}
+
+.main-content {
+  margin-left: var(--pms-sidebar-width);
+  min-height: 100vh;
+}
+
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid #e5e9ef;
+  padding: 0.75rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.card { border: none; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+
+.badge-ouvert    { @extend .badge; background: #dc3545; }
+.badge-mitige    { @extend .badge; background: #fd7e14; }
+.badge-ferme     { @extend .badge; background: #198754; }
+.badge-prevu     { @extend .badge; background: #6c757d; }
+.badge-en_cours  { @extend .badge; background: #0d6efd; }
+.badge-livre     { @extend .badge; background: #0dcaf0; }
+.badge-valide    { @extend .badge; background: #198754; }

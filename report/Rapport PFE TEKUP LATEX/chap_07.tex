@@ -1,0 +1,228 @@
+\chapter{Implémentation --- Gestion opérationnelle}
+
+\section*{Introduction}
+Ce chapitre couvre les modules qui constituent le c\oe{}ur de la gestion opérationnelle
+quotidienne~: les équipes projet (phase~8), les charges de travail planifiées et réelles
+(phase~9) et le moteur de KPI financiers (phase~10). Ces trois modules interagissent en permanence
+et alimentent les tableaux de bord de pilotage du Directeur et du Chef de Projet.
+
+\section{Gestion des équipes}
+
+\subsection{Modèle d'affectation}
+
+Une affectation d'équipe (\texttt{TeamAssignment}) lie une \texttt{Resource} à un \texttt{Project}
+pour une période donnée (\texttt{startDate} / \texttt{endDate}). Elle suit le même mécanisme de
+suppression douce que les autres entités~: un retrait d'équipe positionne \texttt{deleted = true}
+sans supprimer l'enregistrement, afin de conserver l'historique des affectations.
+
+Un \textbf{index partiel unique} garantit qu'une ressource ne peut être affectée qu'une seule fois à
+un projet sur une période à la fois~:
+
+\begin{verbatim}
+UNIQUE (project_id, resource_id) WHERE deleted = FALSE
+\end{verbatim}
+
+Cette contrainte accepte les ré-affectations successives (une ressource peut quitter puis rejoindre
+un projet) tout en empêchant les doublons actifs.
+
+\subsection{Endpoints du module Équipes}
+
+\begin{longtable}{|m{2cm}|m{6.5cm}|m{3cm}|m{2.5cm}|}
+\hline
+\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Réponse} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+GET & \texttt{/api/projects/\{id\}/team} & \texttt{VIEW\_TEAM} & 200 liste \\
+\hline
+GET & \texttt{/api/projects/\{id\}/team/history} & \texttt{VIEW\_TEAM} & 200 historique \\
+\hline
+POST & \texttt{/api/projects/\{id\}/team} & \texttt{ASSIGN\_DEVELOPER} & 201 + Location \\
+\hline
+DELETE & \texttt{/api/projects/\{id\}/team/\{aid\}} & \texttt{ASSIGN\_DEVELOPER} & 204 \\
+\hline
+\caption{Endpoints REST du module Équipes}
+\label{tab:team-api}
+\end{longtable}
+
+\section{Charges de travail}
+
+\subsection{Deux types de charges}
+
+Le module de charges de travail distingue deux flux~:
+
+\begin{itemize}
+  \item \textbf{Plan de charge} (\texttt{plan\_charges})~: saisie mensuelle prévisionnelle par le
+        Chef de Projet (nombre de jours prévus par ressource et par mois).
+  \item \textbf{Charge réelle} (\texttt{charges\_reelles})~: saisie mensuelle par le Développeur ou
+        importée depuis KIMAI (\texttt{source = MANUAL | KIMAI}), représentant le nombre de jours
+        effectivement travaillés.
+\end{itemize}
+
+\subsection{Normalisation de la période}
+
+Toute entrée de charge est rattachée à un mois entier. La date de période est systématiquement
+normalisée en premier jour du mois~:
+
+\begin{verbatim}
+LocalDate period = LocalDate.of(year, month, 1);
+\end{verbatim}
+
+Cela simplifie les agrégations mensuelles et les jointures entre les deux tables.
+
+\subsection{Index partiels uniques}
+
+Chaque table possède un index unique partiel sur le triplet métier afin d'éviter les doublons~:
+
+\begin{verbatim}
+-- Plan de charge
+UNIQUE (project_id, resource_id, period) WHERE deleted = FALSE
+
+-- Charge réelle
+UNIQUE (project_id, resource_id, period, source) WHERE deleted = FALSE
+\end{verbatim}
+
+\subsection{Validation des charges réelles}
+
+Une charge réelle passe par un cycle de vie à deux états (\texttt{SOUMISE} → \texttt{VALIDEE}).
+Seul un utilisateur disposant de la permission \texttt{VALIDATE\_WORKLOAD} peut valider. Une
+charge validée (\texttt{validatedAt} non nul) ne peut plus être modifiée ni supprimée~: toute
+tentative déclenche une \texttt{IllegalStateException} traduite en \texttt{409 Conflict}.
+
+\subsection{Immutabilité de la période}
+
+Lors d'une mise à jour d'un plan de charge ou d'une charge réelle, les champs \texttt{period} et
+\texttt{resourceId} sont protégés~: une tentative de modification de ces clés naturelles est rejetée
+avec \texttt{400 Bad Request}. Cette règle garantit la cohérence des séries temporelles.
+
+\subsection{Endpoints du module Charges}
+
+\begin{longtable}{|m{1.8cm}|m{7.5cm}|m{3cm}|m{1.8cm}|}
+\hline
+\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Code} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+GET & \texttt{/api/projects/\{id\}/plan-charges} & \texttt{VIEW\_WORKLOAD} & 200 \\
+\hline
+POST & \texttt{/api/projects/\{id\}/plan-charges} & \texttt{SUBMIT\_WORKLOAD} & 201 \\
+\hline
+PUT & \texttt{/api/projects/\{id\}/plan-charges/\{pid\}} & \texttt{SUBMIT\_WORKLOAD} & 200 \\
+\hline
+DELETE & \texttt{/api/projects/\{id\}/plan-charges/\{pid\}} & \texttt{SUBMIT\_WORKLOAD} & 204 \\
+\hline
+GET & \texttt{/api/projects/\{id\}/charges-reelles} & \texttt{VIEW\_WORKLOAD} & 200 \\
+\hline
+POST & \texttt{/api/projects/\{id\}/charges-reelles} & \texttt{SUBMIT\_WORKLOAD} & 201 \\
+\hline
+PUT & \texttt{/api/projects/\{id\}/charges-reelles/\{cid\}} & \texttt{SUBMIT\_WORKLOAD} & 200 \\
+\hline
+DELETE & \texttt{/api/projects/\{id\}/charges-reelles/\{cid\}} & \texttt{SUBMIT\_WORKLOAD} & 204 \\
+\hline
+PATCH & \texttt{/api/projects/\{id\}/charges-reelles/\{cid\}/validate} & \texttt{VALIDATE\_WORKLOAD} & 200 \\
+\hline
+\caption{Endpoints REST du module Charges de travail (9 endpoints)}
+\label{tab:workload-api}
+\end{longtable}
+
+\section{Moteur de KPI}
+
+\subsection{Formules financières}
+
+Le moteur de KPI calcule les indicateurs financiers issus du classeur Excel de référence. Toutes
+les formules sont reproduites à l'identique. Le tableau suivant présente les indicateurs clés~:
+
+\begin{longtable}{|m{3cm}|m{5cm}|m{6.5cm}|}
+\hline
+\textbf{Indicateur} & \textbf{Formule} & \textbf{Signification} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+\texttt{budgetPlanifie} & $\sum$ (jours planifiés × TCC jour) & Coût total prévisionnel des
+ressources affectées \\
+\hline
+\texttt{budgetConsome} & $\sum$ (jours réels validés × TCC jour) & Coût des charges validées \\
+\hline
+\texttt{EAC} & réel + planifié restant & Estimation à achèvement (Estimate At Completion) \\
+\hline
+\texttt{marge} & budget effectif − EAC & Marge financière prévisionnelle \\
+\hline
+\texttt{tauxConsomm.} & budgetConsome / budgetPlanifié & Taux d'avancement financier \\
+\hline
+\caption{Indicateurs KPI financiers calculés par le moteur}
+\label{tab:kpi-formulas}
+\end{longtable}
+
+\noindent Le \textbf{coût journalier TCC} d'une ressource est~:
+\begin{verbatim}
+coutJournalierTcc = tarifJournalier × (1 + tauxTcc)
+\end{verbatim}
+\noindent Les valeurs de TCC sont chargées en \textbf{un seul accès batch} par projet (les
+identifiants de ressources sont collectés d'abord, puis une unique requête \texttt{IN} charge les
+TCC correspondants) afin d'éviter le problème \texttt{N+1}.
+
+\subsection{Calcul en direct (live)}
+
+L'endpoint \texttt{GET /api/projects/\{id\}/kpi} recalcule les indicateurs à la demande, sans
+persistance. Cette vue est utilisée par les tableaux de bord en temps réel. La réponse est
+identique à celle d'un snapshot mais le champ \texttt{snapshotId} est absent.
+
+\subsection{Snapshots historiques}
+
+L'endpoint \texttt{POST /api/projects/\{id\}/kpi/snapshots} (permission \texttt{VIEW\_KPI})
+matérialise l'état courant des KPI dans la table \texttt{snapshot\_kpis}. Un index partiel unique
+empêche deux snapshots le même jour pour le même projet~:
+
+\begin{verbatim}
+UNIQUE (project_id, snapshot_date) WHERE deleted = FALSE
+\end{verbatim}
+
+Une tentative de double snapshot dans la même journée déclenche une exception métier traduite
+en \texttt{409 Conflict}. L'endpoint retourne \texttt{201 Created} avec un en-tête
+\texttt{Location} pointant sur \texttt{/snapshots/\{snapshotId\}} (convention API).
+
+\subsection{Convention API~: en-tête Location}
+
+Tous les points d'entrée de création (\texttt{POST}) de la plateforme retournent systématiquement~:
+\begin{itemize}
+  \item le code \texttt{201 Created},
+  \item un en-tête \texttt{Location} construit via \texttt{ServletUriComponentsBuilder},
+        pointant sur la ressource nouvellement créée.
+\end{itemize}
+
+\noindent Cette convention est vérifiée par les tests d'intégration pour l'ensemble des
+dix-huit endpoints POST de l'application.
+
+\subsection{Endpoints du module KPI}
+
+\begin{longtable}{|m{2cm}|m{6.5cm}|m{3cm}|m{2.5cm}|}
+\hline
+\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Réponse} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+GET & \texttt{/api/projects/\{id\}/kpi} & \texttt{VIEW\_KPI} & 200 live \\
+\hline
+GET & \texttt{/api/projects/\{id\}/kpi/snapshots} & \texttt{VIEW\_KPI} & 200 liste \\
+\hline
+POST & \texttt{/api/projects/\{id\}/kpi/snapshots} & \texttt{VIEW\_KPI} & 201 + Location \\
+\hline
+\caption{Endpoints REST du module KPI}
+\label{tab:kpi-api}
+\end{longtable}
+
+\section*{Conclusion}
+Les trois modules de gestion opérationnelle forment un enchaînement cohérent~: les membres de
+l'équipe sont affectés au projet, les charges planifiées et réelles sont saisies mois par mois, et
+le moteur de KPI agrège ces données en indicateurs financiers exploitables par le pilotage. La
+série temporelle mensuelle, les index partiels uniques et le chargement batch des TCC sont les trois
+décisions techniques qui garantissent la fiabilité et la performance de ce pipeline. Le chapitre
+suivant décrit les modules financiers, les missions et la gouvernance de projet.

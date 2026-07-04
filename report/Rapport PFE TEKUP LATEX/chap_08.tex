@@ -1,0 +1,293 @@
+\chapter{Implémentation --- Modules financier et gouvernance}
+
+\section*{Introduction}
+Ce chapitre décrit les modules les plus riches en règles métier~: la facturation (phase~11), les
+missions et frais de déplacement (phase~12), et la gouvernance de projet regroupant risques,
+livrables, parties prenantes et demandes de changement (phase~13). Ensemble, ils couvrent le périmètre
+financier et qualité qui distingue la plateforme PMS d'un simple outil de suivi de projets.
+
+\section{Module Facturation}
+
+\subsection{Jalons de facturation}
+
+La facturation est déclenchée par des jalons (\texttt{JalonFacturation}), chacun représentant un
+pourcentage de la valeur du projet. La règle fondamentale (BR-038) impose~:
+
+\begin{verbatim}
+∑ pourcentage des jalons actifs ≤ 100 %
+\end{verbatim}
+
+Le service vérifie cette contrainte avant toute création ou mise à jour d'un jalon. Toute violation
+déclenche une exception métier traduite en \texttt{400 Bad Request}. Le montant facturé d'un jalon
+est calculé automatiquement~:
+
+\begin{verbatim}
+montant = effectiveBudget × pourcentage / 100
+\end{verbatim}
+
+\subsection{Cycle de vie d'un jalon}
+
+Un jalon suit trois états~:
+
+\begin{center}
+\texttt{PREVU} → \texttt{FACTURE} → \texttt{PAYE}
+\end{center}
+
+\begin{itemize}
+  \item \textbf{PREVU}~: état initial à la création.
+  \item \textbf{FACTURE}~: déclenché par \texttt{PATCH /jalons/\{id\}/facturer}, qui requiert une
+        date de facturation (\texttt{dateFacture}) dans le corps de la requête.
+  \item \textbf{PAYE}~: transition automatique lorsqu'un paiement couvre intégralement le montant
+        du jalon.
+\end{itemize}
+
+\subsection{Paiements}
+
+Un paiement (\texttt{Paiement}) enregistre un montant reçu (\texttt{montantRecu}) sur un jalon
+préalablement à l'état \texttt{FACTURE}. Si \texttt{montantRecu ≥ montant\_jalon}, le jalon passe
+automatiquement en \texttt{PAYE}.
+
+\subsection{Avenants}
+
+Un avenant (\texttt{Avenant}) représente un amendement contractuel qui modifie le budget du projet.
+À la création d'un avenant, le service recalcule \texttt{project.revisedBudget}~:
+
+\begin{verbatim}
+revisedBudget = revisedBudget + avenant.montant
+\end{verbatim}
+
+En cas d'annulation (\texttt{statut = ANNULE}), l'opération est inversée. Le budget effectif
+utilisé partout dans le système est toujours \texttt{revisedBudget ?? initialBudget}.
+
+\subsection{Endpoints du module Facturation}
+
+\begin{longtable}{|m{1.8cm}|m{7.5cm}|m{3cm}|m{1.5cm}|}
+\hline
+\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Code} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+GET & \texttt{/api/projects/\{id\}/jalons} & \texttt{VIEW\_BILLING} & 200 \\
+\hline
+POST & \texttt{/api/projects/\{id\}/jalons} & \texttt{MANAGE\_BILLING} & 201 \\
+\hline
+PUT & \texttt{/api/projects/\{id\}/jalons/\{jid\}} & \texttt{MANAGE\_BILLING} & 200 \\
+\hline
+DELETE & \texttt{/api/projects/\{id\}/jalons/\{jid\}} & \texttt{MANAGE\_BILLING} & 204 \\
+\hline
+PATCH & \texttt{/api/projects/\{id\}/jalons/\{jid\}/facturer} & \texttt{MANAGE\_BILLING} & 200 \\
+\hline
+GET & \texttt{/api/projects/\{id\}/jalons/\{jid\}/paiements} & \texttt{VIEW\_BILLING} & 200 \\
+\hline
+POST & \texttt{/api/projects/\{id\}/jalons/\{jid\}/paiements} & \texttt{MANAGE\_BILLING} & 201 \\
+\hline
+GET & \texttt{/api/projects/\{id\}/avenants} & \texttt{VIEW\_BILLING} & 200 \\
+\hline
+POST & \texttt{/api/projects/\{id\}/avenants} & \texttt{MANAGE\_BILLING} & 201 \\
+\hline
+PUT & \texttt{/api/projects/\{id\}/avenants/\{aid\}} & \texttt{MANAGE\_BILLING} & 200 \\
+\hline
+DELETE & \texttt{/api/projects/\{id\}/avenants/\{aid\}} & \texttt{MANAGE\_BILLING} & 204 \\
+\hline
+\caption{Endpoints REST du module Facturation (11 endpoints)}
+\label{tab:billing-api}
+\end{longtable}
+
+\section{Module Missions}
+
+\subsection{Structure}
+
+Une mission (\texttt{Mission}) représente un déplacement professionnel d'un utilisateur dans le
+cadre d'un projet. Elle est définie par son objet, son lieu, ses dates de début et de fin. La règle
+\texttt{dateFin ≥ dateDebut} est validée en service.
+
+Chaque mission peut comprendre plusieurs composantes de coût (\texttt{ComposanteMission})
+correspondant aux différents types de frais~:
+
+\begin{longtable}{|m{3.5cm}|m{11cm}|}
+\hline
+\textbf{Type} & \textbf{Description} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+\texttt{PERDIEM} & Frais de séjour journaliers \\
+\hline
+\texttt{BILLET} & Billet d'avion ou de transport longue distance \\
+\hline
+\texttt{TIMBRE} & Frais de courrier / postaux \\
+\hline
+\texttt{TRANSPORT} & Transport local (taxi, location de voiture…) \\
+\hline
+\texttt{SEJOUR} & Hébergement hôtelier \\
+\hline
+\caption{Types de composantes de mission}
+\label{tab:mission-types}
+\end{longtable}
+
+\subsection{Multi-devises}
+
+Chaque composante porte un montant et une devise ISO 4217 (ADR-007). La devise est normalisée en
+majuscules à la persistance~; la valeur par défaut est \texttt{TND}. La conversion des devises vers
+une devise de référence est différée~: seuls le montant brut et la devise sont stockés dans cette
+version, la conversion étant prévue dans une évolution future (taux de change, table
+\texttt{exchange\_rates}).
+
+\subsection{Endpoints du module Missions}
+
+\begin{longtable}{|m{1.8cm}|m{7.5cm}|m{3.5cm}|m{1.5cm}|}
+\hline
+\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Code} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+GET & \texttt{/api/projects/\{id\}/missions} & \texttt{VIEW\_MISSION} & 200 \\
+\hline
+POST & \texttt{/api/projects/\{id\}/missions} & \texttt{MANAGE\_MISSION} & 201 \\
+\hline
+GET & \texttt{/api/projects/\{id\}/missions/\{mid\}} & \texttt{VIEW\_MISSION} & 200 \\
+\hline
+PUT & \texttt{/api/projects/\{id\}/missions/\{mid\}} & \texttt{MANAGE\_MISSION} & 200 \\
+\hline
+DELETE & \texttt{/api/projects/\{id\}/missions/\{mid\}} & \texttt{MANAGE\_MISSION} & 204 \\
+\hline
+GET & \texttt{.../missions/\{mid\}/composantes} & \texttt{VIEW\_MISSION} & 200 \\
+\hline
+POST & \texttt{.../missions/\{mid\}/composantes} & \texttt{MANAGE\_MISSION} & 201 \\
+\hline
+DELETE & \texttt{.../missions/\{mid\}/composantes/\{cid\}} & \texttt{MANAGE\_MISSION} & 204 \\
+\hline
+\caption{Endpoints REST du module Missions (8 endpoints)}
+\label{tab:mission-api}
+\end{longtable}
+
+\section{Module Gouvernance}
+
+\subsection{Registre des risques}
+
+Un risque (\texttt{Risk}) est caractérisé par sa probabilité (\texttt{FAIBLE} / \texttt{MOYEN} /
+\texttt{ELEVE}), son impact (\texttt{FAIBLE} / \texttt{MOYEN} / \texttt{ELEVE}), une description
+et un plan de traitement. Son statut peut être \texttt{OUVERT}, \texttt{MITIGE} ou \texttt{FERME}.
+La modification d'un risque fermé est bloquée.
+
+\subsection{Livrables et machine à états}
+
+Un livrable (\texttt{Livrable}) suit une machine à états stricte~:
+
+\begin{center}
+\texttt{EN\_ATTENTE} → \texttt{EN\_COURS} → \texttt{LIVRE} → \texttt{VALIDE}
+\end{center}
+
+Chaque transition est déclenchée par un endpoint dédié~:
+\begin{itemize}
+  \item \texttt{PATCH /livrables/\{id\}/demarrer} (EN\_ATTENTE → EN\_COURS),
+  \item \texttt{PATCH /livrables/\{id\}/livrer} (EN\_COURS → LIVRE),
+  \item \texttt{PATCH /livrables/\{id\}/valider} (LIVRE → VALIDE).
+\end{itemize}
+
+Les transitions inverses sont interdites. Un livrable à l'état \texttt{VALIDE} est immuable~: toute
+tentative de modification ou de suppression est rejetée avec \texttt{409 Conflict}.
+
+\subsection{Parties prenantes}
+
+Une partie prenante (\texttt{PartiePrenante}) représente une personne ou une organisation impactée
+par le projet. Elle est caractérisée par son nom, sa fonction, ses coordonnées et une matrice
+d'influence / intérêt utilisée pour prioriser la communication.
+
+\subsection{Demandes de changement}
+
+Une demande de changement (\texttt{DemandeChangement}) suit un workflow d'approbation biétape~:
+
+\begin{center}
+\texttt{EN\_ATTENTE} → \texttt{APPROUVE} ou \texttt{REJETE}
+\end{center}
+
+\begin{itemize}
+  \item \texttt{PATCH /demandes-changement/\{id\}/approuver} enregistre la date de décision et
+        l'identité du décideur.
+  \item \texttt{PATCH /demandes-changement/\{id\}/rejeter} idem.
+\end{itemize}
+
+Une demande déjà traitée (\texttt{statut ≠ EN\_ATTENTE}) ne peut plus être modifiée (idempotence
+en lecture, rejet en écriture).
+
+\subsection{Endpoints du module Gouvernance}
+
+\begin{longtable}{|m{1.8cm}|m{7.5cm}|m{3.5cm}|m{1.5cm}|}
+\hline
+\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Code} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+GET & \texttt{/api/projects/\{id\}/risks} & \texttt{VIEW\_GOVERNANCE} & 200 \\
+\hline
+POST & \texttt{/api/projects/\{id\}/risks} & \texttt{MANAGE\_GOVERNANCE} & 201 \\
+\hline
+PUT & \texttt{/api/projects/\{id\}/risks/\{rid\}} & \texttt{MANAGE\_GOVERNANCE} & 200 \\
+\hline
+DELETE & \texttt{/api/projects/\{id\}/risks/\{rid\}} & \texttt{MANAGE\_GOVERNANCE} & 204 \\
+\hline
+GET & \texttt{/api/projects/\{id\}/livrables} & \texttt{VIEW\_GOVERNANCE} & 200 \\
+\hline
+POST & \texttt{/api/projects/\{id\}/livrables} & \texttt{MANAGE\_GOVERNANCE} & 201 \\
+\hline
+PATCH & \texttt{.../livrables/\{lid\}/demarrer} & \texttt{MANAGE\_GOVERNANCE} & 200 \\
+\hline
+PATCH & \texttt{.../livrables/\{lid\}/livrer} & \texttt{MANAGE\_GOVERNANCE} & 200 \\
+\hline
+PATCH & \texttt{.../livrables/\{lid\}/valider} & \texttt{MANAGE\_GOVERNANCE} & 200 \\
+\hline
+DELETE & \texttt{.../livrables/\{lid\}} & \texttt{MANAGE\_GOVERNANCE} & 204 \\
+\hline
+GET & \texttt{.../parties-prenantes} & \texttt{VIEW\_GOVERNANCE} & 200 \\
+\hline
+POST & \texttt{.../parties-prenantes} & \texttt{MANAGE\_GOVERNANCE} & 201 \\
+\hline
+PUT & \texttt{.../parties-prenantes/\{ppid\}} & \texttt{MANAGE\_GOVERNANCE} & 200 \\
+\hline
+DELETE & \texttt{.../parties-prenantes/\{ppid\}} & \texttt{MANAGE\_GOVERNANCE} & 204 \\
+\hline
+GET & \texttt{.../demandes-changement} & \texttt{VIEW\_GOVERNANCE} & 200 \\
+\hline
+POST & \texttt{.../demandes-changement} & \texttt{MANAGE\_GOVERNANCE} & 201 \\
+\hline
+PATCH & \texttt{.../demandes-changement/\{did\}/approuver} & \texttt{MANAGE\_GOVERNANCE} & 200 \\
+\hline
+PATCH & \texttt{.../demandes-changement/\{did\}/rejeter} & \texttt{MANAGE\_GOVERNANCE} & 200 \\
+\hline
+DELETE & \texttt{.../demandes-changement/\{did\}} & \texttt{MANAGE\_GOVERNANCE} & 204 \\
+\hline
+\caption{Endpoints REST du module Gouvernance (19 endpoints)}
+\label{tab:gov-api}
+\end{longtable}
+
+\section{Bilan de l'API REST backend}
+
+Au terme des phases~5 à~13, la plateforme PMS expose plus de \textbf{75 endpoints REST},
+répartis sur dix modules. Tous respectent les conventions suivantes~:
+\begin{itemize}
+  \item toute création retourne \texttt{201 Created} avec un en-tête \texttt{Location},
+  \item les permissions sont systématiquement vérifiées par \texttt{@PreAuthorize} (ADR-001),
+  \item les entités supprimées sont filtrées (\texttt{deleted = false}, ADR-009),
+  \item les transitions invalides et les doublons sont rejetés avec \texttt{409 Conflict},
+  \item les données manquantes ou invalides sont rejetées avec \texttt{400 Bad Request}.
+\end{itemize}
+
+\noindent L'ensemble du backend est couvert par \textbf{51 tests d'intégration} exécutés sur une
+base H2 en mémoire avec le profil \texttt{test} (détaillé au chapitre~10).
+
+\section*{Conclusion}
+Les modules de facturation, de missions et de gouvernance complètent l'implémentation backend de la
+plateforme PMS. Chacun apporte des règles métier spécifiques~: la contrainte~$\Sigma\%\leq 100$ pour
+les jalons, la gestion multi-devises pour les missions, et les machines à états pour les livrables
+et les demandes de changement. La cohérence transversale est assurée par les mêmes mécanismes
+utilisés dans les modules précédents~: suppression douce, permissions dynamiques, convention
+\texttt{201 + Location} et rejet explicite des transitions invalides. Le chapitre suivant présente
+l'implémentation du frontend Angular.

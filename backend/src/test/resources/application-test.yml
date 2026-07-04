@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=100,expireAfterWrite=5m
+
+pms:
+  jwt:
+    secret: dGVzdFNlY3JldEtleUZvclRlc3RpbmdPbmx5TXVzdEJlQXRMZWFzdDY0Qnl0ZXNMb25n
+    access-token-expiration: 3600
+    refresh-token-expiration: 86400
+
+logging:
+  level:
+    root: WARN
+    com.pms: DEBUG

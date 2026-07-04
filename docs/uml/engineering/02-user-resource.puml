@@ -1,0 +1,72 @@
+@startuml user_resource
+title Gestion des Utilisateurs et Ressources
+
+left to right direction
+
+skinparam shadowing false
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C5F8A
+skinparam classHeaderBackgroundColor #D6E4F0
+skinparam packageBackgroundColor #EAF2FF
+skinparam packageBorderColor #1F4E79
+skinparam packageFontColor #1F4E79
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.5
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+hide circle
+
+class Utilisateur {
+  - email : String
+  - nom : String
+  - prenom : String
+  - actif : boolean
+}
+
+class Ressource {
+  - nomComplet : String
+  - profil : String
+  - actif : boolean
+  --
+  + calculerCoutAnnuel(annee : int) : double
+}
+
+class TCC {
+  - annee : int
+  - coutAnnuelCharge : double
+  - devise : String
+  --
+  + getTauxJournalier() : double
+}
+
+class Parametre {
+  - cle : String
+  - valeur : String
+  --
+  + getValeur() : String
+}
+
+Ressource "0..1" --> "1"    Utilisateur : peut être >
+Ressource "1"    *--  "1..*" TCC        : historique coût >
+
+note right of Ressource
+  Un consultant externe est
+  une Ressource sans compte
+  Utilisateur associé.
+end note
+
+note right of TCC
+  Taux de Charge Chargé (TCC) :
+  coût annuel chargé incluant
+  salaire, charges et PPR (~×1,7)
+end note
+
+note bottom of Parametre
+  Constantes métier configurables :
+  jours ouvrables / an,
+  taux PPR, taux de change par défaut
+end note
+
+@enduml

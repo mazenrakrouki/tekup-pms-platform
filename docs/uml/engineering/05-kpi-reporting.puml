@@ -1,0 +1,90 @@
+@startuml kpi_reporting
+title Suivi des Charges et Indicateurs KPI
+
+top to bottom direction
+
+skinparam shadowing false
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C5F8A
+skinparam classHeaderBackgroundColor #D6E4F0
+skinparam packageBackgroundColor #EAF2FF
+skinparam packageBorderColor #1F4E79
+skinparam packageFontColor #1F4E79
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.5
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+hide circle
+
+enum SourceCharge {
+  MANUEL
+  KIMAI
+}
+
+class Projet {
+  - code : String
+  - nom : String
+  - budget : double
+}
+
+class Ressource {
+  - nomComplet : String
+  - profil : String
+}
+
+class PlanCharge {
+  - mois : Date
+  - joursPlanifies : double
+  --
+  + totalPlanifie() : double
+}
+
+class ChargeReelle {
+  - mois : Date
+  - joursReels : double
+  - source : SourceCharge
+  --
+  + valider() : void
+  + accepter() : void
+}
+
+class SnapshotKPI {
+  - moisSnapshot : Date
+  - eac : double
+  - margeEAC : double
+  - budgetRestant : double
+  - progressionFacturation : double
+  --
+  + calculerEAC() : double
+  + calculerMarge() : double
+  + genererRapport() : void
+}
+
+Projet "1" *-- "*" PlanCharge    : charge prévisionnelle
+PlanCharge "*" --> "1" Ressource : concerne >
+Projet "1" *-- "*" ChargeReelle  : charge réelle
+ChargeReelle "*" --> "1" Ressource : concerne >
+Projet "1" *-- "*" SnapshotKPI   : historique KPI
+ChargeReelle --> SourceCharge    : provient de >
+
+note right of ChargeReelle
+  Saisie manuelle ou import
+  automatique depuis KIMAI.
+  Validation par le chef de projet.
+end note
+
+note right of SnapshotKPI
+  Calculé chaque mois ou à
+  chaque modification de charge.
+  Historique conservé pour analyse
+  d'évolution du projet.
+end note
+
+note bottom of SnapshotKPI
+  EAC = Estimate At Completion
+  Marge = (Budget - EAC) / Budget
+end note
+
+@enduml

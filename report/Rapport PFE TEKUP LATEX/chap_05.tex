@@ -1,0 +1,156 @@
+\chapter{Conception UML}
+
+\section*{Introduction}
+Ce chapitre présente la modélisation UML de la plateforme PMS au \textbf{niveau du rapport}~:
+diagrammes simples, lisibles d'un coup d'œil et tenant chacun sur une page. Conformément à la
+politique deux-niveaux (ADR-024), les diagrammes d'ingénierie détaillés sont conservés à part et ne
+sont pas reproduits ici. Onze diagrammes sont produits~: un diagramme de cas d'utilisation, un
+diagramme de packages, quatre diagrammes de classes par domaine (Sécurité, Projet \& Équipe,
+Financier, Charges \& KPI), trois diagrammes de séquence (connexion, affectation d'un développeur,
+saisie des charges et recalcul des KPI) et deux diagrammes d'activité (cycle de vie d'un projet,
+pipeline hybride de recalcul des KPI).
+
+\section{Diagramme de cas d'utilisation}
+Quatre acteurs humains (Administrateur, Directeur, Chef de Projet, Développeur) et douze cas
+d'utilisation métier. La permission \texttt{ASSIGN\_DEVELOPER} est attribuée par défaut au Directeur
+\emph{et} au Chef de Projet (ADR-005, décision D4).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\columnwidth]{img/use_case.png}
+  \caption{Diagramme de cas d'utilisation (niveau rapport).}
+  \label{fig:uc}
+\end{figure}
+
+\section{Diagramme de packages}
+Le système se décompose en \textbf{dix modules fonctionnels}. Les flèches du bas convergent vers le
+moteur de KPI, qui agrège la charge, la facturation, les missions et le TCC.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{img/package_diagram.png}
+  \caption{Modules fonctionnels et dépendances principales.}
+  \label{fig:pkg}
+\end{figure}
+
+\section{Diagrammes de classes par domaine}
+Pour la lisibilité, le modèle de classes est éclaté en quatre diagrammes de domaine. Chacun ne
+montre que les entités métier essentielles et leurs relations principales~; les attributs
+secondaires, les champs d'audit et les classes techniques (contrôleurs, services, référentiels,
+DTO, mappeurs) sont volontairement omis.
+
+\subsection{Domaine Sécurité}
+Le cœur du RBAC dynamique~: un \texttt{User} possède un \texttt{Role}, et \texttt{Role} et
+\texttt{Permission} sont liés par une association plusieurs-à-plusieurs configurable en base
+(ADR-001).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\columnwidth]{img/class_security.png}
+  \caption{Diagramme de classes — domaine Sécurité.}
+  \label{fig:class-sec}
+\end{figure}
+
+\subsection{Domaine Projet \& Équipe}
+Un \texttt{Project} est rattaché à un directeur (utilisateur), accueille une succession
+d'affectations de chef de projet et compose son équipe via des affectations de ressources. Une
+\texttt{Resource} peut être liée à un \texttt{User} (lien optionnel, ADR-022) lorsqu'elle dispose
+d'un compte.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/class_project_team.png}
+  \caption{Diagramme de classes — domaine Projet \& Équipe.}
+  \label{fig:class-proj}
+\end{figure}
+
+\subsection{Domaine Financier}
+Les jalons de facturation, les paiements, les missions et les avenants sont tous rattachés au
+projet. Le coût total d'une mission est calculé automatiquement.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.7\columnwidth]{img/class_financial.png}
+  \caption{Diagramme de classes — domaine Financier.}
+  \label{fig:class-fin}
+\end{figure}
+
+\subsection{Domaine Charges \& KPI}
+La charge planifiée et la charge réelle forment une série temporelle mensuelle, et le \texttt{TCC}
+porte le coût journalier par ressource et par année. Les indicateurs financiers sont historisés
+mensuellement dans \texttt{KpiSnapshot}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/class_kpi.png}
+  \caption{Diagramme de classes — domaine Charges \& KPI.}
+  \label{fig:class-kpi}
+\end{figure}
+
+\section{Diagrammes de séquence}
+
+\subsection{Connexion}
+Vérification du mot de passe (BCrypt), émission d'un jeton JWT, redirection vers le changement de
+mot de passe à la première connexion (ADR-010).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{img/seq_login.png}
+  \caption{Séquence~: connexion d'un utilisateur.}
+  \label{fig:seq-login}
+\end{figure}
+
+\subsection{Affecter un développeur~: permission \emph{et} portée}
+La permission \texttt{ASSIGN\_DEVELOPER} est d'abord vérifiée, puis la portée du projet (le
+Directeur accède à tous les projets~; le Chef de Projet doit en être le chef actif) — illustration
+concrète d'ADR-001, ADR-005 et ADR-021.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\columnwidth]{img/seq_assign_developer.png}
+  \caption{Séquence~: affectation d'un développeur (permission \(\wedge\) portée).}
+  \label{fig:seq-assign}
+\end{figure}
+
+\subsection{Saisir des charges réelles puis recalculer les KPI}
+La saisie est synchrone et brève~; le recalcul des KPI est \textbf{asynchrone} et déclenché après
+validation de la transaction. Le résultat est écrit dans \texttt{KpiSnapshot} (ADR-015).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/seq_submit_workload.png}
+  \caption{Séquence~: saisie des charges réelles et recalcul asynchrone des KPI.}
+  \label{fig:seq-kpi}
+\end{figure}
+
+\section{Diagrammes d'activité}
+
+\subsection{Cycle de vie d'un projet}
+Le flux nominal, organisé par couloir d'acteur, de la création des comptes par l'Administrateur
+jusqu'au pilotage par le Chef de Projet et la supervision du portefeuille par le Directeur.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.6\columnwidth]{img/act_project_lifecycle.png}
+  \caption{Diagramme d'activité~: cycle de vie d'un projet.}
+  \label{fig:act-life}
+\end{figure}
+
+\subsection{Pipeline de recalcul des KPI}
+Synthèse de l'approche hybride~: un événement métier déclenche, après commit, le recalcul des coûts
+et indicateurs, puis l'écriture du \texttt{KpiSnapshot} et la notification des tableaux de bord.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\columnwidth]{img/act_kpi_recompute.png}
+  \caption{Diagramme d'activité~: pipeline de recalcul hybride des KPI.}
+  \label{fig:act-kpi}
+\end{figure}
+
+\section*{Conclusion}
+Onze diagrammes simples et complémentaires couvrent les acteurs, les modules, le domaine, les flux
+clés et le cycle de vie d'un projet. Le modèle reste fidèle à l'architecture (RBAC dynamique,
+séparation \emph{User}/\emph{Resource}, série temporelle mensuelle, moteur hybride de KPI) tout en
+restant lisible pour un lecteur non développeur. Les diagrammes d'ingénierie détaillés
+(\texttt{docs/uml/engineering/}) restent disponibles pour la maintenance. La phase suivante entame
+l'implémentation, en commençant par l'authentification et le RBAC dynamique.

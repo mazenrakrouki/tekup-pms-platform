@@ -1,0 +1,80 @@
+@startuml class_kpi
+title Classes — Suivi des Charges et Indicateurs KPI
+
+top to bottom direction
+
+skinparam shadowing false
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C5F8A
+skinparam classHeaderBackgroundColor #D6E4F0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.5
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+hide circle
+
+class Projet {
+  - code : String
+  - nom : String
+  - budget : double
+}
+
+class Ressource {
+  - nomComplet : String
+  - profil : String
+}
+
+class TCC {
+  - annee : int
+  - coutAnnuelCharge : double
+  --
+  + getTauxJournalier() : double
+}
+
+class PlanCharge {
+  - mois : Date
+  - joursPlanifies : double
+}
+
+class ChargeReelle {
+  - mois : Date
+  - joursReels : double
+  - source : String
+  --
+  + valider() : void
+  + accepter() : void
+}
+
+class SnapshotKPI {
+  - moisSnapshot : Date
+  - eac : double
+  - margeEAC : double
+  - budgetRestant : double
+  - progressionFacturation : double
+  --
+  + calculerEAC() : double
+  + calculerMarge() : double
+}
+
+Ressource "1"   *--  "1..*" TCC          : coût par année
+Projet    "1"   *--  "*"    PlanCharge   : charge prévisionnelle
+PlanCharge "*"  -->  "1"    Ressource    : concerne >
+Projet    "1"   *--  "*"    ChargeReelle : charge réelle
+ChargeReelle "*" --> "1"    Ressource    : concerne >
+Projet    "1"   *--  "*"    SnapshotKPI  : historique KPI
+
+note right of SnapshotKPI
+  EAC = coûts réels
+  + coûts restants estimés.
+  Calculé automatiquement
+  après chaque saisie de charges.
+end note
+
+note right of ChargeReelle
+  source : MANUEL
+  ou import KIMAI
+end note
+
+@enduml

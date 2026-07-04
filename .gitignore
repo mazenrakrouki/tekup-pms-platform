@@ -1,0 +1,59 @@
+# ── Maven / Spring Boot ───────────────────────────────────────────
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+.mvn/
+
+# ── Angular / Node ────────────────────────────────────────────────
+frontend/pms-frontend/node_modules/
+frontend/pms-frontend/dist/
+frontend/pms-frontend/.angular/
+frontend/pms-frontend/*.js.map
+
+# ── IDE ───────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Variables d'environnement ─────────────────────────────────────
+.env
+.env.*
+*.env
+
+# ── Logs ──────────────────────────────────────────────────────────
+*.log
+*.log.err
+logs/
+
+# ── Rapports de test ──────────────────────────────────────────────
+/backend/target/surefire-reports/
+
+# ── Artefacts LaTeX ───────────────────────────────────────────────
+*.aux
+*.idx
+*.lof
+*.lot
+*.mtc
+*.mtc0
+*.toc
+*.run.xml
+*.blg
+*.bbl
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.out
+_build_*

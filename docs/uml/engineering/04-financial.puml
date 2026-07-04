@@ -1,0 +1,96 @@
+@startuml financial
+title Gestion Financière
+
+top to bottom direction
+
+skinparam shadowing false
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C5F8A
+skinparam classHeaderBackgroundColor #D6E4F0
+skinparam packageBackgroundColor #EAF2FF
+skinparam packageBorderColor #1F4E79
+skinparam packageFontColor #1F4E79
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.5
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+hide circle
+
+enum StatutJalon {
+  EN_ATTENTE
+  FACTURE
+  PAYE
+}
+
+class Projet {
+  - code : String
+  - nom : String
+  - budget : double
+  - typeEngagement : String
+}
+
+class JalonFacturation {
+  - numero : int
+  - pourcentage : double
+  - montant : double
+  - statut : StatutJalon
+  --
+  + facturer() : void
+  + enregistrerPaiement(montant : double) : void
+}
+
+class Paiement {
+  - montant : double
+  - datePaiement : Date
+}
+
+class Avenant {
+  - montant : double
+  - description : String
+  --
+  + calculerBudgetRevise() : double
+}
+
+class Mission {
+  - destination : String
+  - nombreNuits : int
+  - coutTotal : double
+  --
+  + calculerCout() : double
+}
+
+class Risque {
+  - libelle : String
+  - impactEstime : double
+  - traitement : String
+  --
+  + calculerImpactPondere() : double
+}
+
+Projet "1" *-- "*" JalonFacturation : jalons de facturation
+JalonFacturation "1" *-- "*" Paiement : paiements reçus
+Projet "1" *-- "*" Avenant          : avenants contractuels
+Projet "1" *-- "*" Mission           : missions terrain
+Projet "1" *-- "*" Risque            : risques financiers
+JalonFacturation --> StatutJalon     : statut >
+
+note right of JalonFacturation
+  La somme des pourcentages
+  des jalons ne doit pas
+  dépasser 100 %.
+end note
+
+note right of Avenant
+  Un avenant révise le budget
+  initial du projet.
+end note
+
+note bottom of Risque
+  traitement : REDUCTION,
+  ACCEPTATION, EVITEMENT,
+  TRANSFERT
+end note
+
+@enduml

@@ -1,0 +1,75 @@
+@startuml auth_rbac
+title Authentification et Contrôle d'Accès (RBAC)
+
+left to right direction
+
+skinparam shadowing false
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C5F8A
+skinparam classHeaderBackgroundColor #D6E4F0
+skinparam packageBackgroundColor #EAF2FF
+skinparam packageBorderColor #1F4E79
+skinparam packageFontColor #1F4E79
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.5
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+hide circle
+
+package "Sécurité" {
+
+  class Utilisateur {
+    - email : String
+    - motDePasse : String
+    - actif : boolean
+    - premierAcces : boolean
+    --
+    + authentifier() : JetonAcces
+    + changerMotDePasse() : void
+    + revoquerSession() : void
+  }
+
+  class Role {
+    - nom : String
+    --
+    + verifierPermission(code : String) : boolean
+  }
+
+  class Permission {
+    - code : String
+    - module : String
+  }
+
+  class JetonAcces {
+    - version : int
+    - dateExpiration : Date
+    --
+    + estValide() : boolean
+  }
+
+}
+
+Utilisateur "1" --> "1" Role       : possède >
+Role        "1" --> "*" Permission  : accorde >
+Utilisateur  .>       JetonAcces   : génère >
+
+note bottom of Role
+  Rôles prédéfinis :
+  ADMIN · DIRECTEUR
+  CHEF_PROJET · DEVELOPPEUR
+end note
+
+note right of Permission
+  Exemple :
+  code   = ASSIGN_DEVELOPER
+  module = PROJET
+end note
+
+note bottom of JetonAcces
+  La version permet la révocation
+  immédiate sans liste noire.
+end note
+
+@enduml

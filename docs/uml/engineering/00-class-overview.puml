@@ -1,0 +1,136 @@
+@startuml class_overview
+title Modèle de Domaine — Vue d'Ensemble (PMS)
+
+skinparam shadowing false
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C5F8A
+skinparam classHeaderBackgroundColor #D6E4F0
+skinparam packageBackgroundColor #EAF2FF
+skinparam packageBorderColor #1F4E79
+skinparam packageFontColor #1F4E79
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.5
+hide circle
+hide empty members
+
+package "Sécurité" {
+  class Utilisateur {
+    email : String
+    actif : boolean
+    + authentifier() : JetonAcces
+  }
+  class Role {
+    nom : String
+  }
+  class Permission {
+    code : String
+    module : String
+  }
+}
+
+package "Ressources" {
+  class Ressource {
+    nomComplet : String
+    profil : String
+    + calculerCoutAnnuel() : double
+  }
+  class TCC {
+    annee : int
+    coutAnnuelCharge : double
+  }
+}
+
+package "Projet & Équipe" {
+  class Projet {
+    code : String
+    nom : String
+    budget : double
+    statut : String
+    + calculerBudgetRestant() : double
+  }
+  class AffectationEquipe {
+    tauxAffectation : double
+    dateDebut : Date
+  }
+  class Livrable {
+    designation : String
+    livre : boolean
+  }
+}
+
+package "Facturation & Contrat" {
+  class JalonFacturation {
+    pourcentage : double
+    montant : double
+    statut : String
+    + facturer() : void
+  }
+  class Paiement {
+    montant : double
+    datePaiement : Date
+  }
+  class Avenant {
+    montant : double
+    + calculerBudgetRevise() : double
+  }
+  class Mission {
+    destination : String
+    coutTotal : double
+  }
+  class Risque {
+    libelle : String
+    impactEstime : double
+  }
+}
+
+package "Charges & KPI" {
+  class PlanCharge {
+    mois : Date
+    joursPlanifies : double
+  }
+  class ChargeReelle {
+    mois : Date
+    joursReels : double
+    source : String
+    + valider() : void
+  }
+  class SnapshotKPI {
+    moisSnapshot : Date
+    eac : double
+    margeEAC : double
+    + calculerEAC() : double
+  }
+}
+
+' --- Sécurité ---
+Utilisateur "1"    -->  "1"    Role              : possède >
+Role        "1"    -->  "*"    Permission         : accorde >
+
+' --- Ressources ---
+Ressource   "0..1" -->  "1"    Utilisateur        : peut être >
+Ressource   "1"    *--  "1..*" TCC                : coût annuel
+
+' --- Projet & Équipe ---
+Projet      "*"    -->  "1"    Utilisateur        : directeur >
+Projet      "*"    -->  "1..*" Utilisateur        : chefs de projet >
+Projet      "1"    *--  "*"    AffectationEquipe
+AffectationEquipe "*" --> "1"  Ressource          : concerne >
+Projet      "1"    *--  "*"    Livrable
+
+' --- Facturation & Contrat ---
+Projet      "1"    *--  "*"    JalonFacturation   : jalons >
+JalonFacturation "1" *-- "*"   Paiement           : paiements >
+Projet      "1"    *--  "*"    Avenant
+Projet      "1"    *--  "*"    Mission
+Projet      "1"    *--  "*"    Risque
+
+' --- Charges & KPI ---
+Projet      "1"    *--  "*"    PlanCharge
+PlanCharge  "*"    -->  "1"    Ressource          : concerne >
+Projet      "1"    *--  "*"    ChargeReelle
+ChargeReelle "*"   -->  "1"    Ressource          : concerne >
+Projet      "1"    *--  "*"    SnapshotKPI        : historique KPI >
+
+@enduml

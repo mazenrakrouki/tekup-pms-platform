@@ -1,0 +1,37 @@
+# ── Profil Développement ──────────────────────────────────────────
+# Activé avec : --spring.profiles.active=dev
+# Ou dans l'IDE : VM options = -Dspring.profiles.active=dev
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pms_dev
+    username: pms_dev
+    password: pms_dev
+
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    locations: classpath:db/migration
+    out-of-order: false
+
+  output:
+    ansi:
+      enabled: always   # Couleurs dans la console
+
+pms:
+  jwt:
+    access-token-expiration: 3600   # 1 heure en dev (plus pratique pour tester)
+    refresh-token-expiration: 86400 # 1 jour en dev
+
+logging:
+  level:
+    root: INFO
+    com.pms: DEBUG
+    org.springframework.security: DEBUG
+    org.flywaydb: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

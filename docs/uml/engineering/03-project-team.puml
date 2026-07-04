@@ -1,0 +1,92 @@
+@startuml project_team
+title Gestion de Projet et Équipe
+
+top to bottom direction
+
+skinparam shadowing false
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C5F8A
+skinparam classHeaderBackgroundColor #D6E4F0
+skinparam packageBackgroundColor #EAF2FF
+skinparam packageBorderColor #1F4E79
+skinparam packageFontColor #1F4E79
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.5
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+hide circle
+
+enum StatutProjet {
+  BROUILLON
+  ACTIF
+  EN_ATTENTE
+  TERMINE
+  ANNULE
+}
+
+class Projet {
+  - code : String
+  - nom : String
+  - client : String
+  - budget : double
+  - typeEngagement : String
+  - dateDebut : Date
+  - dateFin : Date
+  --
+  + assignerChefDeProjet(chef : Utilisateur) : void
+  + ajouterMembre(ressource : Ressource) : void
+  + calculerBudgetRestant() : double
+}
+
+class Utilisateur {
+  - nom : String
+  - prenom : String
+  - email : String
+}
+
+class Ressource {
+  - nomComplet : String
+  - profil : String
+}
+
+class AffectationEquipe {
+  - tauxAffectation : double
+  - dateDebut : Date
+  - dateFin : Date
+}
+
+class Livrable {
+  - designation : String
+  - livre : boolean
+  - dateLivraison : Date
+  --
+  + marquerLivre() : void
+}
+
+class Intervenant {
+  - categorie : String
+  - nom : String
+}
+
+Projet "*"  -->  "1"   Utilisateur     : directeur >
+Projet "*"  -->  "1..*" Utilisateur    : chefs de projet >
+Projet "1"  *--  "*"   AffectationEquipe
+AffectationEquipe "*" --> "1" Ressource : concerne >
+Projet "1"  *--  "*"   Livrable
+Projet "1"  *--  "*"   Intervenant
+Projet      -->         StatutProjet   : statut >
+
+note right of AffectationEquipe
+  Affectation partielle possible :
+  ex. 50 % sur deux projets.
+  Traçabilité des changements d'équipe.
+end note
+
+note right of Projet
+  typeEngagement :
+  FORFAIT (FP) ou REGIE (TM)
+end note
+
+@enduml

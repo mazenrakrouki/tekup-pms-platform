@@ -1,0 +1,207 @@
+\chapter{Implémentation --- Frontend Angular}
+
+\section*{Introduction}
+Ce chapitre présente l'implémentation de l'interface utilisateur de la plateforme PMS, développée
+avec \textbf{Angular~21}. Après avoir exposé l'architecture retenue (composants \emph{standalone},
+API \emph{Signals}, structure par fonctionnalités), nous détaillons les mécanismes transversaux~:
+authentification JWT côté client, application du contrôle d'accès dynamique (RBAC) à l'interface,
+communication avec l'API REST, puis les écrans métier et le reflet du périmètre de données
+(\emph{scope}) dans l'affichage.
+
+\section{Architecture de l'application frontend}
+
+L'application est une \emph{Single Page Application} (SPA) bâtie sur Angular~21 en mode
+\textbf{standalone} (sans \texttt{NgModule}), avec l'API \textbf{Signals} pour la gestion d'état
+réactive, \textbf{Bootstrap~5} et \texttt{bootstrap-icons} pour la présentation, et une interface
+entièrement en \textbf{français} (ADR-006).
+
+La structure de dossiers reproduit le découpage par fonctionnalités du backend (ADR-016), ce qui
+facilite la navigation et la traçabilité entre une fonctionnalité métier et son écran~:
+
+\begin{verbatim}
+src/app/
+  core/
+    models/        interfaces typees (Project, Mission, ...)
+    services/      acces API (ProjectService, AuthService, ...)
+    guards/        authGuard, permissionGuard
+    interceptors/  ajout du jeton JWT, rafraichissement
+  features/
+    auth/          login, changement de mot de passe
+    dashboard/     tableau de bord
+    projects/      liste, detail (6 onglets), formulaire
+    workload/  kpi/  billing/  missions/  governance/
+    resources/     tarifs journaliers (TCC)
+    admin/         gestion des utilisateurs
+  layout/shell/    cadre applicatif + menu lateral dynamique
+\end{verbatim}
+
+\noindent Chaque écran est un composant autonome chargé en \emph{lazy loading} via
+\texttt{loadComponent}, ce qui réduit la taille du \emph{bundle} initial et accélère le premier
+affichage (NFR-001).
+
+\section{Authentification et session côté client}
+
+À la connexion, le composant de \emph{login} appelle \texttt{POST /api/auth/login}~; la réponse
+enrichie contient le jeton d'accès, le jeton de rafraîchissement et le \textbf{contexte utilisateur}
+(courriel, nom complet, rôle et \textbf{ensemble des permissions}). Ce contexte est conservé par
+\texttt{AuthService} et constitue la source unique des décisions d'affichage.
+
+Un \textbf{intercepteur HTTP} ajoute automatiquement l'en-tête \texttt{Authorization: Bearer~<token>}
+à chaque requête sortante vers l'API. En cas de réponse \texttt{401}, il déclenche un appel à
+\texttt{POST /api/auth/refresh} puis rejoue la requête~; si le rafraîchissement échoue, l'utilisateur
+est redirigé vers l'écran de connexion.
+
+Le drapeau \texttt{firstLogin} impose le changement du mot de passe temporaire~: tant qu'il vaut
+\texttt{true}, un garde de route force la redirection vers \texttt{/change-password} et bloque l'accès
+au reste de l'application (ADR-010).
+
+\section{Application du RBAC dynamique à l'interface (ADR-001)}
+
+Le principe directeur du projet --- l'autorisation pilotée par \textbf{permission} et jamais par nom
+de rôle --- est appliqué de bout en bout, y compris dans l'interface. Trois niveaux coexistent~:
+
+\begin{itemize}
+  \item \textbf{Protection des routes}~: chaque route sensible est gardée par \texttt{authGuard}
+        (utilisateur authentifié) et \texttt{permissionGuard}, qui lit la permission requise depuis
+        les données de la route et la confronte au contexte utilisateur.
+  \item \textbf{Menu latéral dynamique}~: les entrées du menu sont générées à partir de l'ensemble
+        des permissions reçu à la connexion. Un utilisateur ne voit que les modules auxquels il a
+        droit (le développeur ne voit ni \emph{Facturation} ni \emph{Administration}).
+  \item \textbf{Masquage des actions}~: à l'intérieur d'un écran, les boutons d'écriture
+        (créer, modifier, supprimer, assigner) sont conditionnés par \texttt{auth.hasPermission(\dots)}.
+\end{itemize}
+
+\begin{verbatim}
+// Extrait — garde de permission appliqué à une route
+{
+  path: 'billing',
+  canActivate: [permissionGuard],
+  data: { permission: 'VIEW_BILLING' },
+  loadComponent: () => import('./features/billing/billing.component')
+                         .then(m => m.BillingComponent)
+}
+\end{verbatim}
+
+\noindent Cette protection côté client est un \textbf{confort d'usage}~: elle évite de présenter des
+actions interdites. L'\textbf{autorité} reste le backend, qui revérifie systématiquement chaque appel
+par \texttt{@PreAuthorize}. Un utilisateur qui contournerait l'interface se heurterait à une réponse
+\texttt{403}. Cette double application illustre concrètement le RBAC dynamique~: déplacer une
+responsabilité (accorder ou retirer une permission à un rôle) modifie simultanément le menu, les
+routes accessibles et les boutons visibles, \textbf{sans aucune modification de code}.
+
+\begin{longtable}{|m{3.4cm}|m{4.2cm}|m{6.2cm}|}
+\hline
+\textbf{Écran} & \textbf{Permission requise} & \textbf{Visibilité par défaut} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Tableau de bord & (authentifié) & Tous \\
+\hline
+Projets & \texttt{VIEW\_PROJECT} & Directeur, Chef de projet, Développeur \\
+\hline
+Charges & \texttt{VIEW\_WORKLOAD} & Directeur, Chef de projet, Développeur \\
+\hline
+KPI & \texttt{VIEW\_KPI} & Directeur, Chef de projet \\
+\hline
+Facturation & \texttt{VIEW\_BILLING} & Directeur, Chef de projet \\
+\hline
+Missions & \texttt{VIEW\_MISSION} & Directeur, Chef de projet, Développeur \\
+\hline
+Gouvernance & \texttt{VIEW\_GOVERNANCE} & Directeur, Chef de projet \\
+\hline
+Ressources (TCC) & \texttt{VIEW\_RESOURCES} & Administrateur, Directeur, Chef de projet \\
+\hline
+Administration & \texttt{MANAGE\_USERS} & Administrateur \\
+\hline
+\caption{Correspondance écran $\rightarrow$ permission $\rightarrow$ visibilité (matrice corrigée)}
+\label{tab:front-rbac}
+\end{longtable}
+
+\section{Communication avec l'API REST}
+
+Chaque module dispose d'un service injectable typé qui encapsule les appels HTTP vers l'API,
+dont l'adresse de base est centralisée dans le fichier d'environnement
+(\texttt{environment.apiUrl}). Les échanges sont fortement typés par des interfaces TypeScript
+miroir des DTO backend (\texttt{Project}, \texttt{Mission}, \texttt{JalonFacturation}\dots), ce qui
+fait remonter à la compilation toute incohérence de contrat. L'état local des écrans est porté par
+des \emph{Signals}, qui déclenchent un rafraîchissement ciblé de l'affichage à chaque mutation.
+
+\section{Écrans métier}
+
+\subsection{Cadre applicatif et tableau de bord}
+Le composant \texttt{Shell} fournit l'ossature commune~: barre supérieure, menu latéral dynamique et
+zone de contenu. Le tableau de bord présente une vue synthétique des projets accessibles à
+l'utilisateur connecté.
+
+\subsection{Projets et fiche d'identification}
+La gestion de projet est l'écran le plus riche. Le formulaire de création/édition reproduit la
+\textbf{fiche d'identification} du modèle Excel d'origine, organisée en trois sections~:
+
+\begin{itemize}
+  \item \textbf{Identification}~: code, nom, description, référence de contrat, client, bailleur de
+        fonds, modèle business (seul / groupement), type d'engagement (forfait / régie) et, pour les
+        utilisateurs habilités, le \textbf{chef de projet}.
+  \item \textbf{Contractuel \& financier}~: statut, dates, devise et taux de conversion vers le
+        dinar, budget initial, budget licences \& sous-traitance, provision pour pénalités.
+  \item \textbf{Charge vendue}~: workload vendu et workload de garantie (en jours-homme).
+\end{itemize}
+
+\noindent Le formulaire affiche en temps réel les \textbf{grandeurs calculées} --- budget converti en
+TND, provision pour risques (5~\%) et durée du contrat --- qui reproduisent exactement les valeurs de
+la fiche Excel de référence (projet A24001~: 1\,269\,861~TND, PPR 63\,493~TND, durée 731~jours). Le
+détail d'un projet est organisé en six onglets chargés à la demande~: informations \& KPI, équipe,
+charges, facturation, missions et gouvernance.
+
+\subsection{Saisie opérationnelle}
+Les écrans de saisie s'appuient sur des fenêtres modales Bootstrap pilotées par des \emph{Signals}.
+Ils couvrent l'ensemble du cycle métier~:
+
+\begin{longtable}{|m{3.6cm}|m{10.4cm}|}
+\hline
+\textbf{Module} & \textbf{Actions d'écriture disponibles dans l'interface} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Projets & Création/édition (fiche complète), assignation du chef de projet, gestion d'équipe (affecter / retirer) \\
+\hline
+Charges & Planification (plan de charge), saisie de charge réelle, validation \\
+\hline
+Facturation & Création de jalon, facturation d'un jalon, enregistrement de paiement, avenant (montant \emph{et} impact charge) \\
+\hline
+Missions & Création de mission et de ses composantes de coût (perdiem, billet, transport\dots) \\
+\hline
+Gouvernance & Risques, livrables (machine à états), demandes de changement, parties prenantes \\
+\hline
+Administration & Création / édition / désactivation d'utilisateurs \\
+\hline
+\caption{Couverture fonctionnelle des écrans de saisie}
+\label{tab:front-forms}
+\end{longtable}
+
+\subsection{Ressources et tableaux de bord financiers}
+L'écran \emph{Ressources} expose les tarifs journaliers (TCC) gérés par l'administrateur. Les
+indicateurs financiers (budget planifié, consommé, EAC, marge, taux de consommation) sont présentés
+sous forme de cartes et de barres de progression, réservés aux profils habilités (\texttt{VIEW\_KPI}).
+
+\section{Reflet du périmètre de données}
+
+L'interface respecte le périmètre d'autorisation appliqué par le backend (ADR-021)~: la liste des
+projets et leurs ressources rattachées sont filtrées selon la relation de l'utilisateur au projet.
+Le \textbf{directeur} (capacité d'accès portefeuille) voit l'ensemble des projets~; le \textbf{chef
+de projet} ne voit que les projets qu'il pilote~; le \textbf{développeur} uniquement ceux auxquels il
+est affecté. Toute tentative d'accès à un projet hors périmètre, même par saisie directe de l'URL,
+est rejetée par le serveur (\texttt{403}), garantissant qu'aucune donnée d'un autre projet ne fuite
+par l'interface.
+
+\section*{Conclusion}
+Le frontend Angular offre une interface complète, réactive et fidèle au modèle métier~: il reproduit
+la fiche d'identification du classeur Excel, couvre l'intégralité du cycle de saisie opérationnelle
+et applique le contrôle d'accès dynamique à trois niveaux (routes, menu, actions). Surtout, il
+illustre la valeur centrale du projet~: parce que toute décision d'affichage dérive de l'ensemble des
+permissions, une évolution de la politique d'autorisation se répercute instantanément sur l'interface
+sans modification de code. Le chapitre suivant présente la stratégie de tests, la revue de sécurité et
+la préparation au déploiement.

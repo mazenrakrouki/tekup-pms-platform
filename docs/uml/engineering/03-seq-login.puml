@@ -1,0 +1,59 @@
+@startuml seq_login
+title Séquence : Connexion et Authentification
+
+autonumber
+
+skinparam shadowing false
+skinparam sequenceArrowThickness 2
+skinparam sequenceParticipantBackgroundColor #D6E4F0
+skinparam sequenceParticipantBorderColor #2C5F8A
+skinparam sequenceActorBackgroundColor #FAFAFA
+skinparam sequenceActorBorderColor #2C5F8A
+skinparam sequenceGroupBackgroundColor #F0F8FF
+skinparam sequenceGroupBorderColor #2C5F8A
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+
+actor      "Utilisateur"              as User
+participant "Interface Web"           as UI
+participant "Service d'authentification" as AUTH
+participant "Base de données"         as DB
+
+User -> UI   : saisir email + mot de passe
+UI   -> AUTH : authentifier(email, motDePasse)
+AUTH -> DB   : rechercher l'utilisateur par email
+DB   --> AUTH : données du compte
+
+alt compte inactif ou introuvable
+  AUTH --> UI   : erreur d'authentification
+  UI   --> User : message d'erreur
+
+else mot de passe incorrect
+  AUTH --> UI   : identifiants invalides
+  UI   --> User : message d'erreur
+
+else authentification réussie
+  AUTH -> AUTH  : vérifier le mot de passe (hachage)
+  AUTH -> AUTH  : générer le jeton d'accès JWT
+  AUTH --> UI   : jeton JWT + indicateur première connexion
+
+  alt première connexion
+    UI --> User : redirection vers le changement de mot de passe
+    note right : L'accès est limité\njusqu'au changement de mot de passe.
+  else connexion normale
+    UI --> User : accès au tableau de bord
+  end
+
+end
+
+== Requête suivante ==
+
+User -> UI   : naviguer dans l'application
+UI   -> AUTH : vérifier le jeton JWT
+AUTH -> AUTH : valider la version du jeton
+AUTH --> UI  : accès autorisé ou refusé
+UI   --> User : contenu de la page
+
+@enduml

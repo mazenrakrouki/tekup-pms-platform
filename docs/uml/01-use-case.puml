@@ -1,0 +1,75 @@
+@startuml use_case
+title Diagramme de Cas d'Utilisation — Plateforme PMS
+
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam actorBackgroundColor #D6E4F0
+skinparam actorBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseFontSize 12
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+
+actor "Administrateur"           as Admin
+actor "Directeur"                as Dir
+actor "Chef de Projet"           as PM
+actor "Développeur"              as Dev
+actor "KIMAI\n(système externe)" as Kimai
+
+rectangle "Plateforme PMS" {
+
+  usecase "S'authentifier\n(changement de mot de passe\nà la première connexion)" as UC1
+  usecase "Gérer les utilisateurs et les droits"           as UC3
+  usecase "Créer et configurer un projet"                  as UC4
+  usecase "Affecter le chef de projet"                     as UC_PM
+  usecase "Constituer l'équipe projet"                     as UC5
+  usecase "Planifier la charge de travail"                 as UC6
+  usecase "Gérer la facturation et les jalons"             as UC7
+  usecase "Gérer les risques et les livrables"             as UC8
+  usecase "Saisir les charges réelles"                     as UC9
+  usecase "Importer les charges (KIMAI)"                   as UC10
+  usecase "Consulter les KPI et tableaux de bord"          as UC11
+
+}
+
+Admin --> UC1
+Admin --> UC3
+
+Dir --> UC1
+Dir --> UC4
+Dir --> UC_PM
+Dir --> UC5
+Dir --> UC11
+
+PM  --> UC1
+PM  --> UC5
+PM  --> UC6
+PM  --> UC7
+PM  --> UC8
+PM  --> UC11
+
+Dev --> UC1
+Dev --> UC9
+Dev --> UC11
+
+Kimai --> UC10
+
+note right of UC11
+  Vue filtrée selon le rôle :
+  Directeur → portefeuille complet
+  Chef de Projet → ses projets
+  Développeur → ses affectations
+end note
+
+note right of UC5
+  Directeur et Chef de Projet
+  partagent cette fonctionnalité.
+end note
+
+@enduml
