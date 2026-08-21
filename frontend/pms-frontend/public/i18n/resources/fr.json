@@ -1,0 +1,59 @@
+{
+  "breadcrumb": "Ressources humaines",
+  "title": "Ressources & TCC",
+  "subtitle": {
+    "one": "1 collaborateur · tarifs journaliers & coût annuel chargé",
+    "other": "{{count}} collaborateurs · tarifs journaliers & coût annuel chargé"
+  },
+  "search": {
+    "placeholder": "Rechercher un collaborateur…",
+    "aria": "Rechercher un collaborateur",
+    "reset": "Réinitialiser",
+    "results": {
+      "one": "1 résultat",
+      "other": "{{count}} résultats"
+    }
+  },
+  "table": {
+    "person": "Collaborateur",
+    "dailyRate": "Tarif journalier (TND)",
+    "tccRate": "Taux TCC",
+    "annualCost": "Coût annuel chargé",
+    "period": "Période",
+    "yearlyRates": "Tarifs par année",
+    "ongoing": "en cours"
+  },
+  "actions": {
+    "manage": "Gérer",
+    "view": "Voir",
+    "ratesAria": "{{action}} les tarifs annuels de {{name}}"
+  },
+  "empty": {
+    "noMatchTitle": "Aucun résultat",
+    "noMatchDesc": "Aucun collaborateur ne correspond à « {{query}} ».",
+    "noneTitle": "Aucune ressource",
+    "noneDesc": "Les collaborateurs et leurs tarifs apparaîtront ici."
+  },
+  "modal": {
+    "title": "Tarifs TCC par année — {{name}}",
+    "close": "Fermer",
+    "year": "Année",
+    "yearAria": "Année",
+    "dailyRate": "Tarif journalier (TND)",
+    "dailyRateAria": "Tarif journalier",
+    "tccRate": "Taux TCC",
+    "tccRateAria": "Taux TCC",
+    "removeTitle": "Supprimer",
+    "removeAria": "Supprimer l'année",
+    "emptyTitle": "Aucun tarif annuel défini",
+    "addYear": "Ajouter une année",
+    "save": "Enregistrer"
+  },
+  "msg": {
+    "loadFailed": "Impossible de charger les ressources.",
+    "duplicateYear": "Deux lignes ont la même année — corrigez avant d'enregistrer.",
+    "saved": "Tarifs annuels enregistrés.",
+    "savedToast": "Tarifs TCC enregistrés.",
+    "saveFailed": "Erreur lors de l'enregistrement."
+  }
+}

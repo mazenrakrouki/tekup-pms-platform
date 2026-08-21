@@ -1,41 +1,56 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ProjectService } from '../../core/services/project.service';
 import { MissionService } from '../../core/services/mission.service';
 import { TeamService } from '../../core/services/team.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ConfirmService } from '../../core/services/confirm.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Project } from '../../core/models/project.model';
 import { Mission, Composante } from '../../core/models/mission.model';
+import { ProjectPickerComponent } from '../../shared/project-picker/project-picker.component';
 
 @Component({
   selector: 'app-missions',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProjectPickerComponent],
+  styles: [`
+    /* Expanded composantes sub-row — token-based so it adapts to dark mode (replaces bg-light/bg-white) */
+    .sub-row > td { background: var(--surface-2); }
+    .sub-table { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); }
+    .sub-title { font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--text-2); }
+  `],
   template: `
     <div class="topbar">
-      <h5 class="mb-0 fw-semibold"><i class="bi bi-airplane me-2"></i>Missions</h5>
+      <div class="tb-breadcrumb">
+        <i class="bi bi-airplane" style="font-size:13px;color:var(--text-3)"></i>
+        <span class="bc-sep">›</span>
+        @if (selected()) {
+          <button class="bc-back-btn" (click)="clearSelection()" title="Retour à la sélection de projet">
+            <i class="bi bi-arrow-left"></i> Missions
+          </button>
+          <span class="bc-sep">›</span>
+          <span class="bc-curr">{{ selected()!.code }}</span>
+        } @else {
+          <span class="bc-curr">Missions</span>
+        }
+      </div>
     </div>
-    <div class="p-4">
+    <div class="page-body">
       <!-- Project selector -->
-      <div class="card mb-4">
-        <div class="card-body py-3">
-          <div class="d-flex align-items-center gap-3 flex-wrap">
-            <span class="fw-semibold text-muted small">PROJET :</span>
-            @for (p of projects(); track p.id) {
-              <button class="btn btn-sm"
-                      [class]="selected()?.id === p.id ? 'btn-primary' : 'btn-outline-secondary'"
-                      (click)="select(p)">
-                {{ p.code }}
-              </button>
-            }
-          </div>
-        </div>
+      <div class="mb-4">
+        <app-project-picker [selected]="selected()"
+                            featureTitle="Missions"
+                            featureIcon="bi-airplane"
+                            featureDescription="Gérez les missions et leurs composantes pour chacun de vos projets."
+                            (projectSelected)="select($event)" />
       </div>
 
       @if (selected()) {
         <div class="card">
-          <div class="card-header bg-white fw-semibold py-3 d-flex justify-content-between align-items-center">
+          <div class="card-header justify-content-between">
             <span><i class="bi bi-airplane me-2"></i>Missions — {{ selected()!.name }}</span>
             @if (canManage()) {
               <button class="btn btn-primary btn-sm" (click)="openMissionModal()">
@@ -45,7 +60,7 @@ import { Mission, Composante } from '../../core/models/mission.model';
           </div>
           <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
-              <thead class="table-light">
+              <thead>
                 <tr>
                   <th></th><th>Collaborateur</th><th>Objet</th><th>Lieu</th><th>Début</th><th>Fin</th><th>Durée</th>
                   @if (canManage()) { <th class="text-end">Actions</th> }
@@ -67,38 +82,40 @@ import { Mission, Composante } from '../../core/models/mission.model';
                     <td class="text-muted small">{{ duration(m) }} j</td>
                     <td class="text-end">
                       @if (canManage()) {
-                        <button class="btn btn-sm btn-outline-danger" (click)="deleteMission(m)" title="Supprimer">
+                        <button class="btn btn-sm btn-outline-danger" (click)="deleteMission(m)"
+                                title="Supprimer" aria-label="Supprimer la mission">
                           <i class="bi bi-trash"></i>
                         </button>
                       }
                     </td>
                   </tr>
                   @if (expandedId() === m.id) {
-                    <tr class="bg-light">
+                    <tr class="sub-row">
                       <td></td>
                       <td [attr.colspan]="canManage() ? 7 : 6" class="py-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                          <span class="fw-semibold small text-muted">COMPOSANTES DE COÛT</span>
+                          <span class="sub-title">COMPOSANTES DE COÛT</span>
                           @if (canManage()) {
                             <button class="btn btn-sm btn-outline-primary" (click)="openComposanteModal(m)">
                               <i class="bi bi-plus-lg me-1"></i>Ajouter une composante
                             </button>
                           }
                         </div>
-                        <table class="table table-sm mb-0 bg-white align-middle">
+                        <table class="table table-sm mb-0 sub-table align-middle">
                           <thead>
                             <tr><th>Type</th><th>Description</th><th class="text-end">Montant</th><th>Devise</th><th></th></tr>
                           </thead>
                           <tbody>
                             @for (c of composantes(); track c.id) {
                               <tr>
-                                <td><span class="badge bg-info text-dark">{{ c.typeComposante }}</span></td>
+                                <td><span class="badge-draft">{{ c.typeComposante }}</span></td>
                                 <td class="small">{{ c.description ?? '—' }}</td>
                                 <td class="text-end fw-semibold">{{ c.montant | number:'1.0-2' }}</td>
                                 <td>{{ c.devise }}</td>
                                 <td class="text-end">
                                   @if (canManage()) {
-                                    <button class="btn btn-sm btn-outline-danger" (click)="deleteComposante(m, c)">
+                                    <button class="btn btn-sm btn-outline-danger" (click)="deleteComposante(m, c)"
+                                            title="Supprimer" aria-label="Supprimer la composante">
                                       <i class="bi bi-trash"></i>
                                     </button>
                                   }
@@ -124,16 +141,18 @@ import { Mission, Composante } from '../../core/models/mission.model';
                   }
                 }
                 @empty {
-                  <tr><td colspan="8" class="text-center py-4 text-muted">Aucune mission</td></tr>
+                  <tr><td colspan="8">
+                    <div class="empty-state">
+                      <div class="es-icon"><i class="bi bi-airplane"></i></div>
+                      <div class="es-title">Aucune mission</div>
+                      <div class="es-desc">Planifiez les déplacements et missions de l'équipe.</div>
+                      @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openMissionModal()"><i class="bi bi-plus-lg me-1"></i>Nouvelle mission</button> }
+                    </div>
+                  </td></tr>
                 }
               </tbody>
             </table>
           </div>
-        </div>
-      } @else {
-        <div class="text-center py-5 text-muted">
-          <i class="bi bi-airplane fs-1 d-block mb-3 opacity-25"></i>
-          Sélectionnez un projet pour afficher ses missions
         </div>
       }
     </div>
@@ -150,7 +169,7 @@ import { Mission, Composante } from '../../core/models/mission.model';
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Collaborateur <span class="text-danger">*</span></label>
+                <label class="form-label">Collaborateur <span class="text-danger">*</span></label>
                 <select class="form-select" [(ngModel)]="missionForm.userId">
                   <option [value]="0" disabled>Sélectionner</option>
                   @for (t of teamMembers(); track t.userId) {
@@ -159,20 +178,20 @@ import { Mission, Composante } from '../../core/models/mission.model';
                 </select>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Objet <span class="text-danger">*</span></label>
+                <label class="form-label">Objet <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" [(ngModel)]="missionForm.objet" placeholder="Objet de la mission">
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Lieu</label>
+                <label class="form-label">Lieu</label>
                 <input type="text" class="form-control" [(ngModel)]="missionForm.lieu" placeholder="Ville / pays">
               </div>
               <div class="row g-3">
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Date début <span class="text-danger">*</span></label>
+                  <label class="form-label">Date début <span class="text-danger">*</span></label>
                   <input type="date" class="form-control" [(ngModel)]="missionForm.dateDebut">
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Date fin <span class="text-danger">*</span></label>
+                  <label class="form-label">Date fin <span class="text-danger">*</span></label>
                   <input type="date" class="form-control" [(ngModel)]="missionForm.dateFin">
                 </div>
               </div>
@@ -202,7 +221,7 @@ import { Mission, Composante } from '../../core/models/mission.model';
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Type <span class="text-danger">*</span></label>
+                <label class="form-label">Type <span class="text-danger">*</span></label>
                 <select class="form-select" [(ngModel)]="composanteForm.typeComposante">
                   <option value="PERDIEM">Per diem</option>
                   <option value="BILLET">Billet</option>
@@ -213,11 +232,11 @@ import { Mission, Composante } from '../../core/models/mission.model';
               </div>
               <div class="row g-3 mb-3">
                 <div class="col-7">
-                  <label class="form-label fw-semibold">Montant <span class="text-danger">*</span></label>
+                  <label class="form-label">Montant <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" [(ngModel)]="composanteForm.montant" min="0" step="0.01">
                 </div>
                 <div class="col-5">
-                  <label class="form-label fw-semibold">Devise <span class="text-danger">*</span></label>
+                  <label class="form-label">Devise <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="composanteForm.devise">
                     <option value="TND">TND</option>
                     <option value="EUR">EUR</option>
@@ -226,7 +245,7 @@ import { Mission, Composante } from '../../core/models/mission.model';
                 </div>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Description</label>
+                <label class="form-label">Description</label>
                 <input type="text" class="form-control" [(ngModel)]="composanteForm.description" placeholder="Optionnel">
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
@@ -247,8 +266,12 @@ import { Mission, Composante } from '../../core/models/mission.model';
 export class MissionsComponent implements OnInit {
   private readonly projectSvc = inject(ProjectService);
   private readonly missionSvc = inject(MissionService);
-  private readonly teamSvc = inject(TeamService);
-  private readonly auth = inject(AuthService);
+  private readonly teamSvc    = inject(TeamService);
+  private readonly auth       = inject(AuthService);
+  private readonly confirm    = inject(ConfirmService);
+  private readonly toast      = inject(ToastService);
+  private readonly router     = inject(Router);
+  private readonly route      = inject(ActivatedRoute);
 
   canManage = () => this.auth.hasPermission('MANAGE_MISSION');
 
@@ -270,16 +293,36 @@ export class MissionsComponent implements OnInit {
   composanteForm = { typeComposante: 'PERDIEM', montant: 0, devise: 'TND', description: '' };
 
   ngOnInit(): void {
-    this.projectSvc.list().subscribe(list => this.projects.set(list));
+    this.projectSvc.listAll().subscribe(list => {
+      this.projects.set(list);
+      this.route.queryParamMap.subscribe(params => {
+        const pid = params.get('p');
+        if (!pid) { this.selected.set(null); return; }
+        const project = list.find(p => String(p.id) === pid);
+        if (project && this.selected()?.id !== project.id) {
+          this.selected.set(project);
+          this.expandedId.set(null);
+          this.missionSvc.list(project.id).subscribe(d => this.missions.set(d));
+          this.teamSvc.list(project.id).subscribe(members =>
+            this.teamMembers.set(members.map(m => ({ userId: m.userId, userFullName: m.userFullName })))
+          );
+        }
+      });
+    });
   }
 
   select(p: Project): void {
     this.selected.set(p);
+    this.router.navigate([], { queryParams: { p: p.id }, replaceUrl: false });
     this.expandedId.set(null);
     this.missionSvc.list(p.id).subscribe(d => this.missions.set(d));
     this.teamSvc.list(p.id).subscribe(members =>
       this.teamMembers.set(members.map(m => ({ userId: m.userId, userFullName: m.userFullName })))
     );
+  }
+
+  clearSelection(): void {
+    this.router.navigate([], { queryParams: {} });
   }
 
   duration(m: Mission): number {
@@ -315,17 +358,21 @@ export class MissionsComponent implements OnInit {
     this.missionSvc.create(this.selected()!.id, f).subscribe({
       next: () => {
         this.missionSvc.list(this.selected()!.id).subscribe(d => this.missions.set(d));
-        this.showMissionModal.set(false); this.saving.set(false);
+        this.showMissionModal.set(false); this.saving.set(false); this.toast.success('Mission créée.');
       },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
-  deleteMission(m: Mission): void {
-    if (!confirm(`Supprimer la mission "${m.objet}" ?`)) return;
-    this.missionSvc.delete(this.selected()!.id, m.id).subscribe(() => {
-      this.missionSvc.list(this.selected()!.id).subscribe(d => this.missions.set(d));
-      if (this.expandedId() === m.id) this.expandedId.set(null);
+  async deleteMission(m: Mission): Promise<void> {
+    if (!await this.confirm.ask(`Supprimer la mission « ${m.objet} » ?`, 'Supprimer la mission')) return;
+    this.missionSvc.delete(this.selected()!.id, m.id).subscribe({
+      next: () => {
+        this.missionSvc.list(this.selected()!.id).subscribe(d => this.missions.set(d));
+        if (this.expandedId() === m.id) this.expandedId.set(null);
+        this.toast.success('Mission supprimée.');
+      },
+      error: () => this.toast.error('Suppression impossible.')
     });
   }
 
@@ -346,16 +393,17 @@ export class MissionsComponent implements OnInit {
     this.missionSvc.createComposante(this.selected()!.id, this.composanteMissionId, this.composanteForm).subscribe({
       next: () => {
         this.missionSvc.listComposantes(this.selected()!.id, this.composanteMissionId).subscribe(d => this.composantes.set(d));
-        this.showComposanteModal.set(false); this.saving.set(false);
+        this.showComposanteModal.set(false); this.saving.set(false); this.toast.success('Composante ajoutée.');
       },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
-  deleteComposante(m: Mission, c: Composante): void {
-    if (!confirm('Supprimer cette composante ?')) return;
-    this.missionSvc.deleteComposante(this.selected()!.id, m.id, c.id).subscribe(() =>
-      this.missionSvc.listComposantes(this.selected()!.id, m.id).subscribe(d => this.composantes.set(d))
-    );
+  async deleteComposante(m: Mission, c: Composante): Promise<void> {
+    if (!await this.confirm.ask('Supprimer cette composante ?', 'Supprimer la composante')) return;
+    this.missionSvc.deleteComposante(this.selected()!.id, m.id, c.id).subscribe({
+      next: () => { this.missionSvc.listComposantes(this.selected()!.id, m.id).subscribe(d => this.composantes.set(d)); this.toast.success('Composante supprimée.'); },
+      error: () => this.toast.error('Suppression impossible.')
+    });
   }
 }

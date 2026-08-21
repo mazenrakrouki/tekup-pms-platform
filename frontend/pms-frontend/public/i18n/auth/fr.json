@@ -1,0 +1,37 @@
+{
+  "hero": {
+    "title": "Précision et Contrôle pour vos Projets d'Entreprise",
+    "subtitle": "Gérez les charges, la facturation et les missions complexes avec une architecture robuste conçue pour les Directeurs et Administrateurs."
+  },
+  "footer": {
+    "rights": "© 2026 ST2I PMS · Tous droits réservés."
+  },
+  "login": {
+    "welcome": "Bienvenue",
+    "subtitle": "Saisissez vos identifiants pour accéder à la plateforme.",
+    "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter.",
+    "email": "Adresse Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "rememberMe": "Se souvenir de moi pendant 30 jours",
+    "submit": "Se connecter",
+    "supportQuestion": "Problème de connexion ?",
+    "contactSupport": "Contacter le Support IT",
+    "errors": {
+      "disabled": "Compte désactivé. Contactez l'administrateur.",
+      "tooManyAttempts": "Trop de tentatives. Réessayez dans quelques minutes.",
+      "invalid": "Email ou mot de passe incorrect."
+    }
+  },
+  "changePassword": {
+    "title": "Changement de mot de passe",
+    "subtitle": "Votre mot de passe doit être changé avant de continuer.",
+    "current": "Mot de passe actuel",
+    "new": "Nouveau mot de passe",
+    "confirm": "Confirmer le nouveau mot de passe",
+    "hint": "Minimum 8 caractères, une majuscule, un chiffre.",
+    "successRedirect": "Mot de passe changé. Redirection…",
+    "mismatch": "Les mots de passe ne correspondent pas.",
+    "error": "Erreur lors du changement de mot de passe."
+  }
+}

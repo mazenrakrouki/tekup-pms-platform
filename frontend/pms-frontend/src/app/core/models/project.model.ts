@@ -38,8 +38,12 @@ export interface Project {
   soldWorkloadDays?: number;
   warrantyWorkloadDays?: number;
   penaltyProvision?: number;
+  margeNetteVendue?: number;   // baseline (0.4412 = 44,12 %)
 
   archived?: boolean;
+
+  // Audit
+  createdAt?: string;   // ISO LocalDateTime (ex. "2026-07-14T08:24:06")
 
   // Calculés
   durationDays?: number;
@@ -56,17 +60,18 @@ export interface ProjectRequest {
   endDate?: string;
   initialBudget?: number;
   directorId?: number;
-  chefProjetId?: number;
+  chefProjetId?: number | null;
 
   contractId?: string;
   client?: string;
   funder?: string;
-  businessModel?: BusinessModel;
-  engagementType?: EngagementType;
+  businessModel?: BusinessModel | null;
+  engagementType?: EngagementType | null;
   currency?: string;
   exchangeRateToTnd?: number;
   licenseSubcontractBudget?: number;
   soldWorkloadDays?: number;
   warrantyWorkloadDays?: number;
   penaltyProvision?: number;
+  margeNetteVendue?: number;
 }

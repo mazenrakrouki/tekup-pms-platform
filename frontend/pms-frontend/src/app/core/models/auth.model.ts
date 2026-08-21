@@ -6,7 +6,6 @@ export interface LoginRequest {
 export interface AuthResponse {
   userId: number;
   accessToken: string;
-  refreshToken: string;
   firstLogin: boolean;
   email: string;
   fullName: string;

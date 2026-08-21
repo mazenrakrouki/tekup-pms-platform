@@ -8,6 +8,11 @@ export interface User {
   firstLogin: boolean;
 }
 
+export interface UserCreateResult {
+  user: User;
+  initialPassword: string;
+}
+
 export interface Resource {
   id: number;
   userId: number;

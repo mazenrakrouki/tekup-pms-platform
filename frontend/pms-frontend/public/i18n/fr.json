@@ -1,0 +1,143 @@
+{
+  "app": {
+    "name": "PMS",
+    "tagline": "ST2I Enterprise"
+  },
+  "lang": {
+    "label": "Langue",
+    "french": "Français",
+    "english": "English",
+    "switch": "Changer de langue"
+  },
+  "theme": {
+    "toggle": "Changer de thème",
+    "light": "Mode clair",
+    "dark": "Mode sombre"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "remove": "Retirer",
+    "add": "Ajouter",
+    "create": "Créer",
+    "search": "Rechercher...",
+    "searchByName": "Rechercher par nom...",
+    "filter": "Filtrer",
+    "all": "Tous",
+    "actions": "Actions",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "yes": "Oui",
+    "no": "Non",
+    "loading": "Chargement...",
+    "saving": "Enregistrement...",
+    "noResults": "Aucun résultat",
+    "required": "Requis",
+    "optional": "Facultatif",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "page": "Page",
+    "of": "sur",
+    "result": "résultat",
+    "results": "résultats",
+    "copy": "Copier",
+    "copied": "Copié",
+    "logout": "Déconnexion",
+    "profile": "Profil",
+    "date": "Date",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "createdAt": "Date de création",
+    "from": "Du",
+    "to": "Au",
+    "since": "Depuis",
+    "until": "Jusqu'au",
+    "amount": "Montant",
+    "total": "Total",
+    "name": "Nom",
+    "email": "Email",
+    "role": "Rôle",
+    "description": "Description",
+    "reset": "Réinitialiser",
+    "reactivate": "Réactiver",
+    "deactivate": "Désactiver",
+    "restore": "Restaurer",
+    "archive": "Archiver",
+    "unarchive": "Désarchiver"
+  },
+  "nav": {
+    "section": {
+      "overview": "Vue Générale",
+      "teamWorkload": "Équipe & Charges",
+      "finance": "Finance",
+      "governance": "Gouvernance",
+      "administration": "Administration",
+      "projects": "Projets"
+    },
+    "dashboard": "Tableau de bord",
+    "projects": "Mes projets",
+    "newProject": "Nouveau projet",
+    "resources": "Ressources TCC",
+    "workload": "Charges",
+    "workloadPlan": "Plan de charge",
+    "workloadActuals": "Charges réelles",
+    "kpi": "KPIs",
+    "billing": "Facturation",
+    "missions": "Missions",
+    "governance": "Gouvernance",
+    "risks": "Risques",
+    "deliverables": "Livrables",
+    "changes": "Changements",
+    "users": "Utilisateurs",
+    "roles": "Rôles",
+    "permissions": "Permissions"
+  },
+  "roles": {
+    "ADMIN": "Administrateur",
+    "DIRECTEUR": "Directeur",
+    "CHEF_PROJET": "Chef de Projet",
+    "DEVELOPPEUR": "Développeur"
+  },
+  "status": {
+    "DRAFT": "Brouillon",
+    "ACTIVE": "Actif",
+    "ON_HOLD": "En pause",
+    "COMPLETED": "Terminé",
+    "CANCELLED": "Annulé"
+  },
+  "validation": {
+    "required": "Ce champ est requis.",
+    "allRequired": "Tous les champs sont requis.",
+    "email": "Adresse email invalide.",
+    "minLength": "Trop court (minimum {{ min }} caractères).",
+    "maxLength": "Trop long (maximum {{ max }} caractères).",
+    "passwordMismatch": "Les mots de passe ne correspondent pas.",
+    "genericError": "Une erreur est survenue.",
+    "saveError": "Erreur lors de l'enregistrement.",
+    "loadError": "Erreur lors du chargement."
+  },
+  "notification": {
+    "saved": "Enregistré.",
+    "deleted": "Supprimé.",
+    "created": "Créé avec succès.",
+    "updated": "Mis à jour.",
+    "error": "Une erreur est survenue."
+  },
+  "pagination": {
+    "pageOf": "Page {{ current }} sur {{ total }}",
+    "previous": "Page précédente",
+    "next": "Page suivante",
+    "range": "{{from}}–{{to}} sur {{total}}",
+    "itemsPerPage": "Éléments par page",
+    "perPage": "{{size}} / page"
+  },
+  "palette": {
+    "placeholder": "Rechercher une page ou un projet..."
+  }
+}

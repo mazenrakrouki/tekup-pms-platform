@@ -1,0 +1,59 @@
+{
+  "breadcrumb": "Human resources",
+  "title": "Resources & TCC",
+  "subtitle": {
+    "one": "1 person · daily rates and annual loaded cost",
+    "other": "{{count}} people · daily rates and annual loaded cost"
+  },
+  "search": {
+    "placeholder": "Search a person…",
+    "aria": "Search a person",
+    "reset": "Clear",
+    "results": {
+      "one": "1 result",
+      "other": "{{count}} results"
+    }
+  },
+  "table": {
+    "person": "Person",
+    "dailyRate": "Daily rate (TND)",
+    "tccRate": "TCC rate",
+    "annualCost": "Annual loaded cost",
+    "period": "Period",
+    "yearlyRates": "Yearly rates",
+    "ongoing": "ongoing"
+  },
+  "actions": {
+    "manage": "Manage",
+    "view": "View",
+    "ratesAria": "{{action}} yearly rates for {{name}}"
+  },
+  "empty": {
+    "noMatchTitle": "No matches",
+    "noMatchDesc": "No person matches “{{query}}”.",
+    "noneTitle": "No resources",
+    "noneDesc": "People and their rates will appear here."
+  },
+  "modal": {
+    "title": "TCC rates by year — {{name}}",
+    "close": "Close",
+    "year": "Year",
+    "yearAria": "Year",
+    "dailyRate": "Daily rate (TND)",
+    "dailyRateAria": "Daily rate",
+    "tccRate": "TCC rate",
+    "tccRateAria": "TCC rate",
+    "removeTitle": "Remove",
+    "removeAria": "Remove this year",
+    "emptyTitle": "No yearly rate defined",
+    "addYear": "Add a year",
+    "save": "Save"
+  },
+  "msg": {
+    "loadFailed": "Could not load resources.",
+    "duplicateYear": "Two rows use the same year. Fix this before saving.",
+    "saved": "Yearly rates saved.",
+    "savedToast": "TCC rates saved.",
+    "saveFailed": "Could not save the rates."
+  }
+}

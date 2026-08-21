@@ -1,0 +1,143 @@
+{
+  "app": {
+    "name": "PMS",
+    "tagline": "ST2I Enterprise"
+  },
+  "lang": {
+    "label": "Language",
+    "french": "Français",
+    "english": "English",
+    "switch": "Change language"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light mode",
+    "dark": "Dark mode"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirm": "Confirm",
+    "edit": "Edit",
+    "delete": "Delete",
+    "remove": "Remove",
+    "add": "Add",
+    "create": "Create",
+    "search": "Search...",
+    "searchByName": "Search by name...",
+    "filter": "Filter",
+    "all": "All",
+    "actions": "Actions",
+    "status": "Status",
+    "active": "Active",
+    "inactive": "Inactive",
+    "yes": "Yes",
+    "no": "No",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "noResults": "No results",
+    "required": "Required",
+    "optional": "Optional",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "page": "Page",
+    "of": "of",
+    "result": "result",
+    "results": "results",
+    "copy": "Copy",
+    "copied": "Copied",
+    "logout": "Log out",
+    "profile": "Profile",
+    "date": "Date",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "createdAt": "Created on",
+    "from": "From",
+    "to": "To",
+    "since": "Since",
+    "until": "Until",
+    "amount": "Amount",
+    "total": "Total",
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "description": "Description",
+    "reset": "Reset",
+    "reactivate": "Reactivate",
+    "deactivate": "Deactivate",
+    "restore": "Restore",
+    "archive": "Archive",
+    "unarchive": "Unarchive"
+  },
+  "nav": {
+    "section": {
+      "overview": "Overview",
+      "teamWorkload": "Team & Workload",
+      "finance": "Finance",
+      "governance": "Governance",
+      "administration": "Administration",
+      "projects": "Projects"
+    },
+    "dashboard": "Dashboard",
+    "projects": "My Projects",
+    "newProject": "New Project",
+    "resources": "TCC Resources",
+    "workload": "Workload",
+    "workloadPlan": "Workload Plan",
+    "workloadActuals": "Actual Workload",
+    "kpi": "KPIs",
+    "billing": "Billing",
+    "missions": "Missions",
+    "governance": "Governance",
+    "risks": "Risks",
+    "deliverables": "Deliverables",
+    "changes": "Changes",
+    "users": "Users",
+    "roles": "Roles",
+    "permissions": "Permissions"
+  },
+  "roles": {
+    "ADMIN": "Administrator",
+    "DIRECTEUR": "Director",
+    "CHEF_PROJET": "Project Manager",
+    "DEVELOPPEUR": "Developer"
+  },
+  "status": {
+    "DRAFT": "Draft",
+    "ACTIVE": "Active",
+    "ON_HOLD": "On Hold",
+    "COMPLETED": "Completed",
+    "CANCELLED": "Cancelled"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "allRequired": "All fields are required.",
+    "email": "Invalid email address.",
+    "minLength": "Too short (minimum {{ min }} characters).",
+    "maxLength": "Too long (maximum {{ max }} characters).",
+    "passwordMismatch": "Passwords do not match.",
+    "genericError": "An error occurred.",
+    "saveError": "Error while saving.",
+    "loadError": "Error while loading."
+  },
+  "notification": {
+    "saved": "Saved.",
+    "deleted": "Deleted.",
+    "created": "Successfully created.",
+    "updated": "Updated.",
+    "error": "An error occurred."
+  },
+  "pagination": {
+    "pageOf": "Page {{ current }} of {{ total }}",
+    "previous": "Previous page",
+    "next": "Next page",
+    "range": "{{from}}–{{to}} of {{total}}",
+    "itemsPerPage": "Items per page",
+    "perPage": "{{size}} / page"
+  },
+  "palette": {
+    "placeholder": "Search a page or a project..."
+  }
+}

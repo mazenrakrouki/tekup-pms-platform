@@ -1,0 +1,72 @@
+{
+  "breadcrumb": "Tableau de bord",
+  "admin": {
+    "title": "Administration",
+    "subtitle": "",
+    "metrics": {
+      "users": "Utilisateurs",
+      "total": "total",
+      "activeAccounts": "Comptes Actifs",
+      "active": "actifs",
+      "roles": "Rôles",
+      "permissions": "Permissions",
+      "tccResources": "Ressources TCC"
+    },
+    "modulesTitle": "Modules d'administration",
+    "access": "Accéder",
+    "soon": "Bientôt",
+    "modules": {
+      "users": { "title": "Utilisateurs", "sub": "Comptes & accès", "desc": "" },
+      "tcc": { "title": "TCC", "sub": "Taux de coût chargé", "desc": "" },
+      "roles": { "title": "Rôles", "sub": "Rôles & affectations", "desc": "" },
+      "permissions": { "title": "Permissions", "sub": "Référentiel RBAC", "desc": "" }
+    }
+  },
+  "director": {
+    "title": "Vue Stratégique du Portfolio",
+    "subtitle": "",
+    "allProjects": "Tous les projets",
+    "totalProjects": "Total Projets",
+    "portfolio": "portfolio",
+    "globalView": "Vue globale",
+    "active": "Actifs",
+    "inProgress": "en cours",
+    "onHold": "En Pause",
+    "paused": "pause",
+    "completed": "Terminés",
+    "portfolioTitle": "Portfolio Projets",
+    "viewAll": "Voir tout",
+    "breakdownTitle": "Répartition par Statut"
+  },
+  "chef": {
+    "title": "Mes Projets",
+    "subtitle": "",
+    "myProjects": "Mes Projets",
+    "inProgress": "En Cours",
+    "totalBudget": "Budget Total (TND)",
+    "drafts": "Brouillons",
+    "assignedProjects": "Projets assignés",
+    "manage": "Gérer",
+    "noAssigned": "Aucun projet assigné",
+    "noAssignedDesc": ""
+  },
+  "developer": {
+    "title": "Mon Espace de Travail",
+    "subtitle": "",
+    "projects": "Projets",
+    "active": "Actifs",
+    "completed": "Terminés",
+    "recentProjects": "Projets récents",
+    "notAssigned": ""
+  },
+  "table": {
+    "project": "Projet",
+    "projectManager": "Chef de Projet",
+    "client": "Client",
+    "period": "Période",
+    "budgetTnd": "Budget (TND)",
+    "noProjects": "Aucun projet",
+    "noProjectsDesc": ""
+  },
+  "accessDenied": "Accès refusé. Vous n'êtes pas autorisé à accéder à cette page."
+}

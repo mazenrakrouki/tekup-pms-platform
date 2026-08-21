@@ -1,0 +1,72 @@
+{
+  "breadcrumb": "Dashboard",
+  "admin": {
+    "title": "Administration",
+    "subtitle": "",
+    "metrics": {
+      "users": "Users",
+      "total": "total",
+      "activeAccounts": "Active Accounts",
+      "active": "active",
+      "roles": "Roles",
+      "permissions": "Permissions",
+      "tccResources": "TCC Resources"
+    },
+    "modulesTitle": "Administration modules",
+    "access": "Open",
+    "soon": "Soon",
+    "modules": {
+      "users": { "title": "Users", "sub": "Accounts & access", "desc": "" },
+      "tcc": { "title": "TCC", "sub": "Loaded cost rate", "desc": "" },
+      "roles": { "title": "Roles", "sub": "Roles & assignments", "desc": "" },
+      "permissions": { "title": "Permissions", "sub": "RBAC catalog", "desc": "" }
+    }
+  },
+  "director": {
+    "title": "Strategic Portfolio View",
+    "subtitle": "",
+    "allProjects": "All projects",
+    "totalProjects": "Total Projects",
+    "portfolio": "portfolio",
+    "globalView": "Global view",
+    "active": "Active",
+    "inProgress": "in progress",
+    "onHold": "On Hold",
+    "paused": "paused",
+    "completed": "Completed",
+    "portfolioTitle": "Project Portfolio",
+    "viewAll": "View all",
+    "breakdownTitle": "Breakdown by Status"
+  },
+  "chef": {
+    "title": "My Projects",
+    "subtitle": "",
+    "myProjects": "My Projects",
+    "inProgress": "In Progress",
+    "totalBudget": "Total Budget (TND)",
+    "drafts": "Drafts",
+    "assignedProjects": "Assigned projects",
+    "manage": "Manage",
+    "noAssigned": "No assigned project",
+    "noAssignedDesc": ""
+  },
+  "developer": {
+    "title": "My Workspace",
+    "subtitle": "",
+    "projects": "Projects",
+    "active": "Active",
+    "completed": "Completed",
+    "recentProjects": "Recent projects",
+    "notAssigned": ""
+  },
+  "table": {
+    "project": "Project",
+    "projectManager": "Project Manager",
+    "client": "Client",
+    "period": "Period",
+    "budgetTnd": "Budget (TND)",
+    "noProjects": "No project",
+    "noProjectsDesc": ""
+  },
+  "accessDenied": "Access denied. You are not authorized to access this page."
+}

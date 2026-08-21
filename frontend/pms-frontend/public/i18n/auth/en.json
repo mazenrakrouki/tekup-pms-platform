@@ -1,0 +1,37 @@
+{
+  "hero": {
+    "title": "Precision and Control for your Enterprise Projects",
+    "subtitle": "Manage workload, billing and complex missions with a robust architecture designed for Directors and Administrators."
+  },
+  "footer": {
+    "rights": "© 2026 ST2I PMS · All rights reserved."
+  },
+  "login": {
+    "welcome": "Welcome",
+    "subtitle": "Enter your credentials to access the platform.",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "email": "Email Address",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "rememberMe": "Remember me for 30 days",
+    "submit": "Sign in",
+    "supportQuestion": "Trouble signing in?",
+    "contactSupport": "Contact IT Support",
+    "errors": {
+      "disabled": "Account disabled. Contact the administrator.",
+      "tooManyAttempts": "Too many attempts. Try again in a few minutes.",
+      "invalid": "Incorrect email or password."
+    }
+  },
+  "changePassword": {
+    "title": "Change password",
+    "subtitle": "Your password must be changed before continuing.",
+    "current": "Current password",
+    "new": "New password",
+    "confirm": "Confirm new password",
+    "hint": "At least 8 characters, one uppercase letter, one digit.",
+    "successRedirect": "Password changed. Redirecting…",
+    "mismatch": "Passwords do not match.",
+    "error": "Error while changing the password."
+  }
+}

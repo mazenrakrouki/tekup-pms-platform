@@ -1,70 +1,71 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ProjectService } from '../../core/services/project.service';
 import { GovernanceService } from '../../core/services/governance.service';
 import { TeamService } from '../../core/services/team.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ConfirmService } from '../../core/services/confirm.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Project } from '../../core/models/project.model';
 import { Risk, Livrable, DemandeChangement, NiveauRisque } from '../../core/models/governance.model';
 import { PartiePrenante } from '../../core/models/partie-prenante.model';
+import { ProjectPickerComponent } from '../../shared/project-picker/project-picker.component';
 
 type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
 
 @Component({
   selector: 'app-governance',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProjectPickerComponent],
   template: `
     <div class="topbar">
-      <h5 class="mb-0 fw-semibold"><i class="bi bi-shield-check me-2"></i>Gouvernance de projet</h5>
+      <div class="tb-breadcrumb">
+        <i class="bi bi-shield-check" style="font-size:13px;color:var(--text-3)"></i>
+        <span class="bc-sep">›</span>
+        @if (selected()) {
+          <button class="bc-back-btn" (click)="clearSelection()" title="Retour à la sélection de projet">
+            <i class="bi bi-arrow-left"></i> Gouvernance
+          </button>
+          <span class="bc-sep">›</span>
+          <span class="bc-curr">{{ selected()!.code }}</span>
+        } @else {
+          <span class="bc-curr">Gouvernance</span>
+        }
+      </div>
     </div>
-    <div class="p-4">
+    <div class="page-body">
       <!-- Project selector -->
-      <div class="card mb-4">
-        <div class="card-body py-3">
-          <div class="d-flex align-items-center gap-3 flex-wrap">
-            <span class="fw-semibold text-muted small">PROJET :</span>
-            @for (p of projects(); track p.id) {
-              <button class="btn btn-sm"
-                      [class]="selected()?.id === p.id ? 'btn-primary' : 'btn-outline-secondary'"
-                      (click)="select(p)">
-                {{ p.code }}
-              </button>
-            }
-          </div>
-        </div>
+      <div class="mb-4">
+        <app-project-picker [selected]="selected()"
+                            featureTitle="Gouvernance"
+                            featureIcon="bi-shield-check"
+                            featureDescription="Suivez les risques, livrables, demandes de changement et parties prenantes de vos projets."
+                            (projectSelected)="select($event)" />
       </div>
 
       @if (selected()) {
-        <!-- Sub-tabs -->
-        <ul class="nav nav-pills mb-3">
-          <li class="nav-item">
-            <button class="nav-link" [class.active]="govTab()==='risks'" (click)="govTab.set('risks')">
-              <i class="bi bi-exclamation-triangle me-1"></i>Risques ({{ risks().length }})
-            </button>
-          </li>
-          <li class="nav-item">
-            <button class="nav-link" [class.active]="govTab()==='livrables'" (click)="govTab.set('livrables')">
-              <i class="bi bi-check2-square me-1"></i>Livrables ({{ livrables().length }})
-            </button>
-          </li>
-          <li class="nav-item">
-            <button class="nav-link" [class.active]="govTab()==='changes'" (click)="govTab.set('changes')">
-              <i class="bi bi-arrow-repeat me-1"></i>Changements ({{ changes().length }})
-            </button>
-          </li>
-          <li class="nav-item">
-            <button class="nav-link" [class.active]="govTab()==='parties'" (click)="govTab.set('parties')">
-              <i class="bi bi-person-lines-fill me-1"></i>Parties prenantes ({{ parties().length }})
-            </button>
-          </li>
-        </ul>
+        <!-- Sub-tabs (design-system segmented control) -->
+        <div class="pms-tabs mb-3" style="width:fit-content;max-width:100%;overflow-x:auto">
+          <button class="tab-item" [class.active]="govTab()==='risks'" (click)="setGovTab('risks')">
+            <i class="bi bi-exclamation-triangle me-1"></i>Risques ({{ risks().length }})
+          </button>
+          <button class="tab-item" [class.active]="govTab()==='livrables'" (click)="setGovTab('livrables')">
+            <i class="bi bi-check2-square me-1"></i>Livrables ({{ livrables().length }})
+          </button>
+          <button class="tab-item" [class.active]="govTab()==='changes'" (click)="setGovTab('changes')">
+            <i class="bi bi-arrow-repeat me-1"></i>Changements ({{ changes().length }})
+          </button>
+          <button class="tab-item" [class.active]="govTab()==='parties'" (click)="setGovTab('parties')">
+            <i class="bi bi-person-lines-fill me-1"></i>Parties prenantes ({{ parties().length }})
+          </button>
+        </div>
 
         <!-- RISQUES -->
         @if (govTab() === 'risks') {
           <div class="card">
-            <div class="card-header bg-white fw-semibold py-3 d-flex justify-content-between align-items-center">
+            <div class="card-header justify-content-between">
               <span>Registre des risques — {{ selected()!.name }}</span>
               @if (canManage()) {
                 <button class="btn btn-primary btn-sm" (click)="openRiskModal()">
@@ -74,7 +75,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light">
+                <thead>
                   <tr><th>Description</th><th>Probabilité</th><th>Impact</th><th>Plan de mitigation</th><th>Statut</th><th></th></tr>
                 </thead>
                 <tbody>
@@ -85,13 +86,14 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                       <td><span [class]="niveauBadge(r.impact)">{{ r.impact }}</span></td>
                       <td class="text-muted small">{{ r.planMitigation ?? '—' }}</td>
                       <td>
-                        @if (r.statut === 'FERME') { <span class="badge bg-success">Fermé</span> }
-                        @else if (r.statut === 'MITIGE') { <span class="badge bg-warning text-dark">Mitigé</span> }
-                        @else { <span class="badge bg-danger">Ouvert</span> }
+                        @if (r.statut === 'FERME') { <span class="badge-active">Fermé</span> }
+                        @else if (r.statut === 'MITIGE') { <span class="badge-on-hold">Mitigé</span> }
+                        @else { <span class="badge-cancelled">Ouvert</span> }
                       </td>
                       <td class="text-end">
                         @if (canManage()) {
-                          <button class="btn btn-sm btn-outline-danger" (click)="deleteRisk(r)">
+                          <button class="btn btn-sm btn-outline-danger" (click)="deleteRisk(r)"
+                                  title="Supprimer" aria-label="Supprimer le risque">
                             <i class="bi bi-trash"></i>
                           </button>
                         } @else { <span class="text-muted">—</span> }
@@ -99,7 +101,14 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                     </tr>
                   }
                   @empty {
-                    <tr><td colspan="6" class="text-center py-4 text-muted">Aucun risque enregistré</td></tr>
+                    <tr><td colspan="6">
+                      <div class="empty-state">
+                        <div class="es-icon"><i class="bi bi-exclamation-triangle"></i></div>
+                        <div class="es-title">Aucun risque</div>
+                        <div class="es-desc">Aucun risque n'a encore été enregistré pour ce projet.</div>
+                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openRiskModal()"><i class="bi bi-plus-lg me-1"></i>Ajouter un risque</button> }
+                      </div>
+                    </td></tr>
                   }
                 </tbody>
               </table>
@@ -110,7 +119,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         <!-- LIVRABLES -->
         @if (govTab() === 'livrables') {
           <div class="card">
-            <div class="card-header bg-white fw-semibold py-3 d-flex justify-content-between align-items-center">
+            <div class="card-header justify-content-between">
               <span>Livrables — {{ selected()!.name }}</span>
               @if (canManage()) {
                 <button class="btn btn-primary btn-sm" (click)="openLivrableModal()">
@@ -120,7 +129,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light">
+                <thead>
                   <tr><th>Titre</th><th>Description</th><th>Échéance</th><th>Statut</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
@@ -147,7 +156,8 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                               <i class="bi bi-check-lg"></i>
                             </button>
                           }
-                          <button class="btn btn-sm btn-outline-danger" (click)="deleteLivrable(l)">
+                          <button class="btn btn-sm btn-outline-danger" (click)="deleteLivrable(l)"
+                                  title="Supprimer" aria-label="Supprimer le livrable">
                             <i class="bi bi-trash"></i>
                           </button>
                         } @else { <span class="text-muted">—</span> }
@@ -155,7 +165,14 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                     </tr>
                   }
                   @empty {
-                    <tr><td colspan="5" class="text-center py-4 text-muted">Aucun livrable</td></tr>
+                    <tr><td colspan="5">
+                      <div class="empty-state">
+                        <div class="es-icon"><i class="bi bi-check2-square"></i></div>
+                        <div class="es-title">Aucun livrable</div>
+                        <div class="es-desc">Définissez les livrables attendus pour ce projet.</div>
+                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openLivrableModal()"><i class="bi bi-plus-lg me-1"></i>Ajouter un livrable</button> }
+                      </div>
+                    </td></tr>
                   }
                 </tbody>
               </table>
@@ -166,7 +183,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         <!-- CHANGEMENTS -->
         @if (govTab() === 'changes') {
           <div class="card">
-            <div class="card-header bg-white fw-semibold py-3 d-flex justify-content-between align-items-center">
+            <div class="card-header justify-content-between">
               <span>Demandes de changement — {{ selected()!.name }}</span>
               @if (canManage()) {
                 <button class="btn btn-primary btn-sm" (click)="openChangeModal()">
@@ -176,7 +193,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light">
+                <thead>
                   <tr><th>Titre</th><th>Demandeur</th><th>Priorité</th><th>Date</th><th>Statut</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
@@ -187,9 +204,9 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                       <td><span [class]="prioriteBadge(dc.priorite)">{{ dc.priorite }}</span></td>
                       <td>{{ dc.dateDemande ?? '—' }}</td>
                       <td>
-                        @if (dc.statut === 'APPROUVE') { <span class="badge bg-success">Approuvé</span> }
-                        @else if (dc.statut === 'REJETE') { <span class="badge bg-danger">Rejeté</span> }
-                        @else { <span class="badge bg-warning text-dark">En attente</span> }
+                        @if (dc.statut === 'APPROUVE') { <span class="badge-active">Approuvé</span> }
+                        @else if (dc.statut === 'REJETE') { <span class="badge-cancelled">Rejeté</span> }
+                        @else { <span class="badge-on-hold">En attente</span> }
                       </td>
                       <td>
                         @if (canManage()) {
@@ -201,7 +218,8 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                               <i class="bi bi-x-lg"></i>
                             </button>
                           }
-                          <button class="btn btn-sm btn-outline-danger" (click)="deleteChange(dc)">
+                          <button class="btn btn-sm btn-outline-danger" (click)="deleteChange(dc)"
+                                  title="Supprimer" aria-label="Supprimer la demande">
                             <i class="bi bi-trash"></i>
                           </button>
                         } @else { <span class="text-muted">—</span> }
@@ -209,7 +227,14 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                     </tr>
                   }
                   @empty {
-                    <tr><td colspan="6" class="text-center py-4 text-muted">Aucune demande de changement</td></tr>
+                    <tr><td colspan="6">
+                      <div class="empty-state">
+                        <div class="es-icon"><i class="bi bi-arrow-repeat"></i></div>
+                        <div class="es-title">Aucune demande de changement</div>
+                        <div class="es-desc">Les demandes de changement du projet apparaîtront ici.</div>
+                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openChangeModal()"><i class="bi bi-plus-lg me-1"></i>Nouvelle demande</button> }
+                      </div>
+                    </td></tr>
                   }
                 </tbody>
               </table>
@@ -220,7 +245,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         <!-- PARTIES PRENANTES -->
         @if (govTab() === 'parties') {
           <div class="card">
-            <div class="card-header bg-white fw-semibold py-3 d-flex justify-content-between align-items-center">
+            <div class="card-header justify-content-between">
               <span>Parties prenantes — {{ selected()!.name }}</span>
               @if (canManage()) {
                 <button class="btn btn-primary btn-sm" (click)="openPartieModal()">
@@ -230,7 +255,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0 align-middle">
-                <thead class="table-light">
+                <thead>
                   <tr><th>Nom</th><th>Fonction</th><th>Email</th><th>Téléphone</th><th>Influence</th><th>Intérêt</th><th></th></tr>
                 </thead>
                 <tbody>
@@ -244,7 +269,8 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                       <td><span [class]="niveauBadge(pp.interet)">{{ pp.interet }}</span></td>
                       <td class="text-end">
                         @if (canManage()) {
-                          <button class="btn btn-sm btn-outline-danger" (click)="deletePartie(pp)">
+                          <button class="btn btn-sm btn-outline-danger" (click)="deletePartie(pp)"
+                                  title="Supprimer" aria-label="Supprimer la partie prenante">
                             <i class="bi bi-trash"></i>
                           </button>
                         } @else { <span class="text-muted">—</span> }
@@ -252,18 +278,20 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                     </tr>
                   }
                   @empty {
-                    <tr><td colspan="7" class="text-center py-4 text-muted">Aucune partie prenante</td></tr>
+                    <tr><td colspan="7">
+                      <div class="empty-state">
+                        <div class="es-icon"><i class="bi bi-person-lines-fill"></i></div>
+                        <div class="es-title">Aucune partie prenante</div>
+                        <div class="es-desc">Recensez les parties prenantes impliquées dans le projet.</div>
+                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openPartieModal()"><i class="bi bi-plus-lg me-1"></i>Ajouter une partie prenante</button> }
+                      </div>
+                    </td></tr>
                   }
                 </tbody>
               </table>
             </div>
           </div>
         }
-      } @else {
-        <div class="text-center py-5 text-muted">
-          <i class="bi bi-shield-check fs-1 d-block mb-3 opacity-25"></i>
-          Sélectionnez un projet pour afficher sa gouvernance
-        </div>
       }
     </div>
 
@@ -484,9 +512,13 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
 })
 export class GovernanceComponent implements OnInit {
   private readonly projectSvc = inject(ProjectService);
-  private readonly govSvc = inject(GovernanceService);
-  private readonly teamSvc = inject(TeamService);
-  private readonly auth = inject(AuthService);
+  private readonly govSvc     = inject(GovernanceService);
+  private readonly teamSvc    = inject(TeamService);
+  private readonly auth       = inject(AuthService);
+  private readonly confirm    = inject(ConfirmService);
+  private readonly toast      = inject(ToastService);
+  private readonly router     = inject(Router);
+  private readonly route      = inject(ActivatedRoute);
 
   canManage = () => this.auth.hasPermission('MANAGE_GOVERNANCE');
 
@@ -512,15 +544,43 @@ export class GovernanceComponent implements OnInit {
   partieForm = { nom: '', fonction: '', email: '', telephone: '', influence: 'MOYEN', interet: 'MOYEN' };
 
   ngOnInit(): void {
-    this.projectSvc.list().subscribe(list => this.projects.set(list));
+    this.projectSvc.listAll().subscribe(list => {
+      this.projects.set(list);
+      this.route.queryParamMap.subscribe(params => {
+        const pid = params.get('p');
+        const tab = (params.get('tab') as GovTab) || 'risks';
+        this.govTab.set(tab);
+        if (!pid) { this.selected.set(null); return; }
+        const project = list.find(p => String(p.id) === pid);
+        if (project && this.selected()?.id !== project.id) {
+          this.selected.set(project);
+          this.reload();
+          this.teamSvc.list(project.id).subscribe(members =>
+            this.teamMembers.set(members.map(m => ({ userId: m.userId, userFullName: m.userFullName })))
+          );
+        }
+      });
+    });
   }
 
   select(p: Project): void {
     this.selected.set(p);
+    this.router.navigate([], { queryParams: { p: p.id, tab: this.govTab() }, replaceUrl: false });
     this.reload();
     this.teamSvc.list(p.id).subscribe(members =>
       this.teamMembers.set(members.map(m => ({ userId: m.userId, userFullName: m.userFullName })))
     );
+  }
+
+  clearSelection(): void {
+    this.router.navigate([], { queryParams: {} });
+  }
+
+  setGovTab(tab: GovTab): void {
+    this.govTab.set(tab);
+    if (this.selected()) {
+      this.router.navigate([], { queryParams: { p: this.selected()!.id, tab }, replaceUrl: true });
+    }
   }
 
   reload(): void {
@@ -543,14 +603,17 @@ export class GovernanceComponent implements OnInit {
     if (!this.partieForm.nom) { this.modalError.set('Le nom est requis.'); return; }
     this.saving.set(true);
     this.govSvc.createPartie(this.selected()!.id, this.partieForm).subscribe({
-      next: () => { this.reload(); this.showPartieModal.set(false); this.saving.set(false); },
+      next: () => { this.reload(); this.showPartieModal.set(false); this.saving.set(false); this.toast.success('Partie prenante ajoutée.'); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
-  deletePartie(pp: PartiePrenante): void {
-    if (!confirm(`Supprimer "${pp.nom}" ?`)) return;
-    this.govSvc.deletePartie(this.selected()!.id, pp.id).subscribe(() => this.reload());
+  async deletePartie(pp: PartiePrenante): Promise<void> {
+    if (!await this.confirm.ask(`Supprimer « ${pp.nom} » ?`, 'Supprimer la partie prenante')) return;
+    this.govSvc.deletePartie(this.selected()!.id, pp.id).subscribe({
+      next: () => { this.reload(); this.toast.success('Partie prenante supprimée.'); },
+      error: () => this.toast.error('Suppression impossible.')
+    });
   }
 
   // ── Risques ──────────────────────────────────────────────────────
@@ -564,14 +627,17 @@ export class GovernanceComponent implements OnInit {
     if (!this.riskForm.description) { this.modalError.set('Description requise.'); return; }
     this.saving.set(true);
     this.govSvc.createRisk(this.selected()!.id, this.riskForm).subscribe({
-      next: () => { this.reload(); this.showRiskModal.set(false); this.saving.set(false); },
+      next: () => { this.reload(); this.showRiskModal.set(false); this.saving.set(false); this.toast.success('Risque enregistré.'); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
-  deleteRisk(r: Risk): void {
-    if (!confirm('Supprimer ce risque ?')) return;
-    this.govSvc.deleteRisk(this.selected()!.id, r.id).subscribe(() => this.reload());
+  async deleteRisk(r: Risk): Promise<void> {
+    if (!await this.confirm.ask('Supprimer ce risque ?', 'Supprimer le risque')) return;
+    this.govSvc.deleteRisk(this.selected()!.id, r.id).subscribe({
+      next: () => { this.reload(); this.toast.success('Risque supprimé.'); },
+      error: () => this.toast.error('Suppression impossible.')
+    });
   }
 
   // ── Livrables ────────────────────────────────────────────────────
@@ -585,26 +651,38 @@ export class GovernanceComponent implements OnInit {
     if (!this.livrableForm.titre) { this.modalError.set('Titre requis.'); return; }
     this.saving.set(true);
     this.govSvc.createLivrable(this.selected()!.id, this.livrableForm).subscribe({
-      next: () => { this.reload(); this.showLivrableModal.set(false); this.saving.set(false); },
+      next: () => { this.reload(); this.showLivrableModal.set(false); this.saving.set(false); this.toast.success('Livrable créé.'); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   demarrerLivrable(l: Livrable): void {
-    this.govSvc.demarrerLivrable(this.selected()!.id, l.id).subscribe(() => this.reload());
+    this.govSvc.demarrerLivrable(this.selected()!.id, l.id).subscribe({
+      next: () => { this.reload(); this.toast.success('Livrable démarré.'); },
+      error: () => this.toast.error('Action impossible.')
+    });
   }
 
   livrerLivrable(l: Livrable): void {
-    this.govSvc.livrerLivrable(this.selected()!.id, l.id).subscribe(() => this.reload());
+    this.govSvc.livrerLivrable(this.selected()!.id, l.id).subscribe({
+      next: () => { this.reload(); this.toast.success('Livrable marqué comme livré.'); },
+      error: () => this.toast.error('Action impossible.')
+    });
   }
 
   validerLivrable(l: Livrable): void {
-    this.govSvc.validerLivrable(this.selected()!.id, l.id).subscribe(() => this.reload());
+    this.govSvc.validerLivrable(this.selected()!.id, l.id).subscribe({
+      next: () => { this.reload(); this.toast.success('Livrable validé.'); },
+      error: () => this.toast.error('Action impossible.')
+    });
   }
 
-  deleteLivrable(l: Livrable): void {
-    if (!confirm(`Supprimer le livrable "${l.titre}" ?`)) return;
-    this.govSvc.deleteLivrable(this.selected()!.id, l.id).subscribe(() => this.reload());
+  async deleteLivrable(l: Livrable): Promise<void> {
+    if (!await this.confirm.ask(`Supprimer le livrable « ${l.titre} » ?`, 'Supprimer le livrable')) return;
+    this.govSvc.deleteLivrable(this.selected()!.id, l.id).subscribe({
+      next: () => { this.reload(); this.toast.success('Livrable supprimé.'); },
+      error: () => this.toast.error('Suppression impossible.')
+    });
   }
 
   // ── Changements ──────────────────────────────────────────────────
@@ -621,42 +699,51 @@ export class GovernanceComponent implements OnInit {
     }
     this.saving.set(true);
     this.govSvc.createChangement(this.selected()!.id, this.changeForm).subscribe({
-      next: () => { this.reload(); this.showChangeModal.set(false); this.saving.set(false); },
+      next: () => { this.reload(); this.showChangeModal.set(false); this.saving.set(false); this.toast.success('Demande de changement créée.'); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   approuver(dc: DemandeChangement): void {
-    this.govSvc.approuverChangement(this.selected()!.id, dc.id).subscribe(() => this.reload());
+    this.govSvc.approuverChangement(this.selected()!.id, dc.id).subscribe({
+      next: () => { this.reload(); this.toast.success('Demande approuvée.'); },
+      error: () => this.toast.error('Action impossible.')
+    });
   }
 
   rejeter(dc: DemandeChangement): void {
-    this.govSvc.rejeterChangement(this.selected()!.id, dc.id).subscribe(() => this.reload());
+    this.govSvc.rejeterChangement(this.selected()!.id, dc.id).subscribe({
+      next: () => { this.reload(); this.toast.success('Demande rejetée.'); },
+      error: () => this.toast.error('Action impossible.')
+    });
   }
 
-  deleteChange(dc: DemandeChangement): void {
-    if (!confirm(`Supprimer la demande "${dc.titre}" ?`)) return;
-    this.govSvc.deleteChangement(this.selected()!.id, dc.id).subscribe(() => this.reload());
+  async deleteChange(dc: DemandeChangement): Promise<void> {
+    if (!await this.confirm.ask(`Supprimer la demande « ${dc.titre} » ?`, 'Supprimer la demande')) return;
+    this.govSvc.deleteChangement(this.selected()!.id, dc.id).subscribe({
+      next: () => { this.reload(); this.toast.success('Demande supprimée.'); },
+      error: () => this.toast.error('Suppression impossible.')
+    });
   }
 
   // ── Badges ───────────────────────────────────────────────────────
   niveauBadge(n: NiveauRisque): string {
-    return n === 'ELEVE' ? 'badge bg-danger' : n === 'MOYEN' ? 'badge bg-warning text-dark' : 'badge bg-success';
+    return n === 'ELEVE' ? 'badge-cancelled' : n === 'MOYEN' ? 'badge-on-hold' : 'badge-active';
   }
 
   livrableBadge(s: string): string {
     const m: Record<string, string> = {
-      EN_ATTENTE: 'badge bg-secondary', EN_COURS: 'badge bg-primary',
-      LIVRE: 'badge bg-info text-dark', VALIDE: 'badge bg-success'
+      EN_ATTENTE: 'badge-draft', EN_COURS: 'badge-active',
+      LIVRE: 'badge-completed', VALIDE: 'badge-active'
     };
-    return m[s] ?? 'badge bg-secondary';
+    return m[s] ?? 'badge-draft';
   }
 
   prioriteBadge(p: string): string {
     const m: Record<string, string> = {
-      FAIBLE: 'badge bg-success', NORMALE: 'badge bg-info text-dark',
-      ELEVEE: 'badge bg-warning text-dark', CRITIQUE: 'badge bg-danger'
+      FAIBLE: 'badge-active', NORMALE: 'badge-draft',
+      ELEVEE: 'badge-on-hold', CRITIQUE: 'badge-cancelled'
     };
-    return m[p] ?? 'badge bg-secondary';
+    return m[p] ?? 'badge-draft';
   }
 }

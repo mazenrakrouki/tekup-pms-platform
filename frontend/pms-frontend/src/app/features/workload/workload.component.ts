@@ -1,122 +1,246 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, computed, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ProjectService } from '../../core/services/project.service';
 import { WorkloadService } from '../../core/services/workload.service';
 import { TeamService } from '../../core/services/team.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ToastService } from '../../core/services/toast.service';
 import { Project } from '../../core/models/project.model';
 import { PlanCharge, ChargeReelle } from '../../core/models/workload.model';
+import { ProjectPickerComponent } from '../../shared/project-picker/project-picker.component';
+
+interface Period { year: number; month: number; }
+interface MatrixResource { userId: number; name: string; role: string; }
 
 @Component({
   selector: 'app-workload',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProjectPickerComponent],
+  styles: [`
+    .wl-metric-card { padding: 1.1rem 1.15rem; }
+    .wl-value-lg { font-size: 1.5rem; }
+    .wl-value-md { font-size: 1.35rem; }
+    .wl-metric-sub { font-size: 11px; color: var(--text-3); margin-top: .35rem; }
+    .occ-wrap { overflow-x: auto; }
+    table.occ { width: 100%; border-collapse: separate; border-spacing: 0; }
+    table.occ th, table.occ td { padding: .625rem .75rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    table.occ thead th { position: sticky; top: 0; z-index: 2; background: var(--surface-2, var(--surface));
+      font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--text-2); text-transform: uppercase; }
+    .occ-res-col { position: sticky; left: 0; z-index: 3; background: var(--surface-2, var(--surface)); min-width: 230px; text-align: left; }
+    td.occ-res { position: sticky; left: 0; z-index: 1; background: var(--surface-1, var(--surface)); min-width: 230px; }
+    tr:hover td.occ-res { background: var(--surface-2, rgba(0,0,0,.02)); }
+    tr:hover td { background: var(--surface-2, rgba(0,0,0,.02)); }
+    .occ-res-inner { display: flex; align-items: center; gap: .625rem; }
+    .occ-avatar { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; color: #fff; font-size: 12px;
+      font-weight: 700; display: grid; place-items: center; }
+    .occ-name { font-size: 13px; font-weight: 600; color: var(--text-1); }
+    .occ-role { font-size: 10px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--text-3); }
+    .occ-cell { display: inline-flex; align-items: baseline; gap: .5rem; justify-content: center; font-variant-numeric: tabular-nums; }
+    .occ-plan { font-size: 13px; color: var(--text-3); }
+    .occ-real { font-size: 14px; font-weight: 700; }
+    .occ-real-ok    { color: var(--c-brand); }
+    .occ-real-warn  { color: var(--c-danger, #dc2626); }
+    .occ-real-empty { color: var(--text-3); font-weight: 400; }
+    .occ-year { font-size: 9px; font-weight: 600; color: var(--text-3); }
+    th.occ-peak, td.occ-peak-cell { background: var(--c-brand-dim) !important; }
+    tfoot .occ-totals td { background: var(--surface-2, rgba(0,0,0,.03)); font-weight: 700; border-top: 2px solid var(--border);
+      position: sticky; bottom: 0; }
+    tfoot .occ-totals .occ-tot-label { position: sticky; left: 0; z-index: 1; background: var(--surface-2, var(--surface));
+      font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-2); }
+    .occ-legend { display: inline-flex; align-items: center; gap: 1rem; font-size: 11px; color: var(--text-2); }
+    .occ-legend .sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-right: .35rem; vertical-align: -1px; }
+    .occ-progress { height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; margin-top: .5rem; }
+    .occ-progress > div { height: 100%; background: var(--c-brand); border-radius: 3px; transition: width .5s; }
+    .m-unit { font-size: .7rem; color: var(--text-3); font-weight: 600; }
+    .seg-years { display: inline-flex; background: var(--surface-2, rgba(0,0,0,.04)); border: 1px solid var(--border);
+      border-radius: 8px; padding: 2px; gap: 2px; }
+    .seg-years .sy-btn { border: 0; background: transparent; color: var(--text-2); font-size: 12px; font-weight: 600;
+      padding: .3rem .65rem; border-radius: 6px; cursor: pointer; font-variant-numeric: tabular-nums; }
+    .seg-years .sy-btn:hover { color: var(--text-1); }
+    .seg-years .sy-on { background: var(--surface-1, var(--surface)); color: var(--c-brand); box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+  `],
   template: `
     <div class="topbar">
-      <h5 class="mb-0 fw-semibold"><i class="bi bi-calendar3 me-2"></i>Charges de travail</h5>
+      <div class="tb-breadcrumb">
+        <i class="bi bi-calendar3 fs-13" style="color:var(--text-3)"></i>
+        <span class="bc-sep">›</span>
+        @if (selected()) {
+          <button class="bc-back-btn" (click)="clearSelection()" title="Retour à la sélection de projet">
+            <i class="bi bi-arrow-left"></i> Charges de travail
+          </button>
+          <span class="bc-sep">›</span>
+          <span class="bc-curr">{{ selected()!.code }}</span>
+        } @else {
+          <span class="bc-curr">Charges de travail</span>
+        }
+      </div>
     </div>
-    <div class="p-4">
+    <div class="page-body">
       <!-- Project selector -->
-      <div class="card mb-4">
-        <div class="card-body py-3">
-          <div class="d-flex align-items-center gap-3 flex-wrap">
-            <span class="fw-semibold text-muted small">PROJET :</span>
-            @for (p of projects(); track p.id) {
-              <button class="btn btn-sm"
-                      [class]="selected()?.id === p.id ? 'btn-primary' : 'btn-outline-secondary'"
-                      (click)="select(p)">
-                {{ p.code }}
-              </button>
-            }
-            @empty {
-              <span class="text-muted small">Chargement…</span>
-            }
-          </div>
-        </div>
+      <div class="mb-4">
+        <app-project-picker [selected]="selected()"
+                            featureTitle="Charges de travail"
+                            featureIcon="bi-calendar3"
+                            featureDescription="Planifiez le plan de charge et suivez les charges réelles de vos projets, ressource par ressource."
+                            (projectSelected)="select($event)" />
       </div>
 
       @if (selected()) {
-        <div class="row g-4">
-          <!-- Plan de charge -->
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-white fw-semibold py-3 d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-calendar-week me-2"></i>Plan de charge — {{ selected()!.name }}</span>
-                @if (canPlan()) {
-                  <button class="btn btn-primary btn-sm" (click)="openPlanModal()">
-                    <i class="bi bi-plus-lg me-1"></i>Planifier une charge
-                  </button>
-                }
+        <!-- Header -->
+        <div class="page-header d-flex align-items-start justify-content-between flex-wrap gap-2">
+          <div>
+            <h1 class="page-title">Matrice d'occupation</h1>
+            <p class="page-subtitle">Planification des ressources (JH) — plan vs. réel, mois par mois.</p>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" (click)="exportCsv()" [disabled]="periods().length === 0">
+              <i class="bi bi-download me-1"></i>Exporter
+            </button>
+            @if (canSubmit()) {
+              <button class="btn btn-outline-secondary btn-sm" (click)="openChargeModal()">
+                <i class="bi bi-clock-history me-1"></i>Saisir une charge
+              </button>
+            }
+            @if (canPlan()) {
+              <button class="btn btn-primary btn-sm" (click)="openPlanModal()">
+                <i class="bi bi-plus-lg me-1"></i>Planifier une charge
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Metric cards -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-xl-3">
+            <div class="metric-card wl-metric-card">
+              <div class="d-flex align-items-start justify-content-between mb-2">
+                <div class="metric-icon metric-icon--brand"><i class="bi bi-calendar-check"></i></div>
               </div>
-              <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
-                  <thead class="table-light">
-                    <tr><th>Ressource</th><th>Année</th><th>Mois</th><th class="text-end">Jours prévus</th></tr>
-                  </thead>
-                  <tbody>
-                    @for (c of planCharges(); track c.id) {
-                      <tr>
-                        <td>{{ c.userFullName }}</td>
-                        <td>{{ c.year }}</td>
-                        <td>{{ monthLabel(c.month) }}</td>
-                        <td class="text-end fw-semibold">{{ c.plannedDays }}</td>
-                      </tr>
-                    }
-                    @empty {
-                      <tr><td colspan="4" class="text-center py-4 text-muted">Aucune charge planifiée</td></tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
+              <div class="metric-label">Occupation réelle</div>
+              <div class="metric-value wl-value-lg">{{ totalActual() | number:'1.0-1' }} <span class="m-unit">JH</span></div>
+              <div class="occ-progress"><div [style.width.%]="min(realizationPct(), 100)"></div></div>
+              <div class="wl-metric-sub">sur {{ totalPlanned() | number:'1.0-1' }} JH planifiés</div>
             </div>
           </div>
-
-          <!-- Charges réelles -->
-          <div class="col-12">
-            <div class="card">
-              <div class="card-header bg-white fw-semibold py-3 d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-clock-history me-2"></i>Charges réelles — {{ selected()!.name }}</span>
-                @if (canSubmit()) {
-                  <button class="btn btn-primary btn-sm" (click)="openChargeModal()">
-                    <i class="bi bi-plus-lg me-1"></i>Saisir une charge
-                  </button>
-                }
+          <div class="col-6 col-xl-3">
+            <div class="metric-card wl-metric-card">
+              <div class="d-flex align-items-start justify-content-between mb-2">
+                <div class="metric-icon metric-icon--purple"><i class="bi bi-people-fill"></i></div>
               </div>
-              <div class="table-responsive">
-                <table class="table table-hover mb-0 align-middle">
-                  <thead class="table-light">
-                    <tr><th>Ressource</th><th>Année</th><th>Mois</th><th class="text-end">Jours réels</th><th>Statut</th></tr>
-                  </thead>
-                  <tbody>
-                    @for (c of chargesReelles(); track c.id) {
-                      <tr>
-                        <td>{{ c.userFullName }}</td>
-                        <td>{{ c.year }}</td>
-                        <td>{{ monthLabel(c.month) }}</td>
-                        <td class="text-end fw-semibold">{{ c.actualDays }}</td>
-                        <td>
-                          @if (c.validatedAt) {
-                            <span class="badge bg-success">Validée</span>
-                          } @else {
-                            <span class="badge bg-warning text-dark">Soumise</span>
-                          }
-                        </td>
-                      </tr>
-                    }
-                    @empty {
-                      <tr><td colspan="5" class="text-center py-4 text-muted">Aucune charge réelle</td></tr>
-                    }
-                  </tbody>
-                </table>
+              <div class="metric-label">Ressources actives</div>
+              <div class="metric-value wl-value-lg">{{ resources().length }} <span class="m-unit">{{ resources().length > 1 ? 'consultants' : 'consultant' }}</span></div>
+              <div class="wl-metric-sub">{{ periods().length }} mois planifiés</div>
+            </div>
+          </div>
+          <div class="col-6 col-xl-3">
+            <div class="metric-card wl-metric-card">
+              <div class="d-flex align-items-start justify-content-between mb-2">
+                <div class="metric-icon metric-icon--teal"><i class="bi bi-speedometer2"></i></div>
+                <span class="fs-11 fw-semibold" [class.text-success]="realizationPct() <= 105" [class.text-danger]="realizationPct() > 105">
+                  {{ ecart() >= 0 ? '+' : '' }}{{ ecart() | number:'1.0-1' }} JH
+                </span>
+              </div>
+              <div class="metric-label">Taux de réalisation</div>
+              <div class="metric-value wl-value-lg">{{ realizationPct() | number:'1.0-0' }}<span class="m-unit">%</span></div>
+              <div class="wl-metric-sub">réel vs. planifié</div>
+            </div>
+          </div>
+          <div class="col-6 col-xl-3">
+            <div class="metric-card wl-metric-card">
+              <div class="d-flex align-items-start justify-content-between mb-2">
+                <div class="metric-icon metric-icon--amber"><i class="bi bi-graph-up"></i></div>
+              </div>
+              <div class="metric-label">Mois de pic</div>
+              <div class="metric-value wl-value-md">{{ peakMonth()?.label ?? '—' }}</div>
+              <div class="wl-metric-sub">
+                @if (peakMonth(); as pk) { {{ pk.cumul | number:'1.0-1' }} JH cumulés } @else { Aucune donnée }
               </div>
             </div>
           </div>
         </div>
-      } @else {
-        <div class="text-center py-5 text-muted">
-          <i class="bi bi-calendar3 fs-1 d-block mb-3 opacity-25"></i>
-          Sélectionnez un projet pour afficher ses charges
+
+        <!-- Matrix -->
+        <div class="card">
+          <div class="card-header justify-content-between flex-wrap gap-2">
+            <span><i class="bi bi-grid-3x3-gap me-2"></i>Matrice — {{ selected()!.name }}</span>
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              @if (years().length > 1) {
+                <div class="seg-years">
+                  @for (y of years(); track y) {
+                    <button type="button" class="sy-btn" [class.sy-on]="year() === y" (click)="year.set(y)">{{ y }}</button>
+                  }
+                </div>
+              }
+              <span class="occ-legend">
+                <span><span class="sw" style="background:var(--surface-3)"></span>Planifié</span>
+                <span><span class="sw" style="background:var(--c-brand)"></span>Réel</span>
+              </span>
+            </div>
+          </div>
+
+          @if (periods().length === 0) {
+            <div class="empty-state">
+              <div class="es-icon"><i class="bi bi-calendar3"></i></div>
+              <div class="es-title">Aucune charge planifiée ni saisie</div>
+              @if (canPlan()) {
+                <button class="btn btn-primary btn-sm mt-3" (click)="openPlanModal()"><i class="bi bi-plus-lg me-1"></i>Planifier une charge</button>
+              }
+            </div>
+          } @else {
+            <div class="occ-wrap">
+              <table class="occ">
+                <thead>
+                  <tr>
+                    <th class="occ-res-col">Ressource / Rôle</th>
+                    @for (per of periods(); track per.year * 100 + per.month) {
+                      <th class="text-center" [class.occ-peak]="isPeak(per)">
+                        {{ monthName(per.month) }}
+                        <div class="occ-year">{{ per.year }}</div>
+                      </th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (r of resources(); track r.userId) {
+                    <tr>
+                      <td class="occ-res">
+                        <div class="occ-res-inner">
+                          <div class="occ-avatar" [style.background]="avatarColor(r.name)">{{ initials(r.name) }}</div>
+                          <div>
+                            <div class="occ-name">{{ r.name }}</div>
+                            <div class="occ-role">{{ r.role || '—' }}</div>
+                          </div>
+                        </div>
+                      </td>
+                      @for (per of periods(); track per.year * 100 + per.month) {
+                        <td class="text-center" [class.occ-peak-cell]="isPeak(per)">
+                          <span class="occ-cell">
+                            <span class="occ-plan">{{ planOf(r.userId, per) || '·' }}</span>
+                            <span class="occ-real" [class]="realClass(r.userId, per)">{{ actualOf(r.userId, per) || '—' }}</span>
+                          </span>
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+                <tfoot>
+                  <tr class="occ-totals">
+                    <td class="occ-tot-label">Totaux mensuels</td>
+                    @for (per of periods(); track per.year * 100 + per.month) {
+                      <td class="text-center" [class.occ-peak-cell]="isPeak(per)">
+                        <span class="occ-cell">
+                          <span class="occ-plan">{{ monthTotalPlanned(per) | number:'1.0-1' }}</span>
+                          <span class="occ-real occ-real-ok">{{ monthTotalActual(per) | number:'1.0-1' }}</span>
+                        </span>
+                      </td>
+                    }
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          }
         </div>
       }
     </div>
@@ -133,7 +257,7 @@ import { PlanCharge, ChargeReelle } from '../../core/models/workload.model';
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Ressource <span class="text-danger">*</span></label>
+                <label class="form-label">Ressource <span class="text-danger">*</span></label>
                 @if (isDevOnly()) {
                   <input type="text" class="form-control" [value]="currentUserFullName" disabled>
                 } @else {
@@ -147,11 +271,11 @@ import { PlanCharge, ChargeReelle } from '../../core/models/workload.model';
               </div>
               <div class="row g-3">
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Année <span class="text-danger">*</span></label>
+                  <label class="form-label">Année <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" [(ngModel)]="chargeForm.year" min="2000" max="2100">
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Mois <span class="text-danger">*</span></label>
+                  <label class="form-label">Mois <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="chargeForm.month">
                     @for (m of months; track m.v) {
                       <option [value]="m.v">{{ m.l }}</option>
@@ -160,7 +284,7 @@ import { PlanCharge, ChargeReelle } from '../../core/models/workload.model';
                 </div>
               </div>
               <div class="mb-3 mt-3">
-                <label class="form-label fw-semibold">Jours travaillés <span class="text-danger">*</span></label>
+                <label class="form-label">Jours travaillés <span class="text-danger">*</span></label>
                 <input type="number" class="form-control" [(ngModel)]="chargeForm.actualDays" min="0" max="31" step="0.5">
               </div>
               @if (chargeError()) {
@@ -191,7 +315,7 @@ import { PlanCharge, ChargeReelle } from '../../core/models/workload.model';
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Ressource <span class="text-danger">*</span></label>
+                <label class="form-label">Ressource <span class="text-danger">*</span></label>
                 <select class="form-select" [(ngModel)]="planForm.userId">
                   <option [value]="0" disabled>Sélectionner une ressource</option>
                   @for (m of teamMembers(); track m.userId) {
@@ -201,11 +325,11 @@ import { PlanCharge, ChargeReelle } from '../../core/models/workload.model';
               </div>
               <div class="row g-3">
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Année <span class="text-danger">*</span></label>
+                  <label class="form-label">Année <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" [(ngModel)]="planForm.year" min="2000" max="2100">
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Mois <span class="text-danger">*</span></label>
+                  <label class="form-label">Mois <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="planForm.month">
                     @for (m of months; track m.v) {
                       <option [value]="m.v">{{ m.l }}</option>
@@ -214,7 +338,7 @@ import { PlanCharge, ChargeReelle } from '../../core/models/workload.model';
                 </div>
               </div>
               <div class="mb-3 mt-3">
-                <label class="form-label fw-semibold">Jours planifiés <span class="text-danger">*</span></label>
+                <label class="form-label">Jours planifiés <span class="text-danger">*</span></label>
                 <input type="number" class="form-control" [(ngModel)]="planForm.plannedDays" min="0" max="31" step="0.5">
               </div>
               @if (planError()) { <div class="alert alert-danger py-2">{{ planError() }}</div> }
@@ -237,6 +361,9 @@ export class WorkloadComponent implements OnInit {
   private readonly workloadSvc = inject(WorkloadService);
   private readonly teamSvc = inject(TeamService);
   private readonly auth = inject(AuthService);
+  private readonly toast = inject(ToastService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   canPlan = () => this.auth.hasPermission('VALIDATE_WORKLOAD');
   canSubmit = () => this.auth.hasPermission('SUBMIT_WORKLOAD');
@@ -245,14 +372,31 @@ export class WorkloadComponent implements OnInit {
 
   projects = signal<Project[]>([]);
   selected = signal<Project | null>(null);
-  planCharges = signal<PlanCharge[]>([]);
-  chargesReelles = signal<ChargeReelle[]>([]);
-  teamMembers = signal<{ userId: number; userFullName: string }[]>([]);
+  fullPlan = signal<PlanCharge[]>([]);
+  fullCharges = signal<ChargeReelle[]>([]);
+  teamMembers = signal<{ userId: number; userFullName: string; role: string }[]>([]);
+  year = signal<number | null>(null);
+
+  /** Distinct years present across plan + actual, sorted. */
+  readonly years = computed(() => {
+    const s = new Set<number>();
+    for (const p of this.fullPlan()) s.add(p.year);
+    for (const c of this.fullCharges()) s.add(c.year);
+    return [...s].sort((a, b) => a - b);
+  });
+
+  private readonly planInScope = computed(() => {
+    const y = this.year();
+    return y == null ? this.fullPlan() : this.fullPlan().filter(p => p.year === y);
+  });
+  private readonly chargesInScope = computed(() => {
+    const y = this.year();
+    return y == null ? this.fullCharges() : this.fullCharges().filter(c => c.year === y);
+  });
 
   showChargeModal = signal(false);
   chargeSaving = signal(false);
   chargeError = signal('');
-
   showPlanModal = signal(false);
   planSaving = signal(false);
   planError = signal('');
@@ -267,19 +411,174 @@ export class WorkloadComponent implements OnInit {
     { v: 10, l: 'Octobre' }, { v: 11, l: 'Novembre' }, { v: 12, l: 'Décembre' }
   ];
 
+  private readonly avatarPalette = ['#2563eb', '#7c3aed', '#0891b2', '#059669', '#d97706', '#dc2626', '#db2777', '#4f46e5'];
+
+  // ── Matrix model ───────────────────────────────────────────────
+  readonly resources = computed<MatrixResource[]>(() => {
+    const roles = new Map(this.teamMembers().map(m => [m.userId, m.role]));
+    const names = new Map<number, string>();
+    for (const p of this.planInScope()) names.set(p.userId, p.userFullName);
+    for (const c of this.chargesInScope()) names.set(c.userId, c.userFullName);
+    return [...names.entries()]
+      .map(([userId, name]) => ({ userId, name, role: roles.get(userId) ?? '' }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  readonly periods = computed<Period[]>(() => {
+    const set = new Set<string>();
+    for (const p of this.planInScope()) set.add(`${p.year}-${p.month}`);
+    for (const c of this.chargesInScope()) set.add(`${c.year}-${c.month}`);
+    return [...set]
+      .map(s => { const [y, m] = s.split('-').map(Number); return { year: y, month: m }; })
+      .sort((a, b) => a.year - b.year || a.month - b.month);
+  });
+
+  /** userId:year:month → { planned, actual } */
+  readonly cells = computed(() => {
+    const m = new Map<string, { planned: number; actual: number }>();
+    const key = (u: number, y: number, mo: number) => `${u}:${y}:${mo}`;
+    for (const p of this.planInScope()) {
+      const k = key(p.userId, p.year, p.month);
+      const c = m.get(k) ?? { planned: 0, actual: 0 }; c.planned += p.plannedDays; m.set(k, c);
+    }
+    for (const ch of this.chargesInScope()) {
+      const k = key(ch.userId, ch.year, ch.month);
+      const c = m.get(k) ?? { planned: 0, actual: 0 }; c.actual += ch.actualDays; m.set(k, c);
+    }
+    return m;
+  });
+
+  readonly monthTotals = computed(() => {
+    const map = new Map<string, { planned: number; actual: number }>();
+    for (const per of this.periods()) map.set(`${per.year}-${per.month}`, { planned: 0, actual: 0 });
+    for (const [k, v] of this.cells()) {
+      const [, y, mo] = k.split(':');
+      const t = map.get(`${y}-${mo}`);
+      if (t) { t.planned += v.planned; t.actual += v.actual; }
+    }
+    return map;
+  });
+
+  readonly totalActual = computed(() => this.chargesInScope().reduce((s, c) => s + c.actualDays, 0));
+  readonly totalPlanned = computed(() => this.planInScope().reduce((s, p) => s + p.plannedDays, 0));
+  readonly ecart = computed(() => this.totalActual() - this.totalPlanned());
+  readonly realizationPct = computed(() => this.totalPlanned() > 0 ? (this.totalActual() / this.totalPlanned()) * 100 : 0);
+
+  readonly peakMonth = computed(() => {
+    let bestKey: string | null = null; let bestVal = -1;
+    for (const [k, t] of this.monthTotals()) {
+      const v = Math.max(t.planned, t.actual);
+      if (v > bestVal) { bestVal = v; bestKey = k; }
+    }
+    if (!bestKey || bestVal <= 0) return null;
+    const [y, mo] = bestKey.split('-').map(Number);
+    return { key: bestKey, label: `${this.monthShort(mo)} ${y}`, cumul: bestVal };
+  });
+
   ngOnInit(): void {
-    this.projectSvc.list().subscribe(list => this.projects.set(list));
+    this.projectSvc.listAll().subscribe(list => {
+      this.projects.set(list);
+      this.route.queryParamMap.subscribe(params => {
+        const pid = params.get('p');
+        if (!pid) { this.selected.set(null); return; }
+        const project = list.find(p => String(p.id) === pid);
+        if (project && this.selected()?.id !== project.id) {
+          this.selected.set(project);
+          this.loadAll();
+          this.teamSvc.list(project.id).subscribe(members =>
+            this.teamMembers.set(members.map(m => ({ userId: m.userId, userFullName: m.userFullName, role: m.roleInTeam })))
+          );
+        }
+      });
+    });
   }
 
   select(p: Project): void {
     this.selected.set(p);
-    this.workloadSvc.listPlanCharges(p.id).subscribe(d => this.planCharges.set(d));
-    this.workloadSvc.listChargesReelles(p.id).subscribe(d => this.chargesReelles.set(d));
+    this.router.navigate([], { queryParams: { p: p.id }, replaceUrl: false });
+    this.loadAll();
     this.teamSvc.list(p.id).subscribe(members =>
-      this.teamMembers.set(members.map(m => ({ userId: m.userId, userFullName: m.userFullName })))
+      this.teamMembers.set(members.map(m => ({ userId: m.userId, userFullName: m.userFullName, role: m.roleInTeam })))
     );
   }
 
+  clearSelection(): void {
+    this.router.navigate([], { queryParams: {} });
+  }
+
+  private loadAll(): void {
+    const p = this.selected();
+    if (!p) return;
+    this.year.set(null);
+    this.workloadSvc.listPlanCharges(p.id, 0, 500).subscribe(res => { this.fullPlan.set(res.content); this.initYear(); });
+    this.workloadSvc.listChargesReelles(p.id, 0, 500).subscribe(res => { this.fullCharges.set(res.content); this.initYear(); });
+  }
+
+  /** Default the scope to the current year if present, else the first year with data. */
+  private initYear(): void {
+    if (this.year() !== null) return;
+    const ys = this.years();
+    if (!ys.length) return;
+    const now = new Date().getFullYear();
+    this.year.set(ys.includes(now) ? now : ys[0]);
+  }
+
+  // ── Cell accessors ─────────────────────────────────────────────
+  private cellOf(u: number, per: Period) {
+    return this.cells().get(`${u}:${per.year}:${per.month}`) ?? { planned: 0, actual: 0 };
+  }
+  planOf(u: number, per: Period): number { return this.cellOf(u, per).planned; }
+  actualOf(u: number, per: Period): number { return this.cellOf(u, per).actual; }
+  realClass(u: number, per: Period): string {
+    const c = this.cellOf(u, per);
+    if (c.actual === 0) return 'occ-real-empty';
+    const v = Math.abs(c.actual - c.planned);
+    const warn = c.planned > 0 ? (v >= 5 || v / c.planned > 0.25) : c.actual >= 5;
+    return warn ? 'occ-real-warn' : 'occ-real-ok';
+  }
+  monthTotalPlanned(per: Period): number { return this.monthTotals().get(`${per.year}-${per.month}`)?.planned ?? 0; }
+  monthTotalActual(per: Period): number { return this.monthTotals().get(`${per.year}-${per.month}`)?.actual ?? 0; }
+  isPeak(per: Period): boolean { return this.peakMonth()?.key === `${per.year}-${per.month}`; }
+
+  // ── Presentation helpers ───────────────────────────────────────
+  initials(name: string): string {
+    return name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
+  }
+  avatarColor(name: string): string {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+    return this.avatarPalette[h % this.avatarPalette.length];
+  }
+  monthName(m: number): string {
+    return ['JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN', 'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'][m - 1] ?? String(m);
+  }
+  monthShort(m: number): string {
+    return ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'][m - 1] ?? String(m);
+  }
+  min(a: number, b: number): number { return Math.min(a, b); }
+
+  // ── Export ─────────────────────────────────────────────────────
+  exportCsv(): void {
+    const per = this.periods();
+    const header = ['Ressource', 'Rôle', ...per.flatMap(p => [`${this.monthShort(p.month)} ${p.year} (Plan)`, `${this.monthShort(p.month)} ${p.year} (Réel)`])];
+    const rows = this.resources().map(r => [
+      r.name, r.role || '',
+      ...per.flatMap(p => [String(this.planOf(r.userId, p)), String(this.actualOf(r.userId, p))]),
+    ]);
+    const totals = ['Totaux mensuels', '', ...per.flatMap(p => [String(this.monthTotalPlanned(p)), String(this.monthTotalActual(p))])];
+    const csv = [header, ...rows, totals]
+      .map(line => line.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'))
+      .join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `matrice-occupation-${this.selected()?.code ?? 'projet'}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // ── Modals ─────────────────────────────────────────────────────
   openChargeModal(): void {
     const uid = this.isDevOnly() ? (this.auth.currentUserId ?? 0) : 0;
     this.chargeForm = { userId: uid, year: new Date().getFullYear(), month: new Date().getMonth() + 1, actualDays: 0 };
@@ -295,11 +594,7 @@ export class WorkloadComponent implements OnInit {
     this.chargeSaving.set(true);
     this.chargeError.set('');
     this.workloadSvc.submitCharge(this.selected()!.id, this.chargeForm).subscribe({
-      next: () => {
-        this.workloadSvc.listChargesReelles(this.selected()!.id).subscribe(d => this.chargesReelles.set(d));
-        this.showChargeModal.set(false);
-        this.chargeSaving.set(false);
-      },
+      next: () => { this.loadAll(); this.showChargeModal.set(false); this.chargeSaving.set(false); this.toast.success('Charge réelle enregistrée.'); },
       error: (e) => { this.chargeError.set(e.error?.message ?? 'Erreur lors de la soumission.'); this.chargeSaving.set(false); }
     });
   }
@@ -318,16 +613,8 @@ export class WorkloadComponent implements OnInit {
     this.planSaving.set(true);
     this.planError.set('');
     this.workloadSvc.createPlanCharge(this.selected()!.id, this.planForm).subscribe({
-      next: () => {
-        this.workloadSvc.listPlanCharges(this.selected()!.id).subscribe(d => this.planCharges.set(d));
-        this.showPlanModal.set(false);
-        this.planSaving.set(false);
-      },
+      next: () => { this.loadAll(); this.showPlanModal.set(false); this.planSaving.set(false); this.toast.success('Charge planifiée.'); },
       error: (e) => { this.planError.set(e.error?.message ?? 'Erreur lors de la planification.'); this.planSaving.set(false); }
     });
-  }
-
-  monthLabel(m: number): string {
-    return ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][m - 1] ?? String(m);
   }
 }

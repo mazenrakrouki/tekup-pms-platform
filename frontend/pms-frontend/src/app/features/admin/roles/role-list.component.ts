@@ -1,0 +1,328 @@
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { RbacService } from '../../../core/services/rbac.service';
+import { ConfirmService } from '../../../core/services/confirm.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { Permission, Role } from '../../../core/models/rbac.model';
+
+interface ModuleGroup { module: string; permissions: Permission[]; }
+
+@Component({
+  selector: 'app-role-list',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="topbar">
+      <div class="tb-breadcrumb">
+        <i class="bi bi-shield-lock" style="font-size:13px;color:var(--text-3)"></i>
+        <span class="bc-sep">›</span>
+        <span class="bc-curr">Rôles &amp; permissions</span>
+      </div>
+      <div class="tb-right">
+        <button class="btn btn-primary btn-sm" (click)="openCreate()">
+          <i class="bi bi-plus-lg"></i>Nouveau rôle
+        </button>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="card">
+        <div class="card-header justify-content-between">
+          <span>Rôles</span>
+          <div class="input-wrap" style="width:260px;max-width:100%">
+            <i class="bi bi-search input-icon"></i>
+            <input type="search" class="form-control form-control-sm"
+                   placeholder="Rechercher un rôle..."
+                   [ngModel]="search()" (ngModelChange)="search.set($event)">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover mb-0 align-middle">
+            <thead>
+              <tr>
+                <th>Rôle</th>
+                <th class="d-none d-md-table-cell">Description</th>
+                <th class="text-center">Permissions</th>
+                <th class="text-center">Utilisateurs</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (loading()) {
+                @for (i of [1,2,3,4]; track i) {
+                  <tr><td colspan="5"><div class="skeleton-row"></div></td></tr>
+                }
+              } @else {
+                @for (r of filtered(); track r.id) {
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center gap-2">
+                        <span class="fw-semibold">{{ r.name }}</span>
+                        @if (r.system) {
+                          <span class="badge-draft" style="font-size:10px" title="Rôle système — non renommable, non supprimable">
+                            <i class="bi bi-lock-fill me-1"></i>système
+                          </span>
+                        }
+                      </div>
+                    </td>
+                    <td class="d-none d-md-table-cell cell-desc">{{ r.description || '—' }}</td>
+                    <td class="text-center"><span class="badge-active">{{ r.permissions.length }}</span></td>
+                    <td class="text-center cell-muted">{{ r.userCount }}</td>
+                    <td class="text-end">
+                      <button class="btn btn-ghost btn-icon btn-sm" (click)="openEdit(r)" title="Modifier / permissions">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button class="btn btn-ghost btn-icon btn-sm"
+                              [disabled]="r.system || r.userCount > 0"
+                              [title]="deleteHint(r)"
+                              (click)="remove(r)"
+                              style="color:var(--c-danger,#dc3545)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                }
+                @empty {
+                  <tr><td colspan="5">
+                    <div class="empty-state">
+                      <div class="es-icon"><i class="bi bi-shield-lock"></i></div>
+                      <div class="es-title">Aucun rôle</div>
+                    </div>
+                  </td></tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create / Edit modal -->
+    @if (showModal()) {
+      <div class="modal-backdrop fade show"></div>
+      <div class="modal d-block" tabindex="-1" (click)="showModal.set(false)">
+        <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">
+                {{ editing() ? 'Modifier le rôle' : 'Nouveau rôle' }}
+              </h5>
+              <button type="button" class="btn-close" (click)="showModal.set(false)"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row g-3 mb-3">
+                <div class="col-md-5">
+                  <label class="form-label">Nom <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" [(ngModel)]="form.name"
+                         placeholder="EX_NOUVEAU_ROLE" [disabled]="editing()?.system ?? false"
+                         (ngModelChange)="form.name = $event.toUpperCase()">
+                  @if (editing()?.system) {
+                    <div style="font-size:11px;color:var(--text-3);margin-top:.25rem">
+                      Nom verrouillé (rôle système).
+                    </div>
+                  }
+                </div>
+                <div class="col-md-7">
+                  <label class="form-label">Description</label>
+                  <input type="text" class="form-control" [(ngModel)]="form.description"
+                         placeholder="Rôle de l'utilisateur en une ligne">
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <label class="form-label mb-0">Permissions</label>
+                <span class="sel-count">{{ selectedIds().size }} sélectionnée(s)</span>
+              </div>
+
+              <div class="perm-groups">
+                @for (g of moduleGroups(); track g.module) {
+                  <div class="perm-group">
+                    <div class="perm-group-head">
+                      <span class="perm-group-title">{{ g.module }}</span>
+                      <button type="button" class="btn btn-ghost btn-sm perm-toggle"
+                              (click)="toggleModule(g)">
+                        {{ allSelected(g) ? 'Tout retirer' : 'Tout cocher' }}
+                      </button>
+                    </div>
+                    <div class="perm-grid">
+                      @for (p of g.permissions; track p.id) {
+                        <label class="perm-item" [class.perm-on]="selectedIds().has(p.id)">
+                          <input type="checkbox" [checked]="selectedIds().has(p.id)"
+                                 (change)="togglePerm(p.id)">
+                          <span class="perm-code">{{ p.code }}</span>
+                          @if (p.description) { <span class="perm-desc">{{ p.description }}</span> }
+                        </label>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" (click)="showModal.set(false)">Annuler</button>
+              <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+                @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  `,
+  styles: [`
+    .skeleton-row { height: 20px; border-radius: 6px;
+      background: linear-gradient(90deg, var(--surface-2,#eee) 25%, var(--surface-3,#f5f5f5) 37%, var(--surface-2,#eee) 63%);
+      background-size: 400% 100%; animation: skl 1.2s ease infinite; }
+    @keyframes skl { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+    @media (prefers-reduced-motion: reduce) { .skeleton-row { animation: none; } }
+    .cell-desc { color: var(--text-2); font-size: 12px; max-width: 340px; }
+    .cell-muted { color: var(--text-2); }
+    .sel-count { font-size: 12px; color: var(--text-3); }
+    .perm-toggle { font-size: 11px; color: var(--c-brand); }
+    /* Keep the modal within the viewport and scroll the body — footer (Enregistrer) stays reachable. */
+    .modal-content { max-height: calc(100vh - 3.5rem); }
+    .modal-body { overflow-y: auto; }
+    .perm-groups { display: flex; flex-direction: column; gap: .75rem; padding-right: .25rem; }
+    .perm-group { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .perm-group-head { display: flex; align-items: center; justify-content: space-between;
+      padding: .4rem .75rem; background: var(--surface-2, rgba(0,0,0,.03)); border-bottom: 1px solid var(--border); }
+    .perm-group-title { font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--text-2); }
+    .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .25rem; padding: .5rem; }
+    .perm-item { display: flex; align-items: baseline; gap: .5rem; padding: .4rem .5rem; border-radius: 8px;
+      cursor: pointer; border: 1px solid transparent; }
+    .perm-item:hover { background: var(--surface-2, rgba(0,0,0,.03)); }
+    .perm-item.perm-on { background: var(--c-brand-dim); border-color: var(--c-brand); }
+    .perm-item input { margin-top: 2px; flex-shrink: 0; }
+    .perm-code { font-size: 12px; font-weight: 600; color: var(--text-1); font-family: var(--font-mono, monospace); }
+    .perm-desc { font-size: 11px; color: var(--text-3); flex-basis: 100%; padding-left: 1.4rem; }
+  `]
+})
+export class RoleListComponent implements OnInit {
+  private readonly rbac = inject(RbacService);
+  private readonly confirm = inject(ConfirmService);
+  private readonly toast = inject(ToastService);
+
+  roles = signal<Role[]>([]);
+  allPermissions = signal<Permission[]>([]);
+  loading = signal(true);
+  search = signal('');
+
+  showModal = signal(false);
+  editing = signal<Role | null>(null);
+  saving = signal(false);
+  selectedIds = signal<Set<number>>(new Set());
+  form: { name: string; description: string } = { name: '', description: '' };
+
+  readonly filtered = computed(() => {
+    const s = this.search().toLowerCase().trim();
+    const list = this.roles();
+    if (!s) return list;
+    return list.filter(r =>
+      r.name.toLowerCase().includes(s) || (r.description ?? '').toLowerCase().includes(s));
+  });
+
+  readonly moduleGroups = computed<ModuleGroup[]>(() => {
+    const groups = new Map<string, Permission[]>();
+    for (const p of this.allPermissions()) {
+      (groups.get(p.module) ?? groups.set(p.module, []).get(p.module)!).push(p);
+    }
+    return [...groups.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([module, permissions]) => ({ module, permissions }));
+  });
+
+  ngOnInit(): void {
+    this.load();
+    this.rbac.listPermissions().subscribe(p => this.allPermissions.set(p));
+  }
+
+  load(): void {
+    this.loading.set(true);
+    this.rbac.listRoles().subscribe({
+      next: r => { this.roles.set(r); this.loading.set(false); },
+      error: () => { this.loading.set(false); this.toast.error('Impossible de charger les rôles.'); }
+    });
+  }
+
+  deleteHint(r: Role): string {
+    if (r.system) return 'Rôle système — suppression impossible';
+    if (r.userCount > 0) return 'Rôle affecté à des utilisateurs — suppression impossible';
+    return 'Supprimer le rôle';
+  }
+
+  openCreate(): void {
+    this.editing.set(null);
+    this.form = { name: '', description: '' };
+    this.selectedIds.set(new Set());
+    this.showModal.set(true);
+  }
+
+  openEdit(r: Role): void {
+    this.editing.set(r);
+    this.form = { name: r.name, description: r.description ?? '' };
+    this.selectedIds.set(new Set(r.permissions.map(p => p.id)));
+    this.showModal.set(true);
+  }
+
+  togglePerm(id: number): void {
+    this.selectedIds.update(s => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  }
+
+  allSelected(g: ModuleGroup): boolean {
+    return g.permissions.every(p => this.selectedIds().has(p.id));
+  }
+
+  toggleModule(g: ModuleGroup): void {
+    const on = this.allSelected(g);
+    this.selectedIds.update(s => {
+      const n = new Set(s);
+      for (const p of g.permissions) { on ? n.delete(p.id) : n.add(p.id); }
+      return n;
+    });
+  }
+
+  save(): void {
+    const name = this.form.name.trim();
+    if (!name) { this.toast.error('Le nom du rôle est requis.'); return; }
+    if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
+      this.toast.error('Le nom doit être en MAJUSCULES_SNAKE (ex. CHEF_PROJET).');
+      return;
+    }
+    this.saving.set(true);
+    const req = {
+      name,
+      description: this.form.description.trim() || undefined,
+      permissionIds: [...this.selectedIds()],
+    };
+    const editing = this.editing();
+    const obs = editing ? this.rbac.updateRole(editing.id, req) : this.rbac.createRole(req);
+    obs.subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.showModal.set(false);
+        this.toast.success(editing ? 'Rôle mis à jour.' : 'Rôle créé.');
+        this.load();
+      },
+      error: (e) => {
+        this.saving.set(false);
+        this.toast.error(e.error?.detail ?? 'Erreur lors de l\'enregistrement.');
+      }
+    });
+  }
+
+  async remove(r: Role): Promise<void> {
+    if (r.system || r.userCount > 0) return;
+    if (!await this.confirm.ask(`Supprimer le rôle « ${r.name} » ?`, 'Supprimer le rôle')) return;
+    this.rbac.deleteRole(r.id).subscribe({
+      next: () => { this.toast.success('Rôle supprimé.'); this.load(); },
+      error: (e) => this.toast.error(e.error?.detail ?? 'Suppression impossible.')
+    });
+  }
+}

@@ -7,5 +7,6 @@ export const permissionGuard: CanActivateFn = (route: ActivatedRouteSnapshot) =>
   const router = inject(Router);
   const required: string = route.data['permission'];
   if (!required || auth.hasPermission(required)) return true;
-  return router.createUrlTree(['/dashboard']);
+  // M-8: communicate why the user was redirected so the dashboard can show a message
+  return router.createUrlTree(['/dashboard'], { queryParams: { forbidden: '1' } });
 };
