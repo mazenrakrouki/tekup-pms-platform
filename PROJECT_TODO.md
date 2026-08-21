@@ -4,8 +4,8 @@
 > **P1** (important) · **P2** (later). A task never starts before its dependencies are DONE.
 > Each phase ends with a report chapter and a validation gate.
 
-**Progress:** Backend phases 5–15 DONE ✅ — Frontend Phase 14 ~90% 🟢 (formulaires écriture Phase B DONE) — Tests Phase 15 95% 🟢 — **RBAC audit + scope (Phase C/C.8) DONE ✅** — Rapport ch.1–8 ✅ — Phases 1,2,3 APPROVED ✅ — Phase 4 gate pending
-**Current phase:** Frontend composants métier (formulaires écriture) + Rapport ch.9 (Frontend) + ch.10 (Tests/Sécurité/Déploiement)
+**Progress:** Backend phases 5–15 DONE ✅ — Frontend Phase 14 DONE ✅ — Tests Phase 15 95% 🟢 (89/89 backend) — **RBAC audit + scope (Phase C/C.8) DONE ✅** — **Phase F DevOps DONE ✅ (vérification runtime bloquée, F.10)** — Rapport restructuré en 7 chapitres anglais, 78 pages, 0 erreur ✅ — Phases 1,2,3 APPROVED ✅ — Phase 4 gate pending
+**Current phase:** Phase F — DevOps. **Pile conteneurisée vérifiée en exécution (F.10 DONE, 2026-08-20).** Restent **F.11** (pousser la ligne de base avant d'activer les checks obligatoires) et les captures d'écran du rapport.
 **Dernière correction majeure (2026-06-27) :** audit + correction de la matrice RBAC (V12) — voir [docs/AUTHORIZATION_MATRIX.md](docs/AUTHORIZATION_MATRIX.md). Admin 22→5 permissions, fuite financière développeur corrigée (BR-050), Directeur aligné ADR-005. **Correction 100% données, zéro code (preuve ADR-001).**
 **See [PROJECT_STATUS.md](PROJECT_STATUS.md) for detailed progress dashboard with percentages.**
 
@@ -207,17 +207,45 @@
 | C.15 | Audit UX/UI — gating des actions par permission | DONE | P0 | C.14 | **Défaut** : billing/governance/workload affichaient TOUS les boutons d'écriture (Ajouter/Supprimer/Facturer/Valider/transitions) même au Directeur (lecture seule) → clic = 403. **Fix** : `canManage()`/`canPlan()`/`canSubmit()` (MANAGE_BILLING/MANAGE_GOVERNANCE/VALIDATE_WORKLOAD/SUBMIT_WORKLOAD) masquent les actions interdites. Vérifié en UI (Directeur ne voit plus les boutons). KPI confirmé auto-chargé + badges FR (fausse alerte = bundle périmé) |
 
 ## Extra modules (ADR-004, full Excel scope) — after core
-| EX.1 | Avenants (contract amendments → budget/billing impact) | TODO | P1 | 9.2,14.3 | financial |
-| EX.2 | Risk Register (probability/severity/treatment scales) | TODO | P1 | 9.2 | Paramètres sheet |
-| EX.3 | Deliverables (Delivery% KPI) | TODO | P1 | 9.2 | |
-| EX.4 | Stakeholders (Parties Prenantes) | TODO | P2 | 9.2 | |
-| EX.5 | Change Register | TODO | P2 | 9.2 | |
+| EX.1 | Avenants (contract amendments → budget/billing impact) | DONE | P1 | 9.2,14.3 | V15 ; writer unique du budget révisé (C-1) + recalcul jalons PREVU (H-4) |
+| EX.2 | Risk Register (probability/severity/treatment scales) | DONE | P1 | 9.2 | module governance (Risk, NiveauRisque, StatutRisque) |
+| EX.3 | Deliverables (Delivery% KPI) | DONE | P1 | 9.2 | Livrable + Delivery % dans le KPI EVM (D.2) |
+| EX.4 | Stakeholders (Parties Prenantes) | DONE | P2 | 9.2 | PartiePrenante (governance) |
+| EX.5 | Change Register | DONE | P2 | 9.2 | DemandeChangement (governance) |
 | EX.6 | Module reports + **gate** | TODO | P1 | EX.1–EX.5 | |
+
+## Phase D — Méthode F-AFF-13 (spec 2026-07-05) *(fiche revue projet ST2i → app)*
+| D.1 | Devis Interne — structure vide (décision §16 BUSINESS_ANALYSIS : structure ✅, valeurs société ❌) | DONE | P0 | EX.1 | V23 `lignes_di` + capacité MANAGE_DI (Directeur) ; moteur 2 passes (montants/marges calculés à la lecture, lignes taxes % du total vendu) ; écran `/projects/:id/devis-interne` ; 4 tests service ; vérifié UI (10 000 FCFA → 51 TND @0.0051) |
+| D.2 | Indicateurs EVM (Glossaire F-AFF-13 §5) | DONE | P0 | D.1 | V22 : EV % (saisie CdP au snapshot), Delivery % (livrés/planifiés), consommé/RAF/dérive JH (vs workload vendu), CA production (budget × EV), FAE, marge actuelle vs vendue (DI calculé sinon fiche identification) ; revue mensuelle avec faits marquants + date fin estimée ; vérifié UI (EV 50 % → CA prod 459 000 TND) |
+| D.3 | TCC par année (règle métier §6.3-4 : TCC 2024 ≠ 2025) | DONE | P1 | D.2 | V21 `tcc_annuels` (resource, année, tarifs) ; valorisation des charges au tarif de l'année d'imputation, fallback tarif de base ; éditeur « Tarifs par année » dans Ressources |
+| D.4 | Backlog corrections clôturé (score 88/100) | DONE | P0 | — | H-3 bannière warnings KPI, N-2 descope V20, N-3 erreurs login 403/429, N-4 warning supprimé, N-5 assertOwnership, headers sécurité, contrainte DI §16 ; **87/87 tests** |
+
+## Phase E — Gouvernance d'ingénierie (Chief Software Architect, 2026-07-05)
+| E.1 | ENHANCEMENTS.md — backlog d'ingénierie vivant (revue complète + roadmap 4 phases) | DONE | P0 | — | Nouveau document maître ; ENHANCEMENTS_AND_CORRECTIONS.md devient l'archive de vérification |
+| E.2 | Refonte UML v2.0 — 14 diagrammes alignés code | DONE | P0 | E.1 | Vue globale du domaine (20 entités, relations seules) + 5 classes/domaine (+ Gouvernance), séquence KPI hybride réelle, états projet + déploiement nouveaux, KIMAI retiré, UML_DESIGN.md v2 avec justifications ; engineering/ archivé |
+| E.3 | Machine à états projet gardée (découverte audit E.2) | DONE | P0 | E.2 | `ProjectStatus.canTransitionTo` (state pattern), 422 sur transition illégale, 2 tests ; **89/89** |
+| E.4 | Roadmap ENHANCEMENTS Phase 1 (reste) : matrice autorisation + springdoc | DONE | P0 | E.1 | AUTHORIZATION_MATRIX.md mis à jour (V20/V23/VIEW_ALL_PROJECTS) ; springdoc 2.6.0 + @Tag 14 contrôleurs ; /swagger-ui.html disponible |
+
+## Phase F — DevOps : conteneurisation et intégration continue (2026-08-19)
+| # | Task | Status | Pri | Depends | Notes |
+|---|------|--------|-----|---------|-------|
+| F.1 | Hygiène dépôt : `.gitignore`, `.gitattributes` ciblé, wrapper `mvnw`/`mvnw.cmd` | DONE | P0 | — | `.mvn/` n'est plus ignoré ; `!.env.example` ajouté (`git check-ignore` → non ignoré). `.gitattributes` volontairement **ciblé** : un `* text=auto` réécrirait les fins de ligne de 277 fichiers non commités |
+| F.2 | Durcissement de la configuration backend + Actuator | DONE | P0 | — | `${DB_PASSWORD}` / `${JWT_SECRET}` **sans valeur de repli** ; secret dev explicite ; prod : `validate-on-migrate: true`, CORS / cookie / niveau de log pilotés par variables ; `spring-boot-starter-actuator` ajouté. **89/89 tests** |
+| F.3 | `/actuator/health` accessible sans authentification | DONE | P0 | F.2 | `SecurityConfig` : `permitAll` sur health/info **uniquement**. Vérifié : health → 200 `{"status":"UP"}` sans détails ; `/api/projects` → toujours 401 |
+| F.4 | **Correctif du build de production Angular** | DONE | P0 | — | `angular.json` ne déclarait aucun `fileReplacements` : `http://localhost:8090/api` était compilé **dans le bundle de production**. Vérifié avant/après — chaîne présente dans `chunk-5JAN45E7.js`, absente après correctif, `/api` relatif présent |
+| F.5 | Images Docker (backend multi-stage non-root, frontend nginx) | DONE | P0 | F.2,F.4 | `eclipse-temurin:21-jre-jammy`, uid 1001. nginx : `^~ /api/` → `backend:8080`, `= /healthz`, `^~ /i18n/` sans cache (JSON Transloco non hachés), assets hachés `try_files $uri =404`, `/` → `index.html` |
+| F.6 | Orchestration `docker-compose.yml` (db + backend + frontend) | DONE | P0 | F.5 | Ports hôte 5433/8091/8081 — 5432/8090/4200/8080 sont déjà occupés. `pg_isready -h 127.0.0.1` (force TCP, sinon vert trop tôt) ; `start_period: 90s` pour 26 migrations ; volume `pms-db-data` ; `.env.example` documenté |
+| F.7 | Pipeline CI/CD GitHub Actions | DONE | P1 | F.5,F.6 | Jobs `backend` / `frontend` / `images` (PR + push), `smoke` (branches d'intégration), `publish` GHCR (`main`). Garde-fou échouant si `localhost:8090` réapparaît dans le bundle. **Pas de `npm test`** : aucune cible `test` déclarée — cf. ENHANCEMENTS FE-1/T-3 |
+| F.8 | `docs/DEPLOYMENT.md` (clôture DOC-2) + ADR-026 | DONE | P1 | F.6 | Deux modes (natif / conteneur), tableau des variables, sauvegarde `pg_dump -Fc`, dépannage, hors-périmètre explicite (Kubernetes, cloud, TLS). ADR-014 passé à *Superseded by ADR-026* ; les ADR réservés par DOC-4 renumérotés 027/028 |
+| F.9 | Rapport — Sprint 9 « Containerization and Continuous Delivery » | DONE | P1 | F.8 | Ajouté dans `chap_07.tex` (Release 4 = Sprints 8–9). La section « Deployment » du Sprint 8 décrivait un déploiement natif mono-artefact : **réécrite**, pas complétée. Rapport reconstruit : 78 pages, 0 erreur |
+| F.10 | **Vérification runtime de la pile conteneurisée (V3–V8)** | DONE | P0 | F.6 | **Exécuté le 2026-08-20.** 3 conteneurs `(healthy)` ; backend uid=1001 sans Maven dans l'image ; nginx : healthz 200, route profonde 200, `/i18n/` en `no-cache`, `.js` inexistant → 404 ; 26 migrations, 127 utilisateurs / 95 projets seedés ; **login réel via nginx → 200 + cookie `Path=/api/auth/refresh; HttpOnly; SameSite=Strict`** ; RBAC vérifié de bout en bout (Directeur/Chef/Dév 200, Admin 403 — conforme à la matrice) ; données conservées après `restart`. Reset `down -v` non exécuté : détruirait la pile nécessaire aux captures d'écran |
+| F.11 | Pousser la ligne de base et vérifier le pipeline (V10) | TODO | P0 | F.7 | Dépôt à 2 commits pour 277 fichiers non commités : un pipeline vert ne prouverait rien tant que la base réelle n'est pas poussée |
+| F.12 | Resynchroniser les miroirs Markdown du rapport | TODO | P2 | F.9 | `docs/report/chap_01…08.md` reflètent l'**ancienne** structure en 10 chapitres, en français. Le rapport est passé à 7 chapitres en anglais (Releases/Sprints) |
 
 ## Phase 17 — Testing, hardening & deployment  *(report ch.7)*
 | 17.1 | Integration/E2E tests, security review | TODO | P0 | 16.6 | |
 | 17.2 | Performance (NFR-001 ≤2s), logging strategy | TODO | P1 | 16.6 | async, structured |
-| 17.3 | Deployment + docs | TODO | P1 | 17.1 | |
+| 17.3 | Deployment + docs | DONE | P1 | 17.1 | Livré par la Phase F : `docs/DEPLOYMENT.md`, pile Docker Compose, CI/CD. Vérification runtime encore bloquée (F.10) |
 | 17.4 | Report ch.7 (Tests) + **final gate** | TODO | P0 | 17.1–17.3 | |
 
 ## Cross-cutting — PFE report (TEK-UP LaTeX)

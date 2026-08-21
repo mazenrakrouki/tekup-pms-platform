@@ -38,36 +38,42 @@ active boolean, deleted_at timestamptz`.
 
 ## 2. Logical model (ERD) — relationship map
 
+> **⚠ Version as-built (2026-07-05).** Cette section reflète le schéma **réellement implémenté**
+> (Flyway V1→V23, 22 tables). L'ERD initial de la Phase 3 prévoyait des tables jamais construites
+> (`project_manager_assignments` → remplacé par la FK directe `projects.chef_projet_id` ;
+> `currencies`/`exchange_rates` → devise + taux portés par le projet ; `actions`,
+> `risk_*_levels` → énumérations code). Le catalogue d'entités (§3+) est conservé comme
+> **conception historique** ; en cas d'écart, **les migrations Flyway font foi**.
+
 ```
                  role_permissions (M:N)
    roles ─────<──────────────────>───── permissions
      │1
      │N
-   users ──1───────────────────────────── resources (0..1 user per resource)
-     │1 (director)                              │1
-     │N                                         │N
-   projects ──1──< project_manager_assignments >──1── users        tcc (per resource, per year)
-     │1                                                              
-     ├──1──< team_assignments >──N── resources  (+ staffing %)
-     ├──1──< workload_plan >──N── resources     (by month, planned JH)
-     ├──1──< actual_workload >──N── resources   (by month, real JH, source)
-     ├──1──< billing_milestones >──1──< payments
-     ├──1──< missions >──1── resources
-     ├──1──< risks >──N── risk_severity_levels / risk_probability_levels
-     ├──1──< deliverables
-     ├──1──< change_requests
-     ├──1──< actions
-     ├──1──< stakeholders
-     ├──1──< avenants
-     └──1──< kpi_snapshots                      (by month + a "current" rollup)
+   users ──1─────0..1── resources ──1──< tcc_annuels     (tarif par année ; ADR-022)
+     │ (directeur, chef_projet : FK directes sur projects)
+     │
+   projects
+     ├──1──< team_assignments >──N── users      (roleInTeam, dates)
+     ├──1──< plan_charges >──N── users          (period, planned_days)
+     ├──1──< charges_reelles >──N── users       (period, actual_days, validation)
+     ├──1──< jalons_facturation ──1──< paiements   (PREVU→FACTURE→PAYE)
+     ├──1──< avenants                           (writer unique du budget révisé)
+     ├──1──< lignes_di                          (Devis Interne, structure vide — §16 BA)
+     ├──1──< missions ──1──< composantes_mission   (frais multi-devises)
+     ├──1──< risks / livrables / demandes_changement / parties_prenantes
+     └──1──< snapshot_kpis                      (revue mensuelle EVM : EV %, Delivery %, dérive,
+                                                 CA production, FAE, marges — figée)
 
- currencies ──1──< exchange_rates >──1── currencies      parameters (key → typed value)
+   parameters (clé → valeur typée)              [réservée — voir dette T-1]
 ```
 
-Cardinality summary: a **role** has many **users** (one role per user); **roles ⇄ permissions** is
-many-to-many; a **project** has one **director** (user) and, over time, project-manager assignments
-(exactly **one active** at a time) and many team/workload/billing/mission/governance children; a
-**resource** has one **TCC per year** and may link to a login **user**.
+Cardinality summary (as-built): a **role** has many **users** (one role per user);
+**roles ⇄ permissions** is many-to-many in data (dynamic RBAC); a **project** carries two direct
+FKs (`director_id`, `chef_projet_id`) and owns all team/workload/billing/DI/mission/governance/KPI
+children; a **resource** extends at most one **user** with cost data and owns one **TCC per year**;
+soft delete everywhere (`deleted` + partial unique indexes `WHERE deleted = FALSE`); all 19 business
+tables carry audit columns (`created_by`, `updated_by`).
 
 ---
 

@@ -1,0 +1,41 @@
+@startuml act_project_lifecycle
+title Activity — Project Lifecycle (from creation to review)
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityBorderColor #2C5F8A
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+
+|Administrator|
+start
+:Create user accounts;
+:Maintain resources\nand yearly TCC;
+
+|Director|
+:Create the project\n(identification sheet);
+:Assign the project manager;
+:Enter the Internal Quote\n(economic baseline);
+
+|Project Manager|
+:Build the team;
+:Plan the workload;
+:Billing, missions,\ngovernance;
+
+|Developer|
+repeat :Submit monthly\nactual workload;
+
+|Project Manager|
+:Validate workload;
+:Monthly review:\nenter EV %, freeze snapshot;
+repeat while (project active?) is (yes)
+-> no;
+
+|Director|
+:Close (COMPLETED)\nthen archive;
+stop
+
+@enduml

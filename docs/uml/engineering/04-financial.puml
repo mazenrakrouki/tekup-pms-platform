@@ -1,5 +1,5 @@
 @startuml financial
-title Gestion Financière
+title Financial Management
 
 top to bottom direction
 
@@ -18,79 +18,68 @@ skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 hide circle
 
-enum StatutJalon {
-  EN_ATTENTE
+enum JalonStatut {
+  PREVU
   FACTURE
   PAYE
 }
 
-class Projet {
+class Project {
   - code : String
-  - nom : String
-  - budget : double
-  - typeEngagement : String
+  - name : String
+  - initialBudget : BigDecimal
+  - engagementType : EngagementType
 }
 
 class JalonFacturation {
-  - numero : int
-  - pourcentage : double
-  - montant : double
-  - statut : StatutJalon
+  - label : String
+  - pourcentage : BigDecimal
+  - montant : BigDecimal
+  - statut : JalonStatut
   --
-  + facturer() : void
-  + enregistrerPaiement(montant : double) : void
+  + invoice() : void
+  + recordPayment(amount : BigDecimal) : void
 }
 
 class Paiement {
-  - montant : double
-  - datePaiement : Date
+  - montant : BigDecimal
+  - datePaiement : LocalDate
 }
 
 class Avenant {
-  - montant : double
-  - description : String
+  - numero : String
+  - objet : String
+  - montant : BigDecimal
   --
-  + calculerBudgetRevise() : double
+  + computeRevisedBudget() : BigDecimal
 }
 
 class Mission {
-  - destination : String
-  - nombreNuits : int
-  - coutTotal : double
-  --
-  + calculerCout() : double
+  - objet : String
+  - lieu : String
+  - dateDebut : LocalDate
+  - dateFin : LocalDate
 }
 
-class Risque {
-  - libelle : String
-  - impactEstime : double
-  - traitement : String
-  --
-  + calculerImpactPondere() : double
+class Risk {
+  - description : String
+  - probabilite : NiveauRisque
+  - impact : NiveauRisque
+  - statut : StatutRisque
 }
 
-Projet "1" *-- "*" JalonFacturation : jalons de facturation
-JalonFacturation "1" *-- "*" Paiement : paiements reçus
-Projet "1" *-- "*" Avenant          : avenants contractuels
-Projet "1" *-- "*" Mission           : missions terrain
-Projet "1" *-- "*" Risque            : risques financiers
-JalonFacturation --> StatutJalon     : statut >
+Project "1" *-- "*" JalonFacturation : billing milestones >
+JalonFacturation "1" *-- "*" Paiement : payments received >
+Project "1" *-- "*" Avenant           : contract amendments >
+Project "1" *-- "*" Mission           : field missions >
+Project "1" *-- "*" Risk              : financial risks >
 
 note right of JalonFacturation
-  La somme des pourcentages
-  des jalons ne doit pas
-  dépasser 100 %.
+  The sum of milestone percentages must not exceed 100%.
 end note
 
 note right of Avenant
-  Un avenant révise le budget
-  initial du projet.
-end note
-
-note bottom of Risque
-  traitement : REDUCTION,
-  ACCEPTATION, EVITEMENT,
-  TRANSFERT
+  An amendment revises the project's initial budget.
 end note
 
 @enduml

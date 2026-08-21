@@ -1,5 +1,5 @@
 @startuml act_project_lifecycle
-title Diagramme d'Activité : Cycle de Vie d'un Projet
+title Activity Diagram: Project Lifecycle
 
 skinparam shadowing false
 skinparam activityBackgroundColor #D6E4F0
@@ -12,35 +12,35 @@ skinparam ArrowColor #444444
 skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 
-|Administrateur|
+|Administrator|
 start
-:Créer les comptes utilisateurs\n(Directeur, Chef de Projet, Développeurs);
-:Configurer le Taux de Charge Chargé (TCC)\npar ressource et par année;
+:Create user accounts\n(Director, Project Manager, Developers);
+:Configure the TCC (fully loaded cost)\nper resource and per year;
 
-|Directeur|
-:Créer le projet\n(code, budget, client, dates, type d'engagement);
-:Affecter le chef de projet;
+|Director|
+:Create the project\n(code, budget, client, dates, engagement type);
+:Assign the project manager;
 
-|Chef de Projet|
-:Constituer l'équipe projet\n(affecter les développeurs avec leur taux d'affectation);
-:Planifier la charge de travail mensuelle\n(jours-hommes par ressource et par mois);
-:Définir les jalons de facturation\n(pourcentage et montant par jalon);
-:Saisir les missions et déplacements\n(perdiem, billet, hébergement);
+|Project Manager|
+:Build the project team\n(assign developers with their allocation rate);
+:Plan the monthly workload\n(man-days per resource and per month);
+:Define billing milestones\n(percentage and amount per milestone);
+:Enter missions and travel\n(per diem, ticket, lodging);
 
-|Développeur|
+|Developer|
 repeat
-  :Saisir les charges réelles du mois\n(jours travaillés sur le projet);
-repeat while (projet en cours ?) is (oui)
--> projet terminé;
+  :Submit the month's actual workload\n(days worked on the project);
+repeat while (project ongoing?) is (yes)
+-> project completed;
 
-|Chef de Projet|
-:Piloter la rentabilité\n(détecter les dérives budgétaires);
-:Valider les jalons et déclencher la facturation;
-:Gérer les risques, livrables et changements;
+|Project Manager|
+:Monitor profitability\n(detect budget drift);
+:Validate milestones and trigger billing;
+:Manage risks, deliverables and changes;
 
-|Directeur|
-:Superviser le portefeuille de projets;
-:Consulter les tableaux de bord exécutifs;
+|Director|
+:Oversee the project portfolio;
+:View the executive dashboards;
 
 stop
 

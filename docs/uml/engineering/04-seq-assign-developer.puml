@@ -1,5 +1,5 @@
 @startuml seq_assign_developer
-title Séquence : Affecter un Développeur à un Projet
+title Sequence: Assign a Developer to a Project
 
 autonumber
 
@@ -16,38 +16,38 @@ skinparam noteBackgroundColor #FFFDE7
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
 
-actor      "Chef de Projet\nou Directeur" as Acteur
-participant "Interface Web"               as UI
-participant "Service de gestion d'équipe" as TEAM
-participant "Service de droits d'accès"   as SEC
-participant "Base de données"             as DB
+actor      "Project Manager\nor Director" as Actor
+participant "Web Interface"               as UI
+participant "Team Service"                as TEAM
+participant "Access Rights Service"       as SEC
+participant "Database"                    as DB
 
-Acteur -> UI   : sélectionner le développeur et définir son taux d'affectation
-UI     -> TEAM : affecter(projetId, développeurId, tauxAffectation)
+Actor -> UI   : select the developer and set their allocation rate
+UI    -> TEAM : assign(projectId, developerId, allocationRate)
 
-TEAM -> SEC : l'utilisateur possède-t-il la permission AFFECTER_DEVELOPPEUR ?
-alt permission manquante
-  SEC --> TEAM : accès refusé
-  TEAM --> UI  : erreur 403
-  UI --> Acteur : message d'accès refusé
+TEAM -> SEC : does the user hold the ASSIGN_DEVELOPER permission?
+alt missing permission
+  SEC --> TEAM : access denied
+  TEAM --> UI  : 403 error
+  UI --> Actor : access-denied message
 
-else permission accordée
-  SEC  --> TEAM : permission vérifiée
+else permission granted
+  SEC  --> TEAM : permission verified
 
-  TEAM -> SEC : l'utilisateur a-t-il accès à ce projet ?
-  note right of SEC : Directeur → accès à tous les projets.\nChef de Projet → uniquement ses projets.
+  TEAM -> SEC : does the user have access to this project?
+  note right of SEC : Director → access to all projects.\nProject Manager → own projects only.
 
-  alt projet hors portée
-    SEC  --> TEAM : portée refusée
-    TEAM --> UI   : erreur 403
-    UI --> Acteur : projet inaccessible
+  alt project out of scope
+    SEC  --> TEAM : scope denied
+    TEAM --> UI   : 403 error
+    UI --> Actor : project not accessible
 
-  else accès autorisé
-    SEC  --> TEAM : portée vérifiée
-    TEAM -> DB   : enregistrer l'affectation\n(développeur, projet, taux, date début)
-    DB   --> TEAM : affectation enregistrée
-    TEAM --> UI  : succès
-    UI   --> Acteur : développeur ajouté à l'équipe
+  else access authorized
+    SEC  --> TEAM : scope verified
+    TEAM -> DB   : record the assignment\n(developer, project, rate, start date)
+    DB   --> TEAM : assignment recorded
+    TEAM --> UI  : success
+    UI   --> Actor : developer added to the team
 
   end
 end

@@ -1,0 +1,99 @@
+@startuml class_governance
+title Classes — Project Governance
+
+top to bottom direction
+
+skinparam shadowing false
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C5F8A
+skinparam classHeaderBackgroundColor #D6E4F0
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam ArrowThickness 1.5
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+hide circle
+hide empty methods
+
+class Project {
+  - code : String
+  - name : String
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+class Risk {
+  - description : String
+  - probability : RiskLevel
+  - impact : RiskLevel
+  - status : RiskStatus
+  - mitigationPlan : String
+}
+
+enum RiskStatus {
+  OPEN
+  MITIGATED
+  CLOSED
+}
+
+class Deliverable {
+  - title : String
+  - dueDate : LocalDate
+  - status : DeliverableStatus
+}
+
+enum DeliverableStatus {
+  PENDING
+  IN_PROGRESS
+  DELIVERED
+  VALIDATED
+}
+
+class ChangeRequest {
+  - title : String
+  - priority : ChangePriority
+  - status : ChangeStatus
+  - requestDate : LocalDate
+  - decisionDate : LocalDate
+}
+
+enum ChangePriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum ChangeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+class Stakeholder {
+  - name : String
+  - role : String
+  - influence : RiskLevel
+}
+
+Project "1" *-- "*" Risk
+Project "1" *-- "*" Deliverable
+Project "1" *-- "*" ChangeRequest
+Project "1" *-- "*" Stakeholder
+Risk ..> RiskLevel : probability, impact
+Risk ..> RiskStatus
+Deliverable ..> DeliverableStatus
+ChangeRequest ..> ChangePriority
+ChangeRequest ..> ChangeStatus
+Stakeholder ..> RiskLevel
+
+note right of Deliverable
+  EVM Delivery % = delivered/validated deliverables ÷ planned deliverables × 100.
+end note
+
+@enduml

@@ -1,5 +1,5 @@
 @startuml package_diagram
-title Architecture Modulaire — 10 Modules Fonctionnels
+title Modular Architecture — The 10 Real Backend Packages (com.pms.*)
 
 skinparam shadowing false
 skinparam packageStyle rectangle
@@ -12,38 +12,32 @@ skinparam defaultFontSize 12
 skinparam ArrowColor #555555
 skinparam ArrowThickness 1.5
 
-package "Authentification\net RBAC"   as AUTH
-package "Gestion des\nUtilisateurs"   as USER
-package "Gestion des\nProjets"        as PROJ
-package "Gestion des\nÉquipes"        as TEAM
-package "Taux de Charge\nChargé (TCC)" as TCC
-package "Plan de Charge"              as PLAN
-package "Charges Réelles"             as ACTUAL
-package "Facturation"                 as BILL
-package "Missions et\nDéplacements"   as MISS
-package "KPI et\nReporting"           as KPI
+package "auth\nJWT, RBAC, sessions"                    as AUTH
+package "user\nusers, resources,\nyearly TCC"           as USER
+package "project\nprojects, status,\nInternal Quote"    as PROJ
+package "team\nteam assignments"                        as TEAM
+package "workload\nworkload plan,\nactual workload"     as WORK
+package "billing\nmilestones, payments,\namendments"    as BILL
+package "mission\nmissions and expenses"                as MISS
+package "governance\nrisks, deliverables,\nchanges"     as GOV
+package "kpi\nEVM engine:\nlive calc + snapshots"       as KPI
+package "shared\nconfig, web security,\nexceptions"     as SHARED
 
-USER   ..> AUTH   : dépend de
-PROJ   ..> AUTH   : dépend de
-TEAM   ..> PROJ   : dépend de
-TEAM   ..> USER   : dépend de
-PLAN   ..> PROJ   : dépend de
-PLAN   ..> TEAM   : dépend de
-ACTUAL ..> PLAN   : dépend de
-BILL   ..> PROJ   : dépend de
-MISS   ..> PROJ   : dépend de
-TCC    ..> USER   : dépend de
+USER ..> AUTH : depends on
+PROJ ..> USER : depends on
+TEAM ..> PROJ : depends on
+TEAM ..> USER : depends on
+WORK ..> TEAM : depends on
+BILL ..> PROJ : depends on
+MISS ..> PROJ : depends on
+GOV  ..> PROJ : depends on
 
-KPI    <.. PLAN   : alimente
-KPI    <.. ACTUAL : alimente
-KPI    <.. BILL   : alimente
-KPI    <.. MISS   : alimente
-KPI    <.. TCC    : alimente
+KPI <.. WORK : feeds
+KPI <.. BILL : feeds
+KPI <.. USER : yearly TCC
+KPI <.. PROJ : Internal Quote, budget
 
-note bottom of KPI
-  Le moteur KPI consolide toutes
-  les données pour calculer les
-  indicateurs de pilotage.
-end note
+AUTH ..> SHARED
+PROJ ..> SHARED
 
 @enduml

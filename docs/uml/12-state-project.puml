@@ -1,0 +1,36 @@
+@startuml state_project
+title States — Project Lifecycle (controlled state machine)
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam stateBackgroundColor #FFFFFF
+skinparam stateBorderColor #2C5F8A
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+
+[*] --> DRAFT : creation
+
+DRAFT --> ACTIVE : start
+DRAFT --> CANCELLED : abandon
+
+ACTIVE --> ON_HOLD : suspend
+ON_HOLD --> ACTIVE : resume
+
+ACTIVE --> COMPLETED : delivery complete
+ACTIVE --> CANCELLED : termination
+ON_HOLD --> CANCELLED : termination
+
+COMPLETED --> [*]
+CANCELLED --> [*]
+
+note right of COMPLETED
+  Archiving is a flag, not a state.
+end note
+
+note bottom of DRAFT
+  Any other transition is rejected (HTTP 422).
+end note
+
+@enduml

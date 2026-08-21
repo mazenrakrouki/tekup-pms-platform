@@ -1,0 +1,40 @@
+@startuml seq_assign_developer
+title Sequence — Assign a Developer (permission AND scope)
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #2C5F8A
+skinparam sequenceLifeLineBorderColor #999999
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+autonumber
+
+actor "Director / Project Manager" as U
+participant "Frontend" as SPA
+participant "TeamController" as TC
+participant "ProjectScopeService" as SCOPE
+participant "TeamService" as TS
+database "PostgreSQL" as DB
+
+U -> SPA : choose a developer
+SPA -> TC : POST /api/projects/{id}/team
+TC -> TC : permission ASSIGN_DEVELOPER\n(@PreAuthorize)
+TC -> SCOPE : is the project within\nthe caller's scope?
+SCOPE -> DB : accessible projects (1 EXISTS query)
+
+alt out of scope or missing permission
+  TC --> SPA : 403 Forbidden
+else authorized
+  TC -> TS : assign(projectId, userId, roleInTeam)
+  TS -> DB : INSERT team_assignments
+  TC --> SPA : 201 Created
+end
+
+note over TC, SCOPE
+  Two distinct checks: permission, then project scope.
+end note
+
+@enduml

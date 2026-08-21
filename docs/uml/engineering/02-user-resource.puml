@@ -1,5 +1,5 @@
 @startuml user_resource
-title Gestion des Utilisateurs et Ressources
+title User and Resource Management
 
 left to right direction
 
@@ -18,55 +18,46 @@ skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 hide circle
 
-class Utilisateur {
+class User {
   - email : String
-  - nom : String
-  - prenom : String
-  - actif : boolean
+  - firstName : String
+  - lastName : String
+  - active : boolean
 }
 
-class Ressource {
-  - nomComplet : String
-  - profil : String
-  - actif : boolean
-  --
-  + calculerCoutAnnuel(annee : int) : double
+class Resource {
+  - dailyRate : BigDecimal
+  - tccRate : BigDecimal
+  - staffingStart : LocalDate
+  - staffingEnd : LocalDate
 }
 
-class TCC {
+class TccAnnuel {
   - annee : int
-  - coutAnnuelCharge : double
-  - devise : String
-  --
-  + getTauxJournalier() : double
+  - dailyRate : BigDecimal
+  - tccRate : BigDecimal
 }
 
-class Parametre {
-  - cle : String
-  - valeur : String
+class Parameter {
+  - key : String
+  - value : String
   --
-  + getValeur() : String
+  + getValue() : String
 }
 
-Ressource "0..1" --> "1"    Utilisateur : peut être >
-Ressource "1"    *--  "1..*" TCC        : historique coût >
+Resource "0..1" --> "1"    User    : may be >
+Resource "1"    *--  "1..*" TccAnnuel : cost history >
 
-note right of Ressource
-  Un consultant externe est
-  une Ressource sans compte
-  Utilisateur associé.
+note right of Resource
+  An external consultant is a Resource with no linked User account.
 end note
 
-note right of TCC
-  Taux de Charge Chargé (TCC) :
-  coût annuel chargé incluant
-  salaire, charges et PPR (~×1,7)
+note right of TccAnnuel
+  TCC (Taux de Charge Chargé) — fully loaded annual cost including salary, employer charges and PPR (~×1.7).
 end note
 
-note bottom of Parametre
-  Constantes métier configurables :
-  jours ouvrables / an,
-  taux PPR, taux de change par défaut
+note bottom of Parameter
+  Configurable business constants: working days/year, PPR rate, default exchange rate.
 end note
 
 @enduml

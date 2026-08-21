@@ -1,295 +1,303 @@
-# CONCEPTION UML — PMS
+# UML DESIGN — PMS
 
-**Projet :** Plateforme centralisée de gestion et de pilotage financier des projets informatiques (PMS)
-**Phase :** 4 — Conception UML · **Statut :** En attente de validation · **Date :** 2026-06-25
-**Outillage (ADR-023) :** PlantUML = source de vérité ; Mermaid = miroir lisible.
-**Politique deux-niveaux (ADR-024) :**
-- **Niveau 1 — UML du rapport** (`docs/uml/`) : simple, pédagogique, lisible en 30 secondes,
-  une page A4 maximum. **Seul ce niveau apparaît dans le rapport.**
-- **Niveau 2 — UML d'ingénierie** (`docs/uml/engineering/`) : modèle complet et détaillé,
-  pour référence/maintenance uniquement.
-
-> **Règle de décision :** en cas de conflit entre exhaustivité et lisibilité, la lisibilité gagne.
+**Project:** Centralized platform for managing and financially steering IT projects (PMS)
+**Version:** 2.1 — English pass, 2026-08 · supersedes v2.0 (2026-07-05, Chief Software Architect) which superseded the 2026-06-25 version
+**Tooling (ADR-023):** PlantUML = source of truth (`docs/uml/*.puml`); Mermaid = readable mirror below.
+**Two-level policy (ADR-024):** Level 1 (this document, 15 diagrams) = report; Level 2
+(`docs/uml/engineering/`) = reference archive, not part of the report.
 
 ---
 
-## 1. Diagramme de cas d'utilisation (Niveau 1)
-**Source :** [`docs/uml/01-use-case.puml`](uml/01-use-case.puml) · **Rendu :** `img/use_case.png`
+## 0. Why this redesign (v2.0, then the v2.1 English pass)
 
-4 acteurs (Administrateur, Directeur, Chef de Projet, Développeur) et 12 cas d'utilisation métier.
+An audit on 2026-07-05 compared every v1 diagram against the code actually shipped. Findings:
+
+1. **Fictional classes.** `ProjectManagerAssignment` never existed (the code carries a direct
+   `Project.chefProjet` association); the old team-assignment class pointed at `Resource` when
+   the code links `TeamAssignment` → `User` with `roleInTeam` and dates — no allocation rate field.
+2. **Invented names.** Placeholder class names were used instead of the real `PlanCharge`,
+   `ChargeReelle`, `TccAnnuel`/`Resource`. A jury opening the code found nothing matching.
+3. **An imaginary pipeline.** The "workload → KPI recompute" sequence and the "hybrid recompute"
+   activity described an asynchronous event bus that was never built. The real engine is simpler
+   and more defensible: **read-time computation + a frozen monthly snapshot** (ADR-026).
+4. **Two missing domains.** Governance (Risk, Deliverable, Change Request, Stakeholder) and the
+   Internal Quote appeared nowhere.
+5. **Missing views.** No state diagram (even though two state machines exist in the code) and no
+   deployment diagram.
+
+**Principles applied in v2:** one domain per diagram, one page per diagram, only real names from
+the code, meaningful attributes only, no technical classes (Controller/Service/Repository/DTO/
+Mapper), enums only when they carry business meaning (statuses), every diagram checked against
+the entity file before rendering.
+The project state machine, unguarded in the code at the time, was **implemented** as part of this
+work (`ProjectStatus.canTransitionTo`, illegal transition → 422, tested): diagram 12 documents
+real behavior, not an intention.
+
+**v2.1 (2026-08):** the report will be published in English, so all report-level diagrams,
+this document, and chapter 5 of the report were translated. Class names were given a
+*conceptual* English label for the report (e.g. `BillingMilestone` for the real `JalonFacturation`,
+`WorkloadPlan`/`ActualWorkload` for the real `PlanCharge`/`ChargeReelle`) — the mapping is
+documented in `docs/uml/UML_AUDIT.md` so it stays traceable to the actual code. The Level 2
+engineering diagrams (`docs/uml/engineering/`) were also audited and corrected in the same pass —
+several had drifted from the real code (wrong enum values, wrong relationship targets, three
+class names that didn't exist anywhere) — see `docs/uml/engineering/UML_AUDIT.md`.
+
+---
+
+## 1. Use Case Diagram
+**Source:** [`01-use-case.puml`](uml/01-use-case.puml) · **Rendered:** `use_case.png`
+
+4 actors, 15 use cases. v2 additions: Internal Quote (Director, restricted access), monthly EVM
+review, governance, workload validation. The v1 "KIMAI" actor was removed: automatic import isn't
+implemented (manual entry only) — it remains a documented future perspective. **v2.1 refinement:**
+introduced actor generalization — an abstract *Platform User* (all four roles authenticate) and
+*Portfolio User* (Director/PM/Developer all view KPIs, role-filtered) — replacing what were
+previously repeated, redundant associations from every concrete actor to the same shared use case.
 
 ```mermaid
 graph LR
-  Admin([Administrateur]):::a --> U1[S'authentifier]
-  Dir([Directeur]):::a --> U1
-  PM([Chef de Projet]):::a --> U1
-  Dev([Développeur]):::a --> U1
-  Admin --> Uu[Gérer utilisateurs et rôles]
-  Admin --> Ut[Gérer le TCC]
-  Dir --> Uproj[Créer et superviser les projets]
-  Dir --> Uapm[Affecter un chef de projet]
-  Dir --> Uteam[Constituer l'équipe]
-  Dir --> Uexec[Portefeuille et KPI exécutifs]
-  PM --> Uteam
-  PM --> Uplan[Planifier la charge]
-  PM --> Ubill[Facturation et missions]
-  PM --> Upmkpi[KPI du projet]
-  Dev --> Usub[Saisir les charges réelles]
-  Dev --> Uhist[Mes affectations]
+  Admin([Administrator]):::a --> U2[Manage users and roles]
+  Admin --> U3[Resources and yearly TCC]
+  Dir([Director]):::a --> U4[Create and oversee projects]
+  Dir --> U5[Assign the project manager]
+  Dir --> U6[Manage the Internal Quote]
+  Dir --> U15[Portfolio KPIs]
+  PM([Project Manager]):::a --> U7[Build the team]
+  PM --> U8[Plan the workload]
+  PM --> U10[Validate workload]
+  PM --> U11[Billing and amendments]
+  PM --> U12[Governance]
+  PM --> U14[Monthly EVM review]
+  Dev([Developer]):::a --> U9[Submit my actual workload]
   classDef a fill:#1f4e79,color:#fff;
 ```
 
----
+## 2. Package Diagram
+**Source:** [`02-package.puml`](uml/02-package.puml) · **Rendered:** `package_diagram.png`
 
-## 2. Diagramme de packages (Niveau 1)
-**Source :** [`docs/uml/02-package.puml`](uml/02-package.puml) · **Rendu :** `img/package_diagram.png`
-
-Les **10 modules fonctionnels** et leurs dépendances principales (les flèches du bas convergent
-vers le moteur de KPI, qui agrège tout le reste).
+v2: the **10 real packages** of `com.pms.*` (v1 listed modules that didn't match the code:
+TCC lives in `user`, "plan" and "actual" together form `workload`, `governance` was missing).
 
 ```mermaid
 flowchart TB
-  AUTH[Authentification et RBAC]
-  USER[Gestion des utilisateurs]
-  PROJ[Gestion des projets]
-  TEAM[Gestion des équipes]
-  TCC[Gestion du TCC]
-  PLAN[Plan de charge]
-  ACTUAL[Charges réelles]
-  BILL[Facturation]
-  MISS[Gestion des missions]
-  KPI[KPI et Reporting]
-  USER -.-> AUTH
-  PROJ -.-> AUTH
-  TEAM -.-> PROJ
-  TEAM -.-> USER
-  PLAN -.-> PROJ
-  PLAN -.-> TEAM
-  ACTUAL -.-> PLAN
-  BILL -.-> PROJ
-  MISS -.-> PROJ
-  TCC -.-> USER
-  PLAN --> KPI
-  ACTUAL --> KPI
-  BILL --> KPI
-  MISS --> KPI
-  TCC --> KPI
+  auth; user; project; team; workload; billing; mission; governance; kpi; shared
+  user -.-> auth
+  project -.-> user
+  team -.-> project & user
+  workload -.-> team
+  billing -.-> project
+  mission -.-> project
+  governance -.-> project
+  workload --> kpi
+  billing --> kpi
+  user -->|yearly TCC| kpi
+  project -->|Internal Quote, budget| kpi
 ```
 
----
+## 3. Class Diagrams (1 global view + 5 domains)
 
-## 3. Diagrammes de classes (Niveau 1, 4 domaines)
-Pour la lisibilité, le modèle est **éclaté en 4 diagrammes de domaine** (ADR-024). Tous omettent les
-champs d'audit et les classes techniques (Controller/Service/Repository/DTO/Mapper).
+All omit audit fields (`BaseEntity`) and technical classes.
 
-### 3.1 Domaine Sécurité
-**Source :** [`03-class-security.puml`](uml/03-class-security.puml) · **Rendu :** `img/class_security.png`
+### 3.0 Domain overview — [`14-class-global.puml`](uml/14-class-global.puml) · `class_global.png`
+
+**High-abstraction global map**: the real entities grouped into 7 sub-domains,
+**relationships only, zero attributes** (`hide members`). This is the opening figure of the
+design chapter: it shows at a glance that `Project` is the domain's aggregation root; each
+sub-domain is then detailed by diagrams 3.1 to 3.5.
 
 ```mermaid
 classDiagram
-  class User { +email; +active }
-  class Role { +name }
-  class Permission { +code; +module }
-  User "*" --> "1" Role : possède
-  Role "*" -- "*" Permission : accorde
+  direction LR
+  User "*" --> "1" Role
+  Role "*" -- "*" Permission
+  Resource "0..1" --> "1" User
+  Resource "1" *-- "*" AnnualTcc
+  Project "*" --> "1" User : director
+  Project "1" *-- "*" TeamAssignment
+  TeamAssignment "*" --> "1" User
+  Project "1" *-- "*" WorkloadPlan
+  Project "1" *-- "*" ActualWorkload
+  Project "1" *-- "*" QuoteLine
+  Project "1" *-- "*" Amendment
+  Project "1" *-- "*" BillingMilestone
+  BillingMilestone "1" *-- "*" Payment
+  Project "1" *-- "*" Mission
+  Project "1" *-- "*" Risk
+  Project "1" *-- "*" Deliverable
+  Project "1" *-- "*" ChangeRequest
+  Project "1" *-- "*" Stakeholder
+  Project "1" *-- "*" KpiSnapshot
 ```
 
-### 3.2 Domaine Projet & Équipe
-**Source :** [`04-class-project-team.puml`](uml/04-class-project-team.puml) · **Rendu :** `img/class_project_team.png`
+**Principle:** the global view deliberately sacrifices attributes to stay readable on one page —
+it's the map, not the territory. The user links from `WorkloadPlan`/`ActualWorkload` are omitted
+here (noted on the diagram) to avoid the spaghetti of crossing lines that made v1 unreadable;
+they appear in the domain diagrams.
 
+### 3.1 Security — [`03-class-security.puml`](uml/03-class-security.puml) · `class_security.png`
 ```mermaid
 classDiagram
-  class Project { +code; +status; +budget }
-  class User { +email }
-  class Resource { +fullName }
-  class ProjectManagerAssignment { +active }
-  class TeamAssignment { +staffingPercent; +active }
-  Project "*" --> "1" User : directeur
-  Project "1" --> "*" ProjectManagerAssignment
-  ProjectManagerAssignment "*" --> "1" User : chef de projet
-  Project "1" --> "*" TeamAssignment
-  TeamAssignment "*" --> "1" Resource
-  Resource "0..1" --> "1" User : peut être (ADR-022)
+  class User { email; active; firstLogin; tokenVersion }
+  class Role { name }
+  class Permission { code; module }
+  User "*" --> "1" Role : has
+  Role "*" -- "*" Permission : grants
 ```
+`tokenVersion` implements session revocation (ADR-017); the role→permission matrix lives in the
+database (dynamic RBAC, proven by migrations V12/V20/V23).
 
-### 3.3 Domaine Financier
-**Source :** [`05-class-financial.puml`](uml/05-class-financial.puml) · **Rendu :** `img/class_financial.png`
-
+### 3.2 Project & Team — [`04-class-project-team.puml`](uml/04-class-project-team.puml) · `class_project_team.png`
 ```mermaid
 classDiagram
-  class Project { +code; +budget }
-  class BillingMilestone { +percent; +amount; +status }
-  class Payment { +amount; +paidDate }
-  class Mission { +totalCost }
-  class Avenant { +amount }
-  Project "1" --> "*" BillingMilestone
-  BillingMilestone "1" --> "*" Payment
-  Project "1" --> "*" Mission
-  Project "1" --> "*" Avenant
+  class Project { code; status; initialBudget; revisedBudget; currency; soldWorkloadDays; archived; +getEffectiveBudget() }
+  class TeamAssignment { roleInTeam; startDate; endDate }
+  class Resource { dailyRate; tccRate }
+  Project "*" --> "1" User : director
+  Project "*" --> "0..1" User : project manager
+  Project "1" *-- "*" TeamAssignment
+  TeamAssignment "*" --> "1" User : member
+  Resource "0..1" --> "1" User : cost of
 ```
+v2 corrections: removed the fictional `ProjectManagerAssignment`; `TeamAssignment` → `User`
+(not `Resource`); real attributes. The revised budget has a single writer: the amendment (ADR-025).
 
-### 3.4 Domaine Charges & KPI
-**Source :** [`06-class-kpi.puml`](uml/06-class-kpi.puml) · **Rendu :** `img/class_kpi.png`
-
+### 3.3 Financial — [`05-class-financial.puml`](uml/05-class-financial.puml) · `class_financial.png`
 ```mermaid
 classDiagram
-  class Project { +code }
-  class Resource { +fullName }
-  class Tcc { +year; +annualCost }
-  class WorkloadPlan { +month; +plannedMd }
-  class ActualWorkload { +month; +manDays; +source }
-  class KpiSnapshot { +snapshotMonth; +eac; +marginEac }
-  Resource "1" --> "*" Tcc
-  Project "1" --> "*" WorkloadPlan
-  WorkloadPlan "*" --> "1" Resource
-  Project "1" --> "*" ActualWorkload
-  ActualWorkload "*" --> "1" Resource
-  Project "1" --> "*" KpiSnapshot
+  class BillingMilestone { label; percentage; amount; status }
+  class Payment { amountReceived; paymentDate }
+  class Amendment { number; amount; workloadDays }
+  class QuoteLine { section; soldWorkloadDays; unitSellingPrice; internalWorkloadDays; unitTccCost; percentageRate }
+  class Mission { purpose; location }
+  Project "1" *-- "*" BillingMilestone
+  BillingMilestone "1" *-- "*" Payment
+  Project "1" *-- "*" Amendment
+  Project "1" *-- "*" QuoteLine : internal quote
+  Project "1" *-- "*" Mission
 ```
+v2 addition: `QuoteLine` (empty structure — amounts/margins always computed at read time, never
+stored; see `BUSINESS_ANALYSIS.md`). Milestone statuses: `PLANNED → INVOICED → PAID`.
+
+### 3.4 Workload & KPI — [`06-class-kpi.puml`](uml/06-class-kpi.puml) · `class_kpi.png`
+```mermaid
+classDiagram
+  class AnnualTcc { year; dailyRate; tccRate }
+  class WorkloadPlan { period; plannedDays }
+  class ActualWorkload { period; actualDays; validatedAt }
+  class KpiSnapshot { snapshotDate; evPct; deliveryPct; driftDays; productionRevenue; unbilledRevenue; eac; margin }
+  Resource "1" *-- "*" AnnualTcc
+  Project "1" *-- "*" WorkloadPlan
+  Project "1" *-- "*" ActualWorkload
+  Project "1" *-- "*" KpiSnapshot : monthly reviews
+```
+v2 corrections: real names (`PlanCharge`/`ChargeReelle`/`TccAnnuel` in the code, shown here under
+their report-level conceptual names), real EVM indicators (per F-AFF-13). The daily cost of a
+man-day uses the rate for **the year the period falls in**.
+
+### 3.5 Governance — [`07-class-governance.puml`](uml/07-class-governance.puml) · `class_governance.png`
+```mermaid
+classDiagram
+  class Risk { probability; impact; status }
+  class Deliverable { title; dueDate; status }
+  class ChangeRequest { title; priority; status }
+  class Stakeholder { name; role; influence }
+  Project "1" *-- "*" Risk
+  Project "1" *-- "*" Deliverable
+  Project "1" *-- "*" ChangeRequest
+  Project "1" *-- "*" Stakeholder
+```
+The EVM engine's Delivery % is derived from deliverables (`DELIVERED`/`VALIDATED` ÷ planned).
+
+## 4. Sequence Diagrams
+
+### 4.1 Authentication — [`08-seq-login.puml`](uml/08-seq-login.puml) · `seq_login.png`
+v2 adds what actually distinguishes the implementation: a constant-time rate limiter, a
+single-use refresh token in an HttpOnly `SameSite=Strict` cookie, forced first-login enforced
+server-side.
+
+### 4.2 Assignment with scope — [`09-seq-assign-developer.puml`](uml/09-seq-assign-developer.puml) · `seq_assign_developer.png`
+Shows the double check (the `ASSIGN_DEVELOPER` permission **and** scope via
+`ProjectScopeService`, a single EXISTS query) — the heart of ADR-021.
+
+### 4.3 Workload → hybrid KPI — [`10-seq-workload-kpi.puml`](uml/10-seq-workload-kpi.puml) · `seq_submit_workload.png`
+v1 showed an event-driven asynchronous recompute that was **never built**. v2 documents the real
+engine (ADR-026) in three steps: guarded entry (own workload + active team membership) → KPIs
+**computed at read time** (nothing written) → **frozen snapshot** at the monthly review (EV %
+entered by the PM).
+
+## 5. Activity Diagram — [`11-act-project-lifecycle.puml`](uml/11-act-project-lifecycle.puml) · `act_project_lifecycle.png`
+v2: actor swimlanes, adds the Internal Quote (Director), workload validation, and the monthly
+review loop; ends with closure + archiving. The v1 "KPI recompute" activity was removed from
+this diagram (fictional pipeline — see 4.3) and now lives as its own diagram (5.1 below).
+
+### 5.1 Activity — KPI recomputation — [`15-act-kpi-recompute.puml`](uml/15-act-kpi-recompute.puml) · `act_kpi_recompute.png`
+The real trigger-based flow: a business event (workload entry, milestone/mission/amendment
+change) triggers recomputation of costs and indicators on the next read — no event bus, no
+background job.
+
+## 6. State Diagram — [`12-state-project.puml`](uml/12-state-project.puml) · `state_project.png`
+```mermaid
+stateDiagram-v2
+  [*] --> DRAFT
+  DRAFT --> ACTIVE
+  DRAFT --> CANCELLED
+  ACTIVE --> ON_HOLD
+  ON_HOLD --> ACTIVE
+  ACTIVE --> COMPLETED
+  ACTIVE --> CANCELLED
+  ON_HOLD --> CANCELLED
+  COMPLETED --> [*]
+  CANCELLED --> [*]
+```
+**This diagram preceded a fix:** the audit found that `changeStatus` enforced no transition rule
+at all. The state machine is now **enforced by the enum**
+(`ProjectStatus.canTransitionTo`); an illegal transition → HTTP 422, covered by two tests.
+Archiving is a flag on `COMPLETED`, not a state.
+
+## 7. Deployment Diagram — [`13-deployment.puml`](uml/13-deployment.puml) · `deployment_diagram.png`
+Three nodes: browser (static Angular 21 SPA) → Spring Boot 3.3 API (single JAR, modular
+monolith) → PostgreSQL 17 (Flyway migrations at startup). JWT Bearer + HttpOnly refresh cookie
+over HTTPS.
 
 ---
 
-## 4. Diagrammes de séquence (Niveau 1)
+## 8. Summary — the 15 report diagrams
 
-### 4.1 Connexion
-**Source :** [`07-seq-login.puml`](uml/07-seq-login.puml) · **Rendu :** `img/seq_login.png`
+| # | Type | Source | Rendered | v2 status |
+|---|------|--------|-------|-----------|
+| 0 | Classes — Domain overview | `14-class-global.puml` | `class_global.png` | **New** (map: entities, relationships only) |
+| 1 | Use case | `01-use-case.puml` | `use_case.png` | Updated (Internal Quote, review, governance; KIMAI removed) |
+| 2 | Packages | `02-package.puml` | `package_diagram.png` | Redesigned (real packages) |
+| 3 | Classes — Security | `03-class-security.puml` | `class_security.png` | Updated (tokenVersion) |
+| 4 | Classes — Project & Team | `04-class-project-team.puml` | `class_project_team.png` | Fixed (fictional classes removed) |
+| 5 | Classes — Financial | `05-class-financial.puml` | `class_financial.png` | Fixed + Internal Quote |
+| 6 | Classes — Workload & KPI | `06-class-kpi.puml` | `class_kpi.png` | Fixed (real names, EVM) |
+| 7 | Classes — Governance | `07-class-governance.puml` | `class_governance.png` | **New** |
+| 8 | Sequence — Authentication | `08-seq-login.puml` | `seq_login.png` | Updated (refresh rotation) |
+| 9 | Sequence — Assignment + scope | `09-seq-assign-developer.puml` | `seq_assign_developer.png` | Updated (ScopeService) |
+| 10 | Sequence — Hybrid KPI | `10-seq-workload-kpi.puml` | `seq_submit_workload.png` | **Redesigned** (fictional pipeline → real one) |
+| 11 | Activity — Lifecycle | `11-act-project-lifecycle.puml` | `act_project_lifecycle.png` | Updated (swimlanes) |
+| 12 | States — Project status | `12-state-project.puml` | `state_project.png` | **New** (+ implemented guard) |
+| 13 | Deployment | `13-deployment.puml` | `deployment_diagram.png` | **New** |
+| 15 | Activity — KPI recompute | `15-act-kpi-recompute.puml` | `act_kpi_recompute.png` | **New** (2026-08 — source was missing though the render was already embedded in the report) |
 
-```mermaid
-sequenceDiagram
-  autonumber
-  actor User as Utilisateur
-  participant SPA as Frontend
-  participant AC as AuthController
-  participant AS as AuthService
-  participant DB as Base de données
-  User->>SPA: e-mail + mot de passe
-  SPA->>AC: POST /api/auth/login
-  AC->>AS: authentifier
-  AS->>DB: vérifier l'utilisateur
-  DB-->>AS: utilisateur
-  AS-->>AC: jeton JWT + premier login ?
-  AC-->>SPA: jeton + redirection
-  alt première connexion
-    SPA-->>User: changer le mot de passe
-  else connexion normale
-    SPA-->>User: accès au tableau de bord
-  end
-```
+Rendering: `java -jar plantuml.jar -tpng -charset UTF-8 docs/uml/*.puml`, or via Kroki (`docs/uml/*.puml` → `https://kroki.io/plantuml/png`).
 
-### 4.2 Affecter un développeur (permission ET portée)
-**Source :** [`08-seq-assign-developer.puml`](uml/08-seq-assign-developer.puml) · **Rendu :** `img/seq_assign_developer.png`
+**Two diagram types deliberately absent from this document:**
+- **ERD** — the entity-relationship model lives in [`DATABASE_DESIGN.md`](DATABASE_DESIGN.md) §2
+  (updated *as-built* on 2026-07-05, 22 real tables); duplicating it here would create two
+  sources of truth.
+- **Component diagram** — redundant with the package diagram for a modular monolith with a
+  single deployable; the deployment diagram (13) covers the physical view.
 
-```mermaid
-sequenceDiagram
-  autonumber
-  actor U as Directeur / CP
-  participant SPA as Frontend
-  participant TC as TeamController
-  participant TS as TeamService
-  participant DB as Base de données
-  U->>SPA: choisir un développeur
-  SPA->>TC: POST /api/projects/{id}/team
-  TC->>TC: vérifier permission ASSIGN_DEVELOPER
-  TC->>TC: vérifier portée (projet accessible)
-  alt refusé
-    TC-->>SPA: 403 Interdit
-  else autorisé
-    TC->>TS: affecter
-    TS->>DB: enregistrer
-    TC-->>SPA: 201 Créé
-  end
-```
+## 9. Appendix — Engineering UML (Level 2, not part of the report)
 
-### 4.3 Saisir les charges → recalcul KPI
-**Source :** [`09-seq-submit-workload-kpi.puml`](uml/09-seq-submit-workload-kpi.puml) · **Rendu :** `img/seq_submit_workload.png`
+`docs/uml/engineering/` was originally kept as an **archive of the initial design** (Phase 4).
+It was audited and corrected in the same 2026-08 pass as this document — several diagrams had
+drifted from the real code (see `docs/uml/engineering/UML_AUDIT.md` for specifics: three
+nonexistent class names, a fabricated enum, two wrong relationship targets, all fixed and
+re-verified against the entity source). Going forward it is a **detailed, implementation-exact
+reference**, not the report's source of truth: if this document (v2) and the code ever disagree
+again, **the code wins**, and this document should be corrected to match.
 
-```mermaid
-sequenceDiagram
-  autonumber
-  actor D as Développeur
-  participant SPA as Frontend
-  participant AC as WorkloadController
-  participant WS as WorkloadService
-  participant KPI as KpiService
-  participant DB as Base de données
-  D->>SPA: saisir charges (mois, JH)
-  SPA->>AC: POST /api/workload/actual
-  AC->>WS: enregistrer
-  WS->>DB: sauvegarder
-  AC-->>SPA: 200 OK
-  Note over WS,KPI: Recalcul asynchrone
-  WS->>KPI: déclencher recalcul (projet)
-  KPI->>DB: lire TCC, plan, réels, facturation
-  KPI->>DB: écrire KpiSnapshot
-```
-
----
-
-## 5. Diagrammes d'activité (Niveau 1)
-
-### 5.1 Cycle de vie d'un projet
-**Source :** [`10-act-project-lifecycle.puml`](uml/10-act-project-lifecycle.puml) · **Rendu :** `img/act_project_lifecycle.png`
-
-```mermaid
-flowchart TD
-  A1[Admin : créer utilisateurs] --> A2[Admin : maintenir TCC]
-  A2 --> B1[Directeur : créer un projet]
-  B1 --> B2[Directeur : affecter un CP]
-  B2 --> C1[CP : constituer l'équipe]
-  C1 --> C2[CP : planifier la charge]
-  C2 --> C3[CP : facturation et missions]
-  C3 --> D1[Dev : saisir charges mensuelles]
-  D1 --> S1[Système : recalculer les KPI]
-  S1 --> E1[CP : piloter la rentabilité]
-  S1 --> E2[Directeur : superviser le portefeuille]
-```
-
-### 5.2 Recalcul hybride des KPI
-**Source :** [`11-act-kpi-recompute.puml`](uml/11-act-kpi-recompute.puml) · **Rendu :** `img/act_kpi_recompute.png`
-
-```mermaid
-flowchart TD
-  T[Événement déclencheur] --> P[Publier après commit]
-  P --> L[Charger données du projet]
-  L --> CC[Calculer coûts main-d'œuvre + autres]
-  CC --> KC[Calculer EAC, marges, CA Production, FAE]
-  KC --> S[Écrire KpiSnapshot]
-  S --> N[Notifier tableaux de bord]
-```
-
----
-
-## 6. Synthèse — diagrammes Niveau 1 (rapport)
-
-| # | Type | Source PlantUML | Rendu PNG |
-|---|------|-----------------|-----------|
-| 1 | Cas d'utilisation | `01-use-case.puml` | `img/use_case.png` |
-| 2 | Packages (10 modules) | `02-package.puml` | `img/package_diagram.png` |
-| 3 | Classes — Sécurité | `03-class-security.puml` | `img/class_security.png` |
-| 4 | Classes — Projet & Équipe | `04-class-project-team.puml` | `img/class_project_team.png` |
-| 5 | Classes — Financier | `05-class-financial.puml` | `img/class_financial.png` |
-| 6 | Classes — Charges & KPI | `06-class-kpi.puml` | `img/class_kpi.png` |
-| 7 | Séquence — Connexion | `07-seq-login.puml` | `img/seq_login.png` |
-| 8 | Séquence — Affecter développeur | `08-seq-assign-developer.puml` | `img/seq_assign_developer.png` |
-| 9 | Séquence — Charges → KPI | `09-seq-submit-workload-kpi.puml` | `img/seq_submit_workload.png` |
-| 10 | Activité — Cycle de vie projet | `10-act-project-lifecycle.puml` | `img/act_project_lifecycle.png` |
-| 11 | Activité — Recalcul KPI | `11-act-kpi-recompute.puml` | `img/act_kpi_recompute.png` |
-
----
-
-## 7. Annexe — UML d'ingénierie (Niveau 2, hors rapport)
-
-Les diagrammes détaillés (modèle de classes complet aligné sur `schema.sql`, séquences avec toutes
-les interactions, contexte de sécurité, ScopeService, etc.) sont conservés sous
-[`docs/uml/engineering/`](uml/engineering/) pour référence et maintenance. **Ils ne sont pas inclus
-dans le rapport PFE** (ADR-024).
-
-| Source d'ingénierie | Rendu | Objet |
-|---|---|---|
-| `engineering/01-use-case.puml` | `engineering/img/use_case.png` | 6 acteurs, ~17 cas d'utilisation détaillés |
-| `engineering/02-class.puml` | `engineering/img/class_diagram.png` | Modèle complet (~26 classes + énumérations) |
-| `engineering/03..05-seq-*.puml` | `engineering/img/seq_*.png` | Séquences détaillées (cache de sécurité, ScopeService, Bus d'événements) |
-| `engineering/06..07-act-*.puml` | `engineering/img/act_*.png` | Activités détaillées |
-
-*Fin de la conception UML (Phase 4). En attente de validation avant la Phase 5 — Authentification &
-RBAC dynamique (début du code).*
+*End of UML design v2.1 — every diagram verified against the code; v2.0 verified 2026-07-05, v2.1 English pass and re-verification 2026-08.*

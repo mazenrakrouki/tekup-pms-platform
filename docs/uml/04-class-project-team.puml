@@ -1,5 +1,5 @@
 @startuml class_project_team
-title Classes — Gestion de Projet et Équipe
+title Classes — Project and Team
 
 top to bottom direction
 
@@ -14,67 +14,62 @@ skinparam ArrowThickness 1.5
 skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 hide circle
+hide empty methods
 
-enum StatutProjet {
-  BROUILLON
-  ACTIF
-  EN_ATTENTE
-  TERMINE
-  ANNULE
-}
-
-class Projet {
-  - code : String
-  - nom : String
-  - client : String
-  - budget : double
-  - typeEngagement : String
-  - dateDebut : Date
-  - dateFin : Date
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
   --
-  + assignerChefDeProjet(chef : Utilisateur) : void
-  + ajouterMembre(ressource : Ressource) : void
-  + calculerBudgetRestant() : double
+  + canTransitionTo(target) : boolean
 }
 
-class Utilisateur {
-  - nom : String
-  - prenom : String
+class Project {
+  - code : String
+  - name : String
+  - client : String
+  - status : ProjectStatus
+  - initialBudget : BigDecimal
+  - revisedBudget : BigDecimal
+  - currency : String
+  - soldWorkloadDays : BigDecimal
+  - archived : boolean
+  --
+  + getEffectiveBudget() : BigDecimal
+}
+
+class User {
+  - firstName : String
+  - lastName : String
   - email : String
 }
 
-class Ressource {
-  - nomComplet : String
-  - profil : String
-  --
-  + calculerCoutAnnuel(annee : int) : double
+class TeamAssignment {
+  - roleInTeam : String
+  - startDate : LocalDate
+  - endDate : LocalDate
 }
 
-class AffectationEquipe {
-  - tauxAffectation : double
-  - dateDebut : Date
-  - dateFin : Date
+class Resource {
+  - dailyRate : BigDecimal
+  - tccRate : BigDecimal
 }
 
-class Livrable {
-  - designation : String
-  - livre : boolean
-  - dateLivraison : Date
-  --
-  + marquerLivre() : void
-}
+Project ..> ProjectStatus
+Project "*" --> "1" User : director >
+Project "*" --> "0..1" User : project manager >
+Project "1" *-- "*" TeamAssignment
+TeamAssignment "*" --> "1" User : member >
+Resource "0..1" --> "1" User : cost of >
 
-Projet "*"  --> "1"    Utilisateur       : directeur >
-Projet "*"  --> "1..*" Utilisateur       : chefs de projet >
-Projet "1"  *-- "*"    AffectationEquipe
-AffectationEquipe "*" --> "1" Ressource  : concerne >
-Projet "1"  *-- "*"    Livrable
-Projet      -->         StatutProjet      : statut >
+note right of Project
+  Effective budget = revisedBudget if set, otherwise initialBudget.
+end note
 
-note right of AffectationEquipe
-  Affectation partielle possible :
-  ex. un développeur à 50 %
-  sur deux projets simultanément.
+note bottom of ProjectStatus
+  Any illegal transition is rejected (HTTP 422).
 end note
 
 @enduml

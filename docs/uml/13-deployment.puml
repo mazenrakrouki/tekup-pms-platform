@@ -1,0 +1,35 @@
+@startuml deployment_diagram
+title Deployment — 3-Tier Architecture
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam nodeBackgroundColor #EAF2FF
+skinparam nodeBorderColor #1F4E79
+skinparam artifactBackgroundColor #FFFFFF
+skinparam artifactBorderColor #2C5F8A
+skinparam databaseBackgroundColor #FFFFFF
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+
+node "Client machine" as client {
+  artifact "Browser\nAngular 21 SPA\n(static build)" as spa
+}
+
+node "Application server" as server {
+  artifact "REST API\nSpring Boot 3.3\n(JAR, port 8090)" as api
+}
+
+node "Data server" as data {
+  database "PostgreSQL 17\npms_db" as db
+}
+
+spa --> api : HTTPS / JSON\nJWT Bearer + HttpOnly refresh cookie
+api --> db : JDBC (Hikari pool)\nFlyway migrations at startup
+
+note bottom of server
+  Single deployable: modular monolith.
+end note
+
+@enduml

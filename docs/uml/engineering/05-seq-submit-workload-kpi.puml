@@ -1,5 +1,5 @@
 @startuml seq_submit_workload
-title Séquence : Saisie des Charges Réelles et Recalcul des KPI
+title Sequence: Actual Workload Entry and KPI Recomputation
 
 autonumber
 
@@ -16,39 +16,39 @@ skinparam noteBackgroundColor #FFFDE7
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
 
-actor      "Développeur"           as Dev
-participant "Interface Web"        as UI
-participant "Service de charges"   as WS
-participant "Moteur de calcul KPI" as KPI
-participant "Base de données"      as DB
+actor      "Developer"          as Dev
+participant "Web Interface"     as UI
+participant "Workload Service"  as WS
+participant "KPI Calc Engine"   as KPI
+participant "Database"          as DB
 
-Dev -> UI  : saisir les charges du mois\n(nombre de jours, projet concerné)
-UI  -> WS  : soumettre(projetId, mois, joursHomme)
+Dev -> UI  : enter the month's workload\n(number of days, project)
+UI  -> WS  : submit(projectId, month, manDays)
 
-WS  -> WS  : vérifier que le développeur est affecté au projet
-WS  -> DB  : enregistrer la charge réelle
+WS  -> WS  : verify the developer is assigned to the project
+WS  -> DB  : record the actual workload
 
-alt développeur non affecté
-  WS --> UI  : accès refusé
-  UI --> Dev : message d'erreur
-else enregistrement réussi
+alt developer not assigned
+  WS --> UI  : access denied
+  UI --> Dev : error message
+else recorded successfully
   DB  --> WS : confirmation
-  WS  --> UI : charge enregistrée
-  UI  --> Dev : saisie confirmée
+  WS  --> UI : workload recorded
+  UI  --> Dev : entry confirmed
 
-  == Traitement asynchrone ==
+  == Asynchronous processing ==
 
-  note over WS, KPI : Le recalcul est déclenché après\nla confirmation au développeur.
+  note over WS, KPI : Recomputation is triggered after\nconfirming the entry to the developer.
 
-  WS -> KPI : déclencher le recalcul des KPI (projetId)
-  KPI -> DB  : charger les données du projet\n(TCC, plan de charge, charges réelles,\njalons de facturation, missions)
-  DB  --> KPI : données consolidées
+  WS -> KPI : trigger KPI recomputation (projectId)
+  KPI -> DB  : load the project's data\n(TCC, workload plan, actual workload,\nbilling milestones, missions)
+  DB  --> KPI : consolidated data
 
-  KPI -> KPI : calculer le coût réel de la main-d'œuvre\n(Σ jours réels × TCC journalier)
-  KPI -> KPI : estimer le coût final du projet (EAC)\net la marge prévisionnelle
-  KPI -> DB  : mettre à jour les indicateurs KPI du projet
+  KPI -> KPI : compute the actual labor cost\n(Σ actual days × daily TCC rate)
+  KPI -> KPI : estimate the final project cost (EAC)\nand the projected margin
+  KPI -> DB  : update the project's KPIs
 
-  note right of KPI : Le tableau de bord est mis à jour\nautomatiquement à la prochaine consultation.
+  note right of KPI : The dashboard updates\nautomatically on next view.
 
 end
 

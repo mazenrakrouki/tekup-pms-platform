@@ -1,5 +1,5 @@
 @startuml project_team
-title Gestion de Projet et Équipe
+title Project and Team Management
 
 top to bottom direction
 
@@ -18,75 +18,71 @@ skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 hide circle
 
-enum StatutProjet {
-  BROUILLON
-  ACTIF
-  EN_ATTENTE
-  TERMINE
-  ANNULE
+enum ProjectStatus {
+  DRAFT
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
 }
 
-class Projet {
+enum EngagementType {
+  FORFAIT
+  REGIE
+}
+
+class Project {
   - code : String
-  - nom : String
+  - name : String
   - client : String
-  - budget : double
-  - typeEngagement : String
-  - dateDebut : Date
-  - dateFin : Date
+  - status : ProjectStatus
+  - engagementType : EngagementType
+  - initialBudget : BigDecimal
+  - startDate : LocalDate
+  - endDate : LocalDate
   --
-  + assignerChefDeProjet(chef : Utilisateur) : void
-  + ajouterMembre(ressource : Ressource) : void
-  + calculerBudgetRestant() : double
+  + assignProjectManager(pm : User) : void
+  + addTeamMember(member : User) : void
+  + computeRemainingBudget() : BigDecimal
 }
 
-class Utilisateur {
-  - nom : String
-  - prenom : String
+class User {
+  - firstName : String
+  - lastName : String
   - email : String
 }
 
-class Ressource {
-  - nomComplet : String
-  - profil : String
-}
-
-class AffectationEquipe {
-  - tauxAffectation : double
-  - dateDebut : Date
-  - dateFin : Date
+class TeamAssignment {
+  - roleInTeam : String
+  - startDate : LocalDate
+  - endDate : LocalDate
 }
 
 class Livrable {
   - designation : String
-  - livre : boolean
-  - dateLivraison : Date
+  - delivered : boolean
+  - deliveryDate : LocalDate
   --
-  + marquerLivre() : void
+  + markDelivered() : void
 }
 
-class Intervenant {
-  - categorie : String
+class PartiePrenante {
   - nom : String
+  - fonction : String
+  - influence : NiveauRisque
 }
 
-Projet "*"  -->  "1"   Utilisateur     : directeur >
-Projet "*"  -->  "1..*" Utilisateur    : chefs de projet >
-Projet "1"  *--  "*"   AffectationEquipe
-AffectationEquipe "*" --> "1" Ressource : concerne >
-Projet "1"  *--  "*"   Livrable
-Projet "1"  *--  "*"   Intervenant
-Projet      -->         StatutProjet   : statut >
+Project "*"  -->  "1"   User            : director >
+Project "*"  -->  "1..*" User           : project managers >
+Project "1"  *--  "*"   TeamAssignment
+TeamAssignment "*" --> "1" User         : member >
+Project "1"  *--  "*"   Livrable
+Project "1"  *--  "*"   PartiePrenante
+Project      -->         ProjectStatus  : status >
+Project      -->         EngagementType : engagement type >
 
-note right of AffectationEquipe
-  Affectation partielle possible :
-  ex. 50 % sur deux projets.
-  Traçabilité des changements d'équipe.
-end note
-
-note right of Projet
-  typeEngagement :
-  FORFAIT (FP) ou REGIE (TM)
+note right of TeamAssignment
+  Partial allocation possible (e.g. 50% across two projects); assignment history is preserved.
 end note
 
 @enduml

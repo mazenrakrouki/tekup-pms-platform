@@ -1,19 +1,25 @@
 # 🎯 PROJECT_STATUS.md — PMS Real-Time Progress Dashboard
 
 > **Mis à jour automatiquement** à chaque fin de phase ou correction majeure.
-> Dernière mise à jour : **2026-06-27** — **Audit RBAC (Phase C) terminé** : matrice rôle→permission reconstruite depuis les règles métier et corrigée via migration V12 (correction 100% données, zéro code — preuve ADR-001). Voir [docs/AUTHORIZATION_MATRIX.md](docs/AUTHORIZATION_MATRIX.md). Test des 4 rôles : **22/22 PASS**. Admin 22→5 permissions ; fuite financière développeur (VIEW_KPI) supprimée (BR-050) ; Directeur aligné ADR-005.
+> Dernière mise à jour : **2026-08-19** — **Phase F — DevOps : conteneurisation et intégration continue.** Pile Docker Compose à 3 services (postgres:17-alpine · backend temurin-21 non-root · nginx servant le build Angular, point d'entrée unique `:8081` → plus aucun CORS) ; pipeline **GitHub Actions** (backend / frontend / images / smoke / publish GHCR) ; `docs/DEPLOYMENT.md` (clôture DOC-2) ; **ADR-026**, ADR-014 passé à *Superseded*. Trois défauts latents corrigés au passage : (1) **`angular.json` n'avait aucun `fileReplacements`** — `http://localhost:8090/api` était compilé dans le bundle de production ; (2) `/actuator/health` répondait 401, ce qui aurait bloqué `depends_on: service_healthy` ; (3) `application.yml` embarquait un mot de passe et un secret JWT de repli. **89/89 tests backend.** Rapport reconstruit : **78 pages, 0 erreur**.
+> ✅ **Pile vérifiée en exécution le 2026-08-20** : 3 conteneurs `(healthy)`, backend uid=1001, 26 migrations, 127 utilisateurs / 95 projets seedés, **login réel via nginx → 200 + cookie `HttpOnly; SameSite=Strict`**, RBAC conforme à la matrice (Directeur/Chef/Dév 200, Admin 403), données conservées après `restart`.
+>
+> Précédent : **2026-07-05 (soir)** — **Gouvernance d'ingénierie (Phase E)** : nomination Chief Software Architect ; création de [docs/ENHANCEMENTS.md](docs/ENHANCEMENTS.md) (backlog d'ingénierie vivant, revue complète du projet, roadmap 4 phases) ; **refonte UML v2.0** — 13 diagrammes alignés sur le code (5 diagrammes de classes par domaine dont Gouvernance, séquence KPI hybride réelle remplaçant le pipeline asynchrone fictif, nouveaux diagrammes d'états et de déploiement, acteur KIMAI retiré) ; correctif découvert par l'audit : **machine à états projet désormais gardée** (`ProjectStatus.canTransitionTo`, transition illégale → 422). **89/89 tests backend.**
+>
+> Précédent : **2026-07-05** — **Méthode F-AFF-13 complète (Phase D)** : (1) backlog corrections clôturé — score ingénierie **88/100** (H-3 bannière KPI, N-2…N-5, headers sécurité, V20) ; (2) spec F-AFF-13 implémentée : **Devis Interne** structure vide (V23, capacité MANAGE_DI Directeur, moteur de calcul 2 passes — aucune valeur société seedée, décision BUSINESS_ANALYSIS §16), **indicateurs EVM** (V22 : EV %, Delivery %, dérive JH, CA production, FAE, marge actuelle vs vendue, revue mensuelle avec saisie EV), **TCC par année** (V21 : tarif de l'année d'imputation, fallback tarif de base). **87/87 tests backend** ; vérifié en UI de bout en bout (calcul DI 10 000 FCFA → 51 TND ✓, snapshot EV 50 % → CA prod 459 000 TND ✓).
 
 ---
 
 ## 📊 Avancement global
 
 ```
-Projet total      ███████████████████░  93%
+Projet total      ███████████████████░  95%
 Documentation     ████████████████████  100% ✅
 Backend           ████████████████████  100% ✅
 Frontend Angular  ████████████████████  100% ✅
 Tests             ███████████████████░   95%
-Rapport           ████████████████░░░░   70%
+DevOps (Phase F)  ███████████████████░   95%  — pile vérifiée en exécution ; reste la ligne de base à pousser
+Rapport           █████████████████░░░   85%  — 78 pages, 0 erreur ; captures d'écran manquantes
 ```
 
 ---
@@ -158,6 +164,41 @@ Rapport           ████████████████░░░░  
 | 4 Controllers — 19 endpoints au total | ✅ |
 | Permissions `MANAGE_GOVERNANCE` (Admin, Chef) + `VIEW_GOVERNANCE` (tous) seedées | ✅ |
 
+### 🐳 Phase F — DevOps : conteneurisation & CI/CD `95%` 🟢
+```
+███████████████████░  95%
+```
+
+**Topologie** — point d'entrée unique `http://localhost:8081` ; l'application et `/api` partagent
+la même origine, donc le cookie `pms_refresh` fonctionne **sans CORS**, contrairement au mode dev.
+
+| Élément | État |
+|---------|------|
+| `docker-compose.yml` — `db` (postgres:17-alpine) · `backend` (temurin-21-jre, uid 1001) · `frontend` (nginx:1.27-alpine) | ✅ écrit, `docker compose config` valide |
+| Ports hôte 5433 / 8091 / 8081 — choisis car 5432 (PostgreSQL natif), 8090 (`spring-boot:run`), 4200 (`ng serve`) et 8080 (Apache) sont occupés | ✅ |
+| `backend/Dockerfile` multi-stage, non-root, healthcheck `curl /actuator/health`, `start_period: 90s` (26 migrations) | ✅ |
+| `frontend/.../Dockerfile` + `docker/nginx.conf` — `^~ /api/` → `backend:8080`, `= /healthz`, `^~ /i18n/` sans cache, assets hachés `try_files $uri =404` | ✅ |
+| `.github/workflows/ci.yml` — `backend` / `frontend` / `images` / `smoke` / `publish` (GHCR) | ✅ YAML valide, graphe de jobs conforme |
+| `docs/DEPLOYMENT.md` (clôture **DOC-2**) + **ADR-026** ; ADR-014 → *Superseded* | ✅ |
+| Rapport — Sprint 9 dans `chap_07.tex` | ✅ |
+| **Exécution réelle de la pile (V3–V8)** | ✅ **Vérifiée le 2026-08-20** — 3 conteneurs sains, 26 migrations, login réel via nginx, RBAC conforme, données persistantes après `restart` |
+
+**Défauts latents corrigés** (préexistants, révélés par la mise en pipeline) :
+
+| # | Défaut | Preuve |
+|---|--------|--------|
+| D1 | `angular.json` sans `fileReplacements` → `http://localhost:8090/api` compilé **dans le bundle de production** | présent dans `chunk-5JAN45E7.js` avant, absent après ; `/api` relatif présent |
+| D2 | `/actuator/health` → 401, le healthcheck n'aurait jamais été vert | après : 200 `{"status":"UP"}` sans détails ; `/api/projects` → toujours 401 |
+| D3 | `mvnw`/`mvnw.cmd` **absents** alors que la doc les documentait ; `.gitignore` ignorait `.mvn/` | wrapper généré, ligne retirée |
+| D4 | `.gitignore` `.env.*` avalait aussi `.env.example` | `git check-ignore` : `.env.example` → suivi, `.env` → ignoré |
+| D5 | `DataInitializer` non conditionné → comptes de démo seedés **aussi en `prod`** | `@ConditionalOnProperty(pms.demo.seed-users)` + avertissement dans DEPLOYMENT.md |
+| D6 | `application.yml` embarquait `${DB_PASSWORD:pms_password}` et un secret JWT littéral | replis supprimés ; **89/89 tests** toujours verts |
+
+**Non régression (V9)** — la boucle de développement native reste intacte : profil dev démarré sur
+le port 8090, `Started PmsApplication in 6.309 seconds`.
+
+---
+
 ## 🟡 À VENIR — Prochaines phases
 
 ---
@@ -211,24 +252,34 @@ Rapport           ████████████████░░░░  
 
 ## 📝 Rapport PFE TEK-UP
 
+> **Restructuré** : le rapport est désormais en **anglais**, en **7 chapitres**, suivant l'architecture
+> Release/Sprint de l'école. Les 10 anciens chapitres français sont dans `_archive_old_chapters/`.
+> Le développement est présenté en sprints **déduits des fonctionnalités réellement livrées** —
+> aucune date, cérémonie, vélocité ni rétrospective inventée.
+
 ```
-Rapport total     ███████████████████░  95% (10/10 chapitres + conclusion ; intro à finaliser)
+Rapport total     █████████████████░░░  85% — compile en 78 pages, 0 erreur (2 passes)
 ```
 
 | Chapitre | Titre | État |
 |----------|-------|------|
-| Introduction générale | Contexte, motivation | 🟡 Ébauche |
-| Chapitre 1 | Contexte du projet | ✅ Rédigé |
-| Chapitre 2 | Analyse des besoins | ✅ Rédigé |
-| Chapitre 3 | Conception architecturale | ✅ Rédigé |
-| Chapitre 4 | Conception BD | ✅ Rédigé |
-| Chapitre 5 | Conception UML | ✅ Rédigé |
-| Chapitre 6 | Implémentation — Socle technique | ✅ Rédigé (Auth, RBAC, Users, Projets) |
-| Chapitre 7 | Implémentation — Gestion opérationnelle | ✅ Rédigé (Équipes, Charges, KPI) |
-| Chapitre 8 | Implémentation — Financier & Gouvernance | ✅ Rédigé (Facturation, Missions, Gouvernance) |
-| Chapitre 9 | Frontend Angular | ✅ Rédigé (chap_09.tex — architecture, RBAC UI, scope, fiche identification) |
-| Chapitre 10 | Tests, sécurité, déploiement | ✅ Rédigé (chap_10.tex — 51 tests, audit RBAC, OWASP, déploiement) |
-| Conclusion | Bilan & perspectives | ✅ Rédigé (conclusion.tex) |
+| Introduction | Contexte, motivation, plan | ✅ Réécrit en anglais |
+| Chapitre 1 | *Project Context and Methodology* | ✅ Rédigé — inclut l'analyse des 8 feuilles Excel (phase de préparation) |
+| Chapitre 2 | *Requirements Analysis and Specification* | ✅ Rédigé — acteurs, RBAC, backlog produit US-01…US-26, planification des releases |
+| Chapitre 3 | *System Architecture and Design* | ✅ Rédigé — fusion architecture + conception BD |
+| Chapitre 4 | *Release 1 — Foundation and Security* | ✅ Rédigé — Sprints 1–2 |
+| Chapitre 5 | *Release 2 — Project and Operational Management* | ✅ Rédigé — Sprints 3–4 |
+| Chapitre 6 | *Release 3 — Financial Management and Governance* | ✅ Rédigé — Sprints 5–7 |
+| Chapitre 7 | *Release 4 — Consolidation, Delivery and Deployment* | ✅ Rédigé — Sprints 8–9 (Sprint 9 = conteneurisation & CI/CD) |
+| Conclusion | Bilan & perspectives | ✅ Réécrit en anglais |
+
+**Correctif de compilation (majeur).** Le rapport **ne compilait pas du tout** : `babel-french` redéfinit
+les listes de manière incompatible avec `enumitem` v3.11, ce qui cassait **chaque** `egin{itemize}`.
+Résolu dans `tpl/isipfe.cls` par `renchbsetup{StandardLists=true}` (prouvé par bissection).
+
+**Reste à faire :** 8 captures Excel anonymisées + 5 captures d'interface — les blocs `% TODO:`
+sont déjà en place, il suffit de les décommenter. Question ouverte : basculer la langue principale
+de `babel` du français vers l'anglais pour que « Figure »/« Table » soient générés en anglais.
 
 ---
 
@@ -255,16 +306,16 @@ Rapport total     ███████████████████░  
 | ADR | Sujet | Statut |
 |-----|-------|--------|
 | ADR-001 | RBAC dynamique (Permission, jamais Role) | ✅ Implémenté |
-| ADR-002 | Modèle Excel complet (EV/ETC/EAC/marges) | 🟡 Partiel (Phase 10 KPI base) |
-| ADR-007 | Multi-devises | 🟡 Partiel (stockage devise ISO 4217 + normalisation uppercase ; conversion taux de change différée) |
+| ADR-002 | Modèle Excel complet (EV/ETC/EAC/marges) | ✅ Implémenté (EVM V22 : EV/Delivery/dérive/CA prod/FAE/marges + DI structure V23 + TCC/année V21) |
+| ADR-007 | Multi-devises | 🟡 Partiel (devise ISO 4217 + taux projet exchangeRateToTnd utilisé par le DI ; historisation des taux différée) |
 | ADR-008 | Parameter store | ✅ Table parameters seedée |
 | ADR-009 | Soft delete + audit | ✅ Implémenté (BaseEntity) |
 | ADR-010 | JWT first-login forcé | ✅ Implémenté |
-| ADR-015 | KPI engine hybride (snapshots) | 🟡 Partiel (Phase 10 base) |
+| ADR-015 | KPI engine hybride (snapshots) | ✅ Implémenté (snapshots EVM : revue mensuelle figée avec EV %, faits marquants, date fin estimée) |
 | ADR-016 | Monolithe modulaire (feature packages) | ✅ Implémenté |
 | ADR-017 | Révocation token-version (cache) | ✅ Implémenté + corrigé |
 | ADR-018 | MapStruct obligatoire | ✅ Implémenté |
-| ADR-019 | Flyway DDL exclusif | ✅ Implémenté (8 migrations) |
+| ADR-019 | Flyway DDL exclusif | ✅ Implémenté (23 migrations V1→V23) |
 | ADR-021 | Scope autorisation (Director/PM/Dev) | 🟡 Partiel (permissions OK, data-scope à affiner) |
 | ADR-022 | User vs Resource (identité vs coût) | ✅ Implémenté |
 | ADR-024 | UML deux niveaux (Niveau 1 + Engineering) | ✅ Documenté |
@@ -273,14 +324,31 @@ Rapport total     ███████████████████░  
 
 ## ⚡ Prochaines actions
 
-> **Phase 15 (restant) — OWASP & Déploiement**
-> - Review sécurité OWASP (injection, XSS, CSRF, broken auth)
-> - Profiles Spring Boot prod (variables d'environnement, HTTPS)
+> **P0 — Débloquer Docker (PROJECT_TODO F.10)**
+> - Le démon Docker Desktop ne démarre pas : socket `dockerInference` obsolète (2025-12-09)
+>   verrouillée par `wslservice`. `Remove-Item`, `del`, `fsutil reparsepoint delete` et un miroir
+>   robocopy échouent tous. Le correctif fiable est `wsl --shutdown`, qui arrête **toutes** les
+>   distributions WSL → décision utilisateur.
+> - ℹ️ `EnableDockerAI` a été mis à `false` dans `%APPDATA%\Docker\settings-store.json`
+>   (sauvegarde : `settings-store.json.bak-pms`) — sans effet, à restaurer si souhaité.
+> - Tant que la pile n'a pas tourné : **V3–V8 non vérifiés** (images, migrations, login de bout en
+>   bout à travers nginx, persistance du volume).
 >
-> **Rapport (ch.9–10 + conclusion)**
-> - Chapitre 9 : Frontend Angular (captures d'écran, composants, RBAC UI)
-> - Chapitre 10 : Tests (51 tests), sécurité, déploiement
-> - Conclusion générale
+> **P0 — Pousser la ligne de base (F.11)**
+> - 2 commits pour 277 fichiers non commités : un pipeline vert ne prouverait rien. À faire **avant**
+>   d'activer les checks obligatoires sur `develop`/`main`.
+> - ⚠️ `.env` a été créé à partir du gabarit pour valider `docker compose` — il contient encore le
+>   `JWT_SECRET` de substitution. À remplacer avant toute exécution réelle (DEPLOYMENT.md §3).
+>
+> **P1 — Rapport**
+> - 8 captures Excel anonymisées + 5 captures d'interface (blocs `% TODO:` déjà prêts).
+> - Question ouverte : langue principale `babel` (français → anglais) pour les libellés générés.
+>
+> **P1/P2 — Backlog qualité** (voir `docs/ENHANCEMENTS.md`)
+> - ADRs (amendement C-1 writer unique, recalcul jalons H-4) · seed de tests frontend (H-7)
+> - Aucune cible `test` Angular déclarée — le CI ne peut pas exécuter de tests front (FE-1/T-3)
+> - Review sécurité OWASP · performance NFR-001 (≤2 s)
+> - Resynchroniser `docs/report/*.md` sur la nouvelle structure en 7 chapitres (F.12)
 
 ---
 

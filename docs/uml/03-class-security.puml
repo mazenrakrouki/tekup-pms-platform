@@ -1,5 +1,5 @@
 @startuml class_security
-title Classes — Sécurité et Contrôle d'Accès
+title Classes — Security and Access Control (dynamic RBAC)
 
 left to right direction
 
@@ -14,22 +14,17 @@ skinparam ArrowThickness 1.5
 skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 hide circle
+hide empty methods
 
-class Utilisateur {
+class User {
   - email : String
-  - motDePasse : String
-  - actif : boolean
-  - premierAcces : boolean
-  --
-  + authentifier() : JetonAcces
-  + changerMotDePasse() : void
-  + revoquerSession() : void
+  - active : boolean
+  - firstLogin : boolean
+  - tokenVersion : int
 }
 
 class Role {
-  - nom : String
-  --
-  + verifierPermission(code : String) : boolean
+  - name : String
 }
 
 class Permission {
@@ -37,20 +32,15 @@ class Permission {
   - module : String
 }
 
-Utilisateur "1" --> "1" Role       : possède >
-Role        "1" --> "*" Permission  : accorde >
+User "*" --> "1" Role : has >
+Role "*" -- "*" Permission : grants >
 
-note bottom of Role
-  Rôles prédéfinis :
-  ADMIN · DIRECTEUR
-  CHEF_PROJET · DEVELOPPEUR
+note bottom of User
+  Incrementing tokenVersion revokes all active sessions.
 end note
 
-note right of Permission
-  Exemple : code = ASSIGN_DEVELOPER
-  module = PROJET
-  Le mapping est configurable
-  en base de données (RBAC dynamique).
+note bottom of Permission
+  The role→permission matrix is stored in the database, not hardcoded.
 end note
 
 @enduml

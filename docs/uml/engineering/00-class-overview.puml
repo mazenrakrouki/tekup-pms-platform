@@ -1,5 +1,5 @@
 @startuml class_overview
-title Modèle de Domaine — Vue d'Ensemble (PMS)
+title Domain Model — Overview (PMS)
 
 skinparam shadowing false
 skinparam classBackgroundColor #FFFFFF
@@ -15,122 +15,137 @@ skinparam ArrowThickness 1.5
 hide circle
 hide empty members
 
-package "Sécurité" {
-  class Utilisateur {
-    email : String
-    actif : boolean
-    + authentifier() : JetonAcces
+package "Security" {
+  class User {
+    - email : String
+    - active : boolean
+    --
+    + authenticate() : AccessToken
   }
   class Role {
-    nom : String
+    - name : String
   }
   class Permission {
-    code : String
-    module : String
+    - code : String
+    - module : String
   }
 }
 
-package "Ressources" {
-  class Ressource {
-    nomComplet : String
-    profil : String
-    + calculerCoutAnnuel() : double
+package "Resources" {
+  class Resource {
+    - fullName : String
+    - profile : String
+    --
+    + computeAnnualCost() : double
   }
-  class TCC {
-    annee : int
-    coutAnnuelCharge : double
+  class TccAnnuel {
+    - year : int
+    - annualChargedCost : double
   }
 }
 
-package "Projet & Équipe" {
-  class Projet {
-    code : String
-    nom : String
-    budget : double
-    statut : String
-    + calculerBudgetRestant() : double
+package "Project & Team" {
+  class Project {
+    - code : String
+    - name : String
+    - budget : double
+    - status : ProjectStatus
+    --
+    + computeRemainingBudget() : double
   }
-  class AffectationEquipe {
-    tauxAffectation : double
-    dateDebut : Date
+  enum ProjectStatus {
+    DRAFT
+    ACTIVE
+    ON_HOLD
+    COMPLETED
+    CANCELLED
+  }
+  class TeamAssignment {
+    - allocationRate : double
+    - startDate : Date
   }
   class Livrable {
-    designation : String
-    livre : boolean
+    - designation : String
+    - delivered : boolean
   }
 }
 
-package "Facturation & Contrat" {
+package "Billing & Contract" {
   class JalonFacturation {
-    pourcentage : double
-    montant : double
-    statut : String
-    + facturer() : void
+    - percentage : double
+    - amount : double
+    - status : JalonStatut
+    --
+    + invoice() : void
   }
   class Paiement {
-    montant : double
-    datePaiement : Date
+    - amount : double
+    - paymentDate : Date
   }
   class Avenant {
-    montant : double
-    + calculerBudgetRevise() : double
+    - amount : double
+    --
+    + computeRevisedBudget() : double
   }
   class Mission {
-    destination : String
-    coutTotal : double
+    - destination : String
+    - totalCost : double
   }
-  class Risque {
-    libelle : String
-    impactEstime : double
+  class Risk {
+    - label : String
+    - estimatedImpact : double
   }
 }
 
-package "Charges & KPI" {
+package "Workload & KPI" {
   class PlanCharge {
-    mois : Date
-    joursPlanifies : double
+    - month : Date
+    - plannedDays : double
   }
   class ChargeReelle {
-    mois : Date
-    joursReels : double
-    source : String
-    + valider() : void
+    - month : Date
+    - actualDays : double
+    - source : String
+    --
+    + validate() : void
   }
-  class SnapshotKPI {
-    moisSnapshot : Date
-    eac : double
-    margeEAC : double
-    + calculerEAC() : double
+  class SnapshotKpi {
+    - snapshotMonth : Date
+    - eac : double
+    - marginAtEac : double
+    --
+    + computeEac() : double
   }
 }
 
-' --- Sécurité ---
-Utilisateur "1"    -->  "1"    Role              : possède >
-Role        "1"    -->  "*"    Permission         : accorde >
+' --- Security ---
+User "1" --> "1" Role : has >
+Role "1" --> "*" Permission : grants >
 
-' --- Ressources ---
-Ressource   "0..1" -->  "1"    Utilisateur        : peut être >
-Ressource   "1"    *--  "1..*" TCC                : coût annuel
+' --- Resources ---
+Resource "0..1" --> "1" User : may be >
+Resource "1" *-- "1..*" TccAnnuel : annual cost
 
-' --- Projet & Équipe ---
-Projet      "*"    -->  "1"    Utilisateur        : directeur >
-Projet      "*"    -->  "1..*" Utilisateur        : chefs de projet >
-Projet      "1"    *--  "*"    AffectationEquipe
-AffectationEquipe "*" --> "1"  Ressource          : concerne >
-Projet      "1"    *--  "*"    Livrable
+' --- Project & Team ---
+Project --> ProjectStatus : status >
+Project "*" --> "1" User : director >
+Project "*" --> "1..*" User : project managers >
+Project "1" *-- "*" TeamAssignment
+TeamAssignment "*" --> "1" Resource : concerns >
+Project "1" *-- "*" Livrable
 
-' --- Facturation & Contrat ---
-Projet      "1"    *--  "*"    JalonFacturation   : jalons >
-JalonFacturation "1" *-- "*"   Paiement           : paiements >
-Projet      "1"    *--  "*"    Avenant
-Projet      "1"    *--  "*"    Mission
-Projet      "1"    *--  "*"    Risque
+' --- Billing & Contract ---
+Project "1" *-- "*" JalonFacturation : milestones >
+JalonFacturation "1" *-- "*" Paiement : payments >
+Project "1" *-- "*" Avenant
+Project "1" *-- "*" Mission
+Project "1" *-- "*" Risk
 
-' --- Charges & KPI ---
-Projet      "1"    *--  "*"    PlanCharge
-PlanCharge  "*"    -->  "1"    Ressource          : concerne >
-Projet      "1"    *--  "*"    ChargeReelle
-ChargeReelle "*"   -->  "1"    Ressource          : concerne >
-Projet      "1"    *--  "*"    SnapshotKPI        : historique KPI >
+' --- Workload & KPI ---
+Project "1" *-- "*" PlanCharge
+PlanCharge "*" --> "1" Resource : concerns >
+Project "1" *-- "*" ChargeReelle
+ChargeReelle "*" --> "1" Resource : concerns >
+Project "1" *-- "*" SnapshotKpi : KPI history >
 
 @enduml

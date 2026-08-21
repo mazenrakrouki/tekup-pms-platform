@@ -1,5 +1,5 @@
 @startuml class_financial
-title Classes — Gestion Financière
+title Classes — Financial Management (billing, amendments, Internal Quote)
 
 top to bottom direction
 
@@ -14,62 +14,78 @@ skinparam ArrowThickness 1.5
 skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 hide circle
+hide empty methods
 
-class Projet {
+class Project {
   - code : String
-  - nom : String
-  - budget : double
-  - typeEngagement : String
+  - currency : String
+  - exchangeRateToTnd : BigDecimal
 }
 
-class JalonFacturation {
-  - numero : int
-  - pourcentage : double
-  - montant : double
-  - statut : String
-  --
-  + facturer() : void
-  + enregistrerPaiement(montant : double) : void
+enum MilestoneStatus {
+  PLANNED
+  INVOICED
+  PAID
 }
 
-class Paiement {
-  - montant : double
-  - datePaiement : Date
+class BillingMilestone {
+  - label : String
+  - percentage : BigDecimal
+  - amount : BigDecimal
+  - dueDate : LocalDate
+  - status : MilestoneStatus
 }
 
-class Avenant {
-  - montant : double
-  - description : String
-  --
-  + calculerBudgetRevise() : double
+class Payment {
+  - amountReceived : BigDecimal
+  - paymentDate : LocalDate
+  - reference : String
+}
+
+class Amendment {
+  - number : String
+  - subject : String
+  - amount : BigDecimal
+  - workloadDays : BigDecimal
+}
+
+enum QuoteSection {
+  FEES
+  EXPENSES
+  OTHER_EXPENSES
+}
+
+class QuoteLine {
+  - section : QuoteSection
+  - contractProfile : String
+  - soldWorkloadDays : BigDecimal
+  - unitSellingPrice : BigDecimal
+  - internalWorkloadDays : BigDecimal
+  - unitTccCost : BigDecimal
+  - percentageRate : BigDecimal
 }
 
 class Mission {
-  - destination : String
-  - nombreNuits : int
-  - coutTotal : double
-  --
-  + calculerCout() : double
+  - purpose : String
+  - location : String
+  - startDate : LocalDate
+  - endDate : LocalDate
 }
 
-class Risque {
-  - libelle : String
-  - impactEstime : double
-  - traitement : String
-  --
-  + calculerImpactPondere() : double
-}
+Project "1" *-- "*" BillingMilestone : milestones >
+BillingMilestone "1" *-- "*" Payment : payments >
+BillingMilestone ..> MilestoneStatus
+Project "1" *-- "*" Amendment : amendments >
+Project "1" *-- "*" QuoteLine : internal quote >
+QuoteLine ..> QuoteSection
+Project "1" *-- "*" Mission : missions >
 
-Projet "1" *-- "*" JalonFacturation : jalons de facturation
-JalonFacturation "1" *-- "*" Paiement : paiements reçus
-Projet "1" *-- "*" Avenant           : avenants contractuels
-Projet "1" *-- "*" Mission            : missions terrain
-Projet "1" *-- "*" Risque             : risques financiers
+note right of BillingMilestone
+  The sum of milestone percentages does not exceed 100% of the contract.
+end note
 
-note right of JalonFacturation
-  La somme des pourcentages
-  de tous les jalons ne dépasse
-  pas 100 % du contrat.
+note bottom of QuoteLine
+  Amounts and margins are always computed at read time, never stored.
 end note
 
 @enduml

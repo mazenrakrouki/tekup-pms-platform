@@ -1,0 +1,46 @@
+@startuml seq_submit_workload
+title Sequence — Workload Entry and the Hybrid KPI Engine
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #2C5F8A
+skinparam sequenceLifeLineBorderColor #999999
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+autonumber
+
+actor "Developer" as D
+actor "Project Manager" as PM
+participant "Frontend" as SPA
+participant "ActualWorkloadService" as WS
+participant "KpiService" as KPI
+database "PostgreSQL" as DB
+
+== 1. Monthly entry (Developer) ==
+D -> SPA : enter days for the month
+SPA -> WS : POST /actual-workload
+WS -> WS : own workload only,\nactive team member
+WS -> DB : INSERT actual_workload
+WS --> SPA : 201 Created
+
+== 2. KPI consultation (computed at read time) ==
+PM -> SPA : open the KPI tab
+SPA -> KPI : GET /api/projects/{id}/kpi
+KPI -> DB : workload, plan, year's TCC,\ninvoiced milestones, deliverables, Internal Quote
+KPI -> KPI : EV %, Delivery %, drift days,\nproduction revenue, unbilled revenue, EAC, margins
+KPI --> SPA : KpiResponse (nothing written)
+
+== 3. Monthly review (frozen snapshot) ==
+PM -> SPA : enter EV % + highlights
+SPA -> KPI : POST /kpi/snapshots
+KPI -> DB : INSERT kpi_snapshot (immutable)
+KPI --> SPA : 201 — review frozen
+
+note over KPI, DB
+  Hybrid engine: live KPIs are recomputed on every read; the snapshot freezes the official state of the monthly review.
+end note
+
+@enduml

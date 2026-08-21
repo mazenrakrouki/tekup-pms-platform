@@ -1,5 +1,5 @@
 @startuml act_kpi_recompute
-title Diagramme d'Activité : Calcul des Indicateurs KPI
+title Activity Diagram: KPI Computation
 
 skinparam shadowing false
 skinparam activityBackgroundColor #D6E4F0
@@ -13,39 +13,28 @@ skinparam noteBackgroundColor #FFFDE7
 
 start
 
-:Événement déclencheur
-(saisie de charges, modification d'un jalon,
-ajout d'une mission ou d'un avenant);
+:Triggering event\n(workload entry, milestone change,\nmission or amendment added);
 
-note right : Le recalcul est automatique\naprès toute modification\nimpactant les coûts ou la facturation.
+note right : Recomputation is automatic\nafter any change affecting\ncost or billing.
 
-:Charger les données du projet
-(Taux de Charge Chargé, plan de charge prévisionnel,
-charges réelles saisies, jalons de facturation, missions);
+:Load the project's data\n(TCC, planned workload,\nactual workload, billing milestones, missions);
 
-:Calculer le coût réel de la main-d'œuvre
-(Σ jours réels × Taux journalier de la ressource);
+:Compute the actual labor cost\n(Σ actual days × resource's daily rate);
 
-:Calculer les autres coûts engagés
-(missions, déplacements, frais divers);
+:Compute other incurred costs\n(missions, travel, sundry expenses);
 
-:Estimer le coût final du projet (EAC)
-(coûts réels + estimation des coûts restants);
+:Estimate the final project cost (EAC)\n(actual costs + estimate of remaining costs);
 
-if (EAC > Budget initial ?) then (oui)
-  :Signaler la dérive budgétaire;
-  note right : Visible immédiatement\nsur le tableau de bord.
-else (non)
-  :Calculer la marge prévisionnelle
-  ((Budget − EAC) / Budget);
+if (EAC > initial budget?) then (yes)
+  :Flag the budget drift;
+  note right : Visible immediately\non the dashboard.
+else (no)
+  :Compute the projected margin\n((Budget − EAC) / Budget);
 endif
 
-:Calculer la progression de la facturation
-(montant facturé / budget total);
+:Compute billing progress\n(invoiced amount / total budget);
 
-:Mettre à jour le tableau de bord KPI du projet
-(marge, coût final estimé, budget restant,
-progression de la facturation);
+:Update the project's KPI dashboard\n(margin, estimated final cost, remaining budget,\nbilling progress);
 
 stop
 

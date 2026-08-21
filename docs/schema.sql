@@ -1,4 +1,16 @@
 -- =====================================================================
+-- PMS — PostgreSQL schema — SNAPSHOT HISTORIQUE (Phase 3, 2026-06)
+-- ⚠ OBSOLETE en tant que reference : le schema implemente est defini
+--   EXCLUSIVEMENT par les migrations Flyway (V1..V23) sous
+--   backend/src/main/resources/db/migration/  (ADR-019).
+--   Ce fichier est conserve comme trace de la conception initiale ;
+--   il ne contient ni lignes_di, ni tcc_annuels, ni les colonnes EVM,
+--   et decrit des tables jamais construites (project_manager_assignments,
+--   currencies, exchange_rates, actions, risk_*_levels).
+--   Voir DATABASE_DESIGN.md §2 (ERD as-built) et ENHANCEMENTS.md DOC-7.
+-- =====================================================================
+
+-- =====================================================================
 -- PMS — PostgreSQL 17 schema  (Phase 3 — Database Design)
 -- Source of truth for the data model (ADR-019: Flyway, schema-first).
 -- In Phase 5 this file becomes V1__core_schema.sql (+ V2__seed.sql) under

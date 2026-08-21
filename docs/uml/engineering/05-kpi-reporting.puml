@@ -1,5 +1,5 @@
 @startuml kpi_reporting
-title Suivi des Charges et Indicateurs KPI
+title Workload Tracking and KPI Indicators
 
 top to bottom direction
 
@@ -18,73 +18,60 @@ skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 hide circle
 
-enum SourceCharge {
-  MANUEL
-  KIMAI
-}
-
-class Projet {
+class Project {
   - code : String
-  - nom : String
-  - budget : double
+  - name : String
+  - initialBudget : BigDecimal
 }
 
-class Ressource {
-  - nomComplet : String
-  - profil : String
+class User {
+  - firstName : String
+  - lastName : String
 }
 
 class PlanCharge {
-  - mois : Date
-  - joursPlanifies : double
-  --
-  + totalPlanifie() : double
+  - period : LocalDate
+  - plannedDays : BigDecimal
 }
 
 class ChargeReelle {
-  - mois : Date
-  - joursReels : double
-  - source : SourceCharge
+  - period : LocalDate
+  - actualDays : BigDecimal
+  - submittedAt : LocalDateTime
+  - validatedAt : LocalDateTime
   --
-  + valider() : void
-  + accepter() : void
+  + validate() : void
 }
 
-class SnapshotKPI {
-  - moisSnapshot : Date
-  - eac : double
-  - margeEAC : double
-  - budgetRestant : double
-  - progressionFacturation : double
+class SnapshotKpi {
+  - snapshotDate : LocalDate
+  - eac : BigDecimal
+  - marge : BigDecimal
+  - evPct : BigDecimal
+  - deliveryPct : BigDecimal
+  - deriveJh : BigDecimal
+  - caProduction : BigDecimal
+  - fae : BigDecimal
   --
-  + calculerEAC() : double
-  + calculerMarge() : double
-  + genererRapport() : void
+  + computeEac() : BigDecimal
 }
 
-Projet "1" *-- "*" PlanCharge    : charge prévisionnelle
-PlanCharge "*" --> "1" Ressource : concerne >
-Projet "1" *-- "*" ChargeReelle  : charge réelle
-ChargeReelle "*" --> "1" Ressource : concerne >
-Projet "1" *-- "*" SnapshotKPI   : historique KPI
-ChargeReelle --> SourceCharge    : provient de >
+Project "1" *-- "*" PlanCharge    : planned workload >
+PlanCharge "*" --> "1" User       : concerns >
+Project "1" *-- "*" ChargeReelle  : actual workload >
+ChargeReelle "*" --> "1" User     : concerns >
+Project "1" *-- "*" SnapshotKpi   : KPI history >
 
 note right of ChargeReelle
-  Saisie manuelle ou import
-  automatique depuis KIMAI.
-  Validation par le chef de projet.
+  Manual entry today; a KIMAI-import source discriminator is designed but not yet a persisted column.
 end note
 
-note right of SnapshotKPI
-  Calculé chaque mois ou à
-  chaque modification de charge.
-  Historique conservé pour analyse
-  d'évolution du projet.
+note right of SnapshotKpi
+  Computed monthly or on every workload change; history kept for trend analysis.
 end note
 
-note bottom of SnapshotKPI
-  EAC = Estimate At Completion
-  Marge = (Budget - EAC) / Budget
+note bottom of SnapshotKpi
+  EAC = Estimate At Completion. Margin = (Budget − EAC) / Budget.
 end note
 
 @enduml

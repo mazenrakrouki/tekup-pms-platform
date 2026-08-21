@@ -26,7 +26,7 @@
 | Soft delete + audit | ADR-009 | Cross-cutting auditing + logical deletion |
 | JWT access + refresh, first-login | ADR-010 | Stateless security; forced password change gate |
 | Tech stack | ADR-006 | Java 21 / Spring Boot 3.3 / PostgreSQL 17 / Angular 21 / Node 22 / Maven 3.9.16 |
-| Native local run | ADR-014 | Use the installed PostgreSQL 17 service; no Docker |
+| Deployment | ADR-026 | Containerized (Docker Compose: db + backend + nginx); native run kept as the dev loop (ADR-014, superseded) |
 | Hybrid KPI snapshots | ADR-015 | Recompute-on-change + per-project/per-month snapshot store |
 | NFRs | SRS | ≤2 s responses, clean architecture, auditability, async logging |
 
@@ -327,36 +327,56 @@ UI is **French**, responsive (Bootstrap 5).
 
 ---
 
-## 11. Deployment & runtime architecture (ADR-014 — Native)
+## 11. Deployment & runtime architecture (ADR-026 — containerized; ADR-014 superseded)
 
-**Local/native run using the installed toolchain (no Docker):**
+Two modes coexist. **Native** remains the primary *development* loop; **containers** are the
+deployment strategy. Host ports are offset so both can run simultaneously.
+
+**A. Native development loop**
 ```
-PostgreSQL 17   → existing Windows service `postgresql-x64-17` (DB: pms)
-Backend         → ./mvnw spring-boot:run   (Maven 3.9.16, Java 21)  → http://localhost:8080
-Frontend        → ng serve                 (Angular 21, Node 22)    → http://localhost:4200
+PostgreSQL 17   → existing Windows service `postgresql-x64-17` (DB: pms_dev)   :5432
+Backend         → ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev        :8090
+Frontend        → ng serve                                                      :4200
 ```
-- **Spring profiles:** `dev` (local Postgres, verbose logging, permissive CORS for :4200),
-  `prod` (externalized config, tightened CORS/security).
-- **Config:** externalized (`application-*.yml`); secrets/DB credentials via environment variables,
-  never committed.
-- **Schema:** managed in Phase 3 (JPA + a migration tool such as Flyway, to be confirmed in Phase 3).
-- **Transport *(correction)*:** local native dev runs over **HTTP on localhost**; **HTTPS** (TLS) is
-  applied in `prod` (reverse proxy / TLS termination). The §3 diagram's "HTTPS" refers to the
-  production transport.
-- Docker 28.4.0 is available on the machine but **not used** per ADR-014 (can be added later without
-  architectural change).
+
+**B. Containerized stack (ADR-026)**
+```
+browser :8081 ──► frontend  nginx 1.27-alpine        (serves the Angular build,
+                     │                                reverse-proxies /api)
+                     ▼
+        :8091 ──► backend   Spring Boot, profile prod                    :8080
+                     ▼
+        :5433 ──► db        postgres:17-alpine  ── volume pms-db-data    :5432
+```
+- **Single origin.** The application and `/api` are served from the same origin, so **no CORS is
+  involved** and the refresh cookie (`SameSite=Strict`) works naturally — unlike the dev loop,
+  which is cross-origin by construction.
+- **Spring profiles:** `dev` (local Postgres, verbose logging, CORS for :4200), `prod`
+  (externalized config, tightened CORS/security, Flyway `validate-on-migrate: true`).
+- **Config:** externalized; `DB_PASSWORD` and `JWT_SECRET` have **no fallback value** — a
+  misconfigured start fails fast rather than running with a known secret.
+- **Schema:** owned by **Flyway** (ADR-019), applied automatically at container startup against a
+  pristine volume.
+- **Transport:** HTTP on localhost; **HTTPS** is terminated by an upstream reverse proxy in a real
+  deployment, at which point `COOKIE_SECURE=true`.
+- Operating procedures, environment variables and backup/restore: **[`DEPLOYMENT.md`](DEPLOYMENT.md)**.
 
 ---
 
 ## 12. Logging & observability (NFR)
 Asynchronous, non-blocking, **structured (JSON)** logging; per-request correlation id; levels
-ERROR/WARN/INFO/DEBUG; security and audit events logged (without secrets). Actuator health endpoint
-for liveness.
+ERROR/WARN/INFO/DEBUG; security and audit events logged (without secrets).
+
+**Health probe (ADR-026).** `spring-boot-starter-actuator` exposes `/actuator/health` and
+`/actuator/info` only. `/actuator/health` is reachable **unauthenticated** — required by the
+container health check — with `show-details: never`, so it returns liveness without disclosing any
+infrastructure detail (database state, disk space). All other actuator endpoints stay closed.
 
 ---
 
 ## 13. New architecture decisions (recorded in DECISIONS.md)
-- **ADR-014** — Native local deployment (installed PostgreSQL 17; no Docker).
+- **ADR-014** — ~~Native local deployment (no Docker)~~ — **superseded by ADR-026**; native
+  execution remains the primary development loop.
 - **ADR-015** — Hybrid KPI architecture (recompute-on-change + per-project/per-month snapshots + history).
 - **ADR-016** — Modular monolith, layered, feature-based packaging **+ module boundary rules** (no
   cross-module repository access; communicate via services; explicit domain boundaries).

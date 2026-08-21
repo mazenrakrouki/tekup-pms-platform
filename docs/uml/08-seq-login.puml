@@ -1,0 +1,40 @@
+@startuml seq_login
+title Sequence — Authentication
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #2C5F8A
+skinparam sequenceLifeLineBorderColor #999999
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+autonumber
+
+actor "User" as U
+participant "Frontend\n(Angular)" as SPA
+participant "AuthController" as AC
+participant "AuthService" as AS
+database "PostgreSQL" as DB
+
+U -> SPA : email + password
+SPA -> AC : POST /api/auth/login
+AC -> AS : login(credentials)
+AS -> AS : rate limiter\n(5 / 15 min, constant time)
+AS -> DB : active user + role + permissions
+DB --> AS : user
+AS --> AC : access token (JWT)\n+ refresh token
+AC --> SPA : 200 + access token\nSet-Cookie refresh (HttpOnly, Strict)
+
+alt first login
+  SPA --> U : forced password change\n(all other routes blocked server-side)
+else normal login
+  SPA --> U : role-based dashboard
+end
+
+note over AS, DB
+  The refresh token is single-use: each refresh increments tokenVersion (replay detection).
+end note
+
+@enduml

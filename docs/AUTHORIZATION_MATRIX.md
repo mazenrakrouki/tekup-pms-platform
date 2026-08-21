@@ -1,6 +1,7 @@
 # AUTHORIZATION MATRIX — PMS (Audit & Correction)
 
 **Phase:** C — RBAC authorization audit · **Date:** 2026-06-27
+**Last updated:** 2026-07-07 — V20 descopes (MANAGE_ROLES/VIEW_AUDIT_LOG) + V23 MANAGE_DI (Directeur) + VIEW_ALL_PROJECTS (V13)
 **Author role:** Solution Architect / Business Analyst / Security Engineer
 **Governance:** Source-of-Truth Priority ([DECISIONS.md](../DECISIONS.md)) →
 ADR/DECISIONS > user instructions > Excel > BRS > Use Cases > SRS > Plan.
@@ -40,17 +41,24 @@ module-level permissions (e.g. `CREATE_USER/EDIT_USER/DEACTIVATE_USER → MANAGE
 **provided the role→permission assignment respects the business boundaries** of §1 — which is exactly
 where the defects are.
 
-| Module | Permissions |
-|--------|-------------|
-| ADMIN | MANAGE_USERS, MANAGE_ROLES, VIEW_AUDIT_LOG |
-| RESSOURCE (TCC) | MANAGE_RESOURCES, VIEW_RESOURCES |
-| PROJET | VIEW_PROJECT, **VIEW_ALL_PROJECTS** (scope global, ADR-021), CREATE_PROJECT, EDIT_PROJECT, DELETE_PROJECT, ASSIGN_CHEF_PROJET |
-| EQUIPE | ASSIGN_DEVELOPER, VIEW_TEAM |
-| CHARGE | SUBMIT_WORKLOAD, VALIDATE_WORKLOAD, VIEW_WORKLOAD |
-| FACTURATION | MANAGE_BILLING, VIEW_BILLING |
-| MISSION | MANAGE_MISSION, VIEW_MISSION |
-| GOVERNANCE | MANAGE_GOVERNANCE, VIEW_GOVERNANCE |
-| KPI | VIEW_KPI |
+| Module | Permissions | Status |
+|--------|-------------|--------|
+| ADMIN | MANAGE_USERS | live |
+| ~~ADMIN~~ | ~~MANAGE_ROLES, VIEW_AUDIT_LOG~~ | **descoped V20** — features not built for this release |
+| RESSOURCE (TCC) | MANAGE_RESOURCES, VIEW_RESOURCES | live |
+| PROJET | VIEW_PROJECT, **VIEW_ALL_PROJECTS** (scope global, ADR-021), CREATE_PROJECT, EDIT_PROJECT, DELETE_PROJECT, ASSIGN_CHEF_PROJET | live |
+| PROJET (DI) | **MANAGE_DI** — consultation + édition du Devis Interne (**Directeur only**, données sensibles) | live V23 |
+| EQUIPE | ASSIGN_DEVELOPER, VIEW_TEAM | live |
+| CHARGE | SUBMIT_WORKLOAD, VALIDATE_WORKLOAD, VIEW_WORKLOAD | live |
+| FACTURATION | MANAGE_BILLING, VIEW_BILLING | live |
+| MISSION | MANAGE_MISSION, VIEW_MISSION | live |
+| GOVERNANCE | MANAGE_GOVERNANCE, VIEW_GOVERNANCE | live |
+| KPI | VIEW_KPI | live |
+
+> **V20 descope rationale:** `MANAGE_ROLES` and `VIEW_AUDIT_LOG` were inserted in V2 but no
+> `@PreAuthorize` check ever guarded them (no role-permission-admin UI, no audit-log viewer feature).
+> V20 deletes the rows from `permissions` and `role_permissions` to keep the matrix clean.
+> These are *formally descoped*, not security-relevant omissions — the features don't exist.
 
 > **Known coarsening note:** workload **planning** and **validation** are both gated by
 > `VALIDATE_WORKLOAD` (`PlanChargeService` uses it for create/update/delete). This keeps planning
@@ -66,7 +74,7 @@ where the defects are.
 | UC-001 | Authenticate (login) | — (authenticated) | Auth | all | BR-005/006, ADR-010 |
 | UC-002 | First-login password change | — (authenticated) | Auth | all | BR-006, ADR-010/017 |
 | UC-003 | Manage users (create/edit/deactivate) | MANAGE_USERS | ADMIN | **ADMIN** | BR-001…007: admin-only |
-| UC-004 | Manage roles & permissions | MANAGE_ROLES | ADMIN | **ADMIN** | Platform admin (BA §3) |
+| UC-004 | Manage roles & permissions | ~~MANAGE_ROLES~~ *(descoped V20)* | ADMIN | — | Feature not built; descoped |
 | UC-005 | Manage TCC / resources (cost) | MANAGE_RESOURCES | RESSOURCE | **ADMIN** | BR-023…025: TCC admin-only |
 | UC-006 | View resource availability/cost | VIEW_RESOURCES | RESSOURCE | ADMIN, DIRECTOR, PM | Planning/costing visibility |
 | UC-007 | Create project | CREATE_PROJECT | PROJET | **DIRECTOR** | BR-008: Director creates |
@@ -87,25 +95,30 @@ where the defects are.
 | UC-22 | Manage governance (risk/deliv/stake/change) | MANAGE_GOVERNANCE | GOVERNANCE | **PM** | ADR-004; PM owns governance |
 | UC-23 | View governance | VIEW_GOVERNANCE | GOVERNANCE | DIRECTOR, PM | Portfolio + operational view |
 | UC-24 | View KPI / financials | VIEW_KPI | KPI | DIRECTOR(all), PM(managed) | **BR-049…054, BR-050: NOT developer** |
+| UC-25 | Consult & edit Devis Interne | **MANAGE_DI** | PROJET (DI) | **DIRECTOR** | BUSINESS_ANALYSIS §16 — données sensibles, Directeur uniquement |
 
 \* Planning is gated by `VALIDATE_WORKLOAD` due to the §2 coarsening note.
 
 ---
 
-## 4. Corrected default Role → Permission matrix (TARGET)
+## 4. Live Role → Permission matrix (as of V23)
+
+> Applied migrations: V12 (RBAC fix) · V13 (VIEW_ALL_PROJECTS + scope) · V20 (descope MANAGE_ROLES/VIEW_AUDIT_LOG) · V23 (MANAGE_DI)
 
 | Permission | Module | ADMIN | DIRECTEUR | CHEF_PROJET | DEVELOPPEUR |
 |-----------|--------|:-----:|:---------:|:-----------:|:-----------:|
 | MANAGE_USERS | ADMIN | ✔ | | | |
-| MANAGE_ROLES | ADMIN | ✔ | | | |
-| VIEW_AUDIT_LOG | ADMIN | ✔ | | | |
+| ~~MANAGE_ROLES~~ | ~~ADMIN~~ | ~~✔~~ | | | | *(descoped V20)* |
+| ~~VIEW_AUDIT_LOG~~ | ~~ADMIN~~ | ~~✔~~ | | | | *(descoped V20)* |
 | MANAGE_RESOURCES | RESSOURCE | ✔ | | | |
 | VIEW_RESOURCES | RESSOURCE | ✔ | ✔ | ✔ | |
 | VIEW_PROJECT | PROJET | | ✔ | ✔ | ✔ |
+| VIEW_ALL_PROJECTS | PROJET | | ✔ | | | *(scope lift, ADR-021, added V13)* |
 | CREATE_PROJECT | PROJET | | ✔ | | |
 | EDIT_PROJECT | PROJET | | ✔ | ✔ | |
 | DELETE_PROJECT | PROJET | | ✔ | | |
 | ASSIGN_CHEF_PROJET | PROJET | | ✔ | | |
+| **MANAGE_DI** | **PROJET** | | **✔** | | | *(added V23 — données sensibles DI)* |
 | ASSIGN_DEVELOPER | EQUIPE | | ✔ | ✔ | |
 | VIEW_TEAM | EQUIPE | | ✔ | ✔ | ✔ |
 | SUBMIT_WORKLOAD | CHARGE | | | | ✔ |
@@ -118,7 +131,10 @@ where the defects are.
 | MANAGE_GOVERNANCE | GOVERNANCE | | | ✔ | |
 | VIEW_GOVERNANCE | GOVERNANCE | | ✔ | ✔ | |
 | VIEW_KPI | KPI | | ✔ | ✔ | |
-| **Total** | | **5** | **13** | **14** | **5** |
+| **Live total** | | **2** | **15** | **14** | **5** |
+
+> Admin count drops from 5→2 after V20 removes MANAGE_ROLES and VIEW_AUDIT_LOG.
+> Director count goes 13→15 after V13 (+VIEW_ALL_PROJECTS) and V23 (+MANAGE_DI).
 
 ---
 
@@ -151,6 +167,51 @@ V9/V10/V11 added billing/mission/governance to admin.
 |-------|---------|------|
 | Has **VIEW_KPI** | ❌ remove | **BR-050**: developers walled off from all financial/KPI data |
 | Has **VIEW_GOVERNANCE** | ❌ remove | BA §3: developer scope = own work only, not governance |
+
+#### 5.3.1 Payload-level financial leak — ✅ **RESOLVED (audit 2026-07-16)**
+Removing `VIEW_KPI` (V12) closed the **endpoint** surface (`/kpi`, `/jalons`, `/risks`… → 403), but
+**not the payload**: `ProjectResponse` carries `initialBudget`, `revisedBudget`, `effectiveBudget`,
+`budgetTnd`, `pprTnd`, `margeNetteVendue`, `penaltyProvision`, `licenseSubcontractBudget`, and
+`GET /api/projects/{id}` is gated on `VIEW_PROJECT` only. A developer assigned to a project therefore
+received the full financials — a direct **BR-050** violation (verified live: budget 650 000, PPR
+32 500, marge 0,36 returned to `dev@pms.local`).
+
+**Fix (capability-based, ADR-001 — never role-based):**
+- `ProjectResponse.withoutFinancials()` — redacted copy; workload in JH (`soldWorkloadDays`,
+  `warrantyWorkloadDays`) is **not** financial and stays visible.
+- `ProjectService.toResponse()` applies it on every read/write path when the caller lacks `VIEW_KPI`.
+- Frontend defence-in-depth: budget rows (project detail), Budget column (project list + developer
+  dashboard) gated on `VIEW_KPI`; the *Infos & KPI* tab reads *Infos* without the capability.
+
+**Validated:** DEVELOPPEUR → 0 financial fields (detail + list); DIRECTEUR/CHEF_PROJET → unchanged.
+
+#### 5.3.2 `DEV(own)` scope not enforced on reads — ✅ **RESOLVED (audit 2026-07-16)**
+UC-017 / UC-21 specify **DEV(own)** — a developer views *their own* workload and missions only
+(BA §3 "own work only"; BR-062…064). `ProjectScopeService` filters **which projects** are reachable,
+but **inside** a reachable project the read paths were permission-only. Verified live: `dev@pms.local`,
+assigned to project 35, saw **60 workload entries from 5 colleagues** and **3 missions belonging to
+other people** — none of them his.
+
+Note the asymmetry that hid this: `ChargeReelleService.assertOwnership()` already enforced own-only on
+**writes** (BR-033) since day one; the **reads** never had the equivalent filter.
+
+**Fix (capability-based, ADR-001 — no migration, no new permission):**
+| Read path | Broad view granted by | Otherwise |
+|-----------|----------------------|-----------|
+| `ChargeReelleService.findByProject` | `VALIDATE_WORKLOAD` (PM validates) ∨ `VIEW_ALL_PROJECTS` (Director) | own rows only |
+| `PlanChargeService.findByProject` | idem | own rows only |
+| `MissionService.findByProject` | `MANAGE_MISSION` (PM) ∨ `VIEW_ALL_PROJECTS` (Director) | own rows only |
+
+Filtering is done **in the query** (`findActiveByProjectIdAndUserId[Paged]`), not in memory, so
+pagination totals stay correct.
+
+> **Why not `VALIDATE_WORKLOAD` alone?** The Director holds `VIEW_WORKLOAD` **without**
+> `VALIDATE_WORKLOAD` (§4) — gating on it alone would have wrongly restricted the Director to their
+> own rows. `VIEW_ALL_PROJECTS` is the Director's existing scope-lift capability (ADR-021).
+
+**Validated:** DEV submits own workload → 201, then sees **1 row (his own) out of 61**; submitting for
+another user → 403 (BR-033). CHEF_PROJET → 61 rows / 6 people. DIRECTEUR → unchanged. Out-of-scope
+project → 403.
 
 ### 5.4 CHEF_PROJET — **correct** ✅
 All 14 permissions match the business boundary (operational execution of managed projects). No change.

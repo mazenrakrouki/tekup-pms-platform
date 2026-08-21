@@ -1,0 +1,109 @@
+@startuml class_global
+title Classes — Domain Overview (global map, details in diagrams 3 to 7)
+
+skinparam shadowing false
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #2C5F8A
+skinparam classHeaderBackgroundColor #D6E4F0
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor #F7FAFF
+skinparam packageBorderColor #1F4E79
+skinparam packageFontColor #1F4E79
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+hide members
+hide circle
+
+package "Security" {
+  class User
+  class Role
+  class Permission
+}
+
+package "Resources & Costs" {
+  class Resource
+  class AnnualTcc
+}
+
+package "Project & Team" {
+  class Project
+  class TeamAssignment
+}
+
+package "Workload" {
+  class WorkloadPlan
+  class ActualWorkload
+}
+
+package "Financial" {
+  class QuoteLine
+  class Amendment
+  class BillingMilestone
+  class Payment
+  class Mission
+}
+
+package "Governance" {
+  class Risk
+  class Deliverable
+  class ChangeRequest
+  class Stakeholder
+}
+
+package "KPI" {
+  class KpiSnapshot
+}
+
+' -- Security --
+User "*" --> "1" Role
+Role "*" -- "*" Permission
+
+' -- Resources --
+Resource "0..1" --> "1" User
+Resource "1" *-- "*" AnnualTcc
+
+' -- Project & Team --
+Project "*" --> "1" User : director
+Project "*" --> "0..1" User : project manager
+Project "1" *-- "*" TeamAssignment
+TeamAssignment "*" --> "1" User
+
+' -- Workload --
+Project "1" *-- "*" WorkloadPlan
+Project "1" *-- "*" ActualWorkload
+
+' -- Financial --
+Project "1" *-- "*" QuoteLine
+Project "1" *-- "*" Amendment
+Project "1" *-- "*" BillingMilestone
+BillingMilestone "1" *-- "*" Payment
+Project "1" *-- "*" Mission
+
+' -- Governance --
+Project "1" *-- "*" Risk
+Project "1" *-- "*" Deliverable
+Project "1" *-- "*" ChangeRequest
+Project "1" *-- "*" Stakeholder
+
+' -- KPI --
+Project "1" *-- "*" KpiSnapshot
+
+' -- Layout (invisible links: keep the map to 2 rows of packages) --
+TeamAssignment -[hidden]down- WorkloadPlan
+AnnualTcc -[hidden]down- QuoteLine
+Permission -[hidden]down- Amendment
+Mission -[hidden]right- Risk
+ChangeRequest -[hidden]right- KpiSnapshot
+
+note bottom of ActualWorkload
+  WorkloadPlan and ActualWorkload also reference the concerned user.
+end note
+
+note right of Project
+  The project is the aggregation root of the domain.
+end note
+
+@enduml

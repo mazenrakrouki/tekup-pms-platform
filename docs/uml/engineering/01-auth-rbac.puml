@@ -1,5 +1,5 @@
 @startuml auth_rbac
-title Authentification et Contrôle d'Accès (RBAC)
+title Authentication and Access Control (RBAC)
 
 left to right direction
 
@@ -18,23 +18,23 @@ skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 hide circle
 
-package "Sécurité" {
+package "Security" {
 
-  class Utilisateur {
+  class User {
     - email : String
-    - motDePasse : String
-    - actif : boolean
-    - premierAcces : boolean
+    - passwordHash : String
+    - active : boolean
+    - firstLogin : boolean
+    - tokenVersion : int
     --
-    + authentifier() : JetonAcces
-    + changerMotDePasse() : void
-    + revoquerSession() : void
+    + authenticate() : AccessToken
+    + changePassword() : void
   }
 
   class Role {
-    - nom : String
+    - name : String
     --
-    + verifierPermission(code : String) : boolean
+    + hasPermission(code : String) : boolean
   }
 
   class Permission {
@@ -42,34 +42,29 @@ package "Sécurité" {
     - module : String
   }
 
-  class JetonAcces {
+  class AccessToken {
     - version : int
-    - dateExpiration : Date
+    - expiresAt : Date
     --
-    + estValide() : boolean
+    + isValid() : boolean
   }
 
 }
 
-Utilisateur "1" --> "1" Role       : possède >
-Role        "1" --> "*" Permission  : accorde >
-Utilisateur  .>       JetonAcces   : génère >
+User "1" --> "1" Role       : has >
+Role "1" --> "*" Permission : grants >
+User  .>       AccessToken  : generates >
 
 note bottom of Role
-  Rôles prédéfinis :
-  ADMIN · DIRECTEUR
-  CHEF_PROJET · DEVELOPPEUR
+  Predefined roles: ADMIN, DIRECTEUR, CHEF_PROJET, DEVELOPPEUR.
 end note
 
 note right of Permission
-  Exemple :
-  code   = ASSIGN_DEVELOPER
-  module = PROJET
+  Example: code = ASSIGN_DEVELOPER, module = PROJET.
 end note
 
-note bottom of JetonAcces
-  La version permet la révocation
-  immédiate sans liste noire.
+note bottom of AccessToken
+  Not a persisted entity — represents the JWT claims; revocation uses User.tokenVersion.
 end note
 
 @enduml

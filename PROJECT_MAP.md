@@ -30,12 +30,14 @@
 - **Phase 13 — Gouvernance :** DONE ✅ (Risk, Livrable machine à états, PartiePrenante, DemandeChangement).
 - **Phase 14 — Frontend Angular :** 60% 🟡 (auth, guards, menu dynamique, dashboard, formulaire Projet).
 - **Phase 15 — Tests d'intégration :** 95% 🟢 (51/51 ✅ — Auth, Project+RBAC, Governance, Billing, Team, Workload, KPI).
-- **Suivant :** Tests Team/Workload/KPI + composants frontend métier.
+- **Phase F — DevOps :** DONE ✅ (conteneurisation 3 services, CI/CD GitHub Actions, `DEPLOYMENT.md`, ADR-026) — **pile vérifiée en exécution le 2026-08-20** : 3 conteneurs sains, 26 migrations, login réel via nginx, RBAC conforme (PROJECT_TODO F.10).
+- **Suivant :** débloquer Docker (F.10), pousser la ligne de base (F.11), captures d'écran du rapport.
 
 ## [TECH_STACK]  (ADR-006 — aligned to installed versions)
 - **Backend:** Java 21 (21.0.9 LTS, JDK `C:\Program Files\Java\jdk-21`) · Spring Boot 3.3.x · Spring Security + JWT · Spring Data JPA · **PostgreSQL 17** · **Maven 3.9.16** (installed, not on PATH) + `mvnw` wrapper
-- **Frontend:** **Angular 21** (CLI 21.2.8) · **Node 22.20.0** · TypeScript · Bootstrap 5 · Chart.js · ng-bootstrap · PrimeNG · French UI
+- **Frontend:** **Angular 21** (CLI 21.2.8) · **Node 22.20.0** · TypeScript · Bootstrap 5 · Chart.js · ng-bootstrap · PrimeNG · **Bilingual UI (FR default / EN)** via **Transloco** i18n (ADR-025)
 - **Also installed:** Git 2.51.0 · Docker 28.4.0 · Python 3.8.10 · MiKTeX (pdflatex)
+- **DevOps (Phase F):** **Docker Compose** 3 services (`db` postgres:17-alpine · `backend` temurin-21-jre non-root · `frontend` nginx:1.27-alpine) · **GitHub Actions** (`.github/workflows/ci.yml`) · Spring Boot **Actuator** (`/actuator/health` en `permitAll`) — voir [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) et ADR-026
 - **Auth:** JWT access + refresh token; forced first-login password change (ADR-010)
 - **Authorization:** Dynamic RBAC, permission-based (ADR-001)
 
@@ -64,6 +66,10 @@ Authorization on every action = permission check (never role check).
   repository boundary (Director=all, PM=managed, Developer=assigned, Admin=admin-only).
 - **User vs Resource (ADR-022):** auth identity vs workload/cost person; `resources.user_id` nullable
   (external consultants/subcontractors = Resource only).
+- **Internationalization (ADR-025):** Transloco runtime i18n — FR (default) / EN, **instant switch, no
+  reload**; catalogs in `public/i18n/` (root shared + lazy per-module scopes); backend stays
+  language-independent (returns codes `ACTIVE`/`CHEF_PROJET`, Angular maps `status.*`/`roles.*`);
+  adding a language = drop a JSON file, zero code change. Guide: `docs/FRONTEND_I18N.md`.
 - **Security (ADR-010/017):** JWT access (short TTL, identity + token_version) + refresh + cache-backed security context (immediate revocation); first-login
   password change; BCrypt; access in memory / refresh in HttpOnly cookie.
 - **KPI engine (ADR-015):** hybrid — per-project/per-month `KpiSnapshot`, recompute-on-change, history.
@@ -92,8 +98,12 @@ Authorization on every action = permission check (never role check).
 - **Billing :** jalons + paiements + avenants — /api/projects/{id}/{jalons,avenants} (11 endpoints)
 - **Missions :** missions + composantes — /api/projects/{id}/missions (8 endpoints)
 - **Governance :** risks, livrables, parties-prenantes, demandes-changement (19 endpoints)
-- **11 migrations Flyway** V1–V11 (schema + seed)
-- **32 tests d'intégration** (Auth, Project+RBAC 403, Governance, Billing) — H2, profile=test — BUILD SUCCESS ✅
+- **Devis Interne (F-AFF-13 §3) :** GET/POST/PUT/DELETE /api/projects/{id}/devis-interne[/lignes] — structure vide, capacité MANAGE_DI (Directeur), montants/marges calculés à la lecture (jamais stockés), lignes taxes en % du total vendu
+- **TCC par année (F-AFF-13 §6.3-4) :** GET/PUT /api/resources/{id}/tcc — tarif de l'année d'imputation, fallback tarif de base
+- **KPI EVM (F-AFF-13 §5) :** EV %, Delivery %, consommé/RAF/dérive JH, CA production, FAE, marge actuelle vs vendue ; snapshot = revue mensuelle (EV saisi + faits marquants + date fin estimée)
+- **23 migrations Flyway** V1–V23 (schema + seed + V20 descope RBAC + V21 tcc_annuels + V22 EVM + V23 lignes_di)
+- **87 tests** (11 suites : contrôleurs + services ChargeReelle/Jalon/Avenant/Scope/DevisInterne) — H2, profile=test — BUILD SUCCESS ✅
+**Frontend Angular 21 (signals, standalone)** — login/guards/menu dynamique, dashboards, projets (fiche identification + détail à onglets), équipe, charges (pagination), KPI + bannière warnings, facturation, missions, gouvernance, ressources (tarifs par année), admin utilisateurs, **écran Devis Interne** `/projects/:id/devis-interne` (gated MANAGE_DI)
 
 ## [ORPHANS_AND_PENDING]
 - Cahier des Charges copied into `docs/` ✓ (housekeeping done).
@@ -109,13 +119,15 @@ Authorization on every action = permission check (never role check).
   normalized data, never replicating broken cell references.
 
 ## [REPORT_READABLE_MIRRORS]
-- Every LaTeX report chapter is mirrored as readable Markdown in `docs/report/` (so the report can
-  be read without LaTeX): `introduction.md`, `chap_01.md`, `chap_02.md`, `chap_03.md`, `chap_04.md`,
-  `chap_05.md`, `chap_06.md`, `chap_07.md`, `chap_08.md`. Kept in sync with the `.tex` sources each phase.
+- ⚠️ **Stale — do not trust.** `docs/report/*.md` mirrors the **former** 10-chapter French report.
+  The report has since been restructured to **7 chapters in English** (Context/Methodology,
+  Requirements, Architecture & Design, then Releases 1–4 covering Sprints 1–9); the old chapters
+  live in `report/Rapport PFE TEKUP LATEX/_archive_old_chapters/`.
+- The `.tex` sources under `report/Rapport PFE TEKUP LATEX/` are the **only** current version.
+  Resynchronising the mirrors is tracked as PROJECT_TODO **F.12** (P2).
 
 ## [NEXT_ACTIONS]
-1. **Phase 11 — Facturation** : `V9__schema_billing.sql`, entités `JalonFacturation` / `Paiement` / `Avenant`, règle Σ%≤100, Service + Controller.
-2. **Phase 12 — Missions** : `V10__schema_missions.sql`, composantes coût, multi-devises (ADR-007).
-3. **Phase 13 — Gouvernance** : Risk, Deliverable, Stakeholder, ChangeRequest.
-4. **Phase 14 — Frontend Angular** : skeleton → login → guards → menu → dashboards.
-5. **Rapport ch.6** : rédiger chapitre implémentation (Auth + Backend core).
+2. **Pousser la ligne de base (F.11, P0)** : 2 commits pour 277 fichiers non commités ; à faire **avant** d'activer les checks obligatoires sur `develop`/`main`.
+3. **Captures d'écran du rapport** : 8 captures Excel anonymisées + 5 captures UI — blocs `% TODO:` déjà en place dans `chap_01.tex`.
+4. **Backlog qualité restant** (voir `docs/ENHANCEMENTS.md`) : ADRs (C-1 writer unique, H-4 recalcul jalons), seed tests frontend (H-7), cible `test` Angular absente (FE-1/T-3).
+5. **Phase 15 (restant)** : review OWASP, performance NFR-001.

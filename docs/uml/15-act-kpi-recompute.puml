@@ -1,0 +1,39 @@
+@startuml act_kpi_recompute
+title Activity — KPI Recomputation
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam activityBackgroundColor #FFFFFF
+skinparam activityBorderColor #2C5F8A
+skinparam ArrowColor #444444
+skinparam noteBorderColor #999999
+skinparam noteBackgroundColor #FFFDE7
+
+start
+
+:Triggering event\n(workload entry, milestone update, mission or amendment);
+
+:Load the project's data\n(TCC, workload plan, actual workload, milestones, missions);
+
+:Compute the actual labor cost\n(Σ actual days × daily TCC rate);
+
+:Estimate the final project cost (EAC);
+
+if (EAC > initial budget?) then (yes)
+  :Flag the budget drift;
+else (no)
+  :Compute the projected margin\n((budget − EAC) / budget);
+endif
+
+:Compute billing progress\n(invoiced amount / total budget);
+
+:Update the project's KPI dashboard;
+
+stop
+
+note right
+  Recomputed on every read; nothing is written until the monthly snapshot.
+end note
+
+@enduml

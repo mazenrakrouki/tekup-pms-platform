@@ -1,75 +1,89 @@
 @startuml use_case
-title Diagramme de Cas d'Utilisation — Plateforme PMS
+title Global Use Case Diagram — PMS Platform
 
 left to right direction
 
 skinparam shadowing false
 skinparam packageStyle rectangle
-skinparam actorBackgroundColor #D6E4F0
-skinparam actorBorderColor #2C5F8A
-skinparam usecaseBackgroundColor #FFFFFF
-skinparam usecaseBorderColor #2C5F8A
-skinparam usecaseFontSize 12
 skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam ArrowColor #444444
+skinparam defaultFontSize 11
+skinparam actorBorderColor #2C5F8A
+skinparam actorBackgroundColor #D6E4F0
+skinparam usecaseBorderColor #2C5F8A
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam ArrowColor #555555
 skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 
-actor "Administrateur"           as Admin
-actor "Directeur"                as Dir
-actor "Chef de Projet"           as PM
-actor "Développeur"              as Dev
-actor "KIMAI\n(système externe)" as Kimai
+actor "Administrator\n(ADMIN)"        as Admin
+actor "Director\n(DIRECTEUR)"         as Dir
+actor "Project Manager\n(CHEF_PROJET)" as PM
+actor "Developer\n(DEVELOPPEUR)"      as Dev
 
-rectangle "Plateforme PMS" {
+rectangle "PMS Platform" {
 
-  usecase "S'authentifier\n(changement de mot de passe\nà la première connexion)" as UC1
-  usecase "Gérer les utilisateurs et les droits"           as UC3
-  usecase "Créer et configurer un projet"                  as UC4
-  usecase "Affecter le chef de projet"                     as UC_PM
-  usecase "Constituer l'équipe projet"                     as UC5
-  usecase "Planifier la charge de travail"                 as UC6
-  usecase "Gérer la facturation et les jalons"             as UC7
-  usecase "Gérer les risques et les livrables"             as UC8
-  usecase "Saisir les charges réelles"                     as UC9
-  usecase "Importer les charges (KIMAI)"                   as UC10
-  usecase "Consulter les KPI et tableaux de bord"          as UC11
+  usecase "Manage users\nand roles"            as UC1
+  usecase "Manage resources\nand yearly cost rates" as UC2
+  usecase "Create and configure\na project"    as UC3
+  usecase "Assign the\nproject manager"        as UC4
+  usecase "Define the\ninternal quote"         as UC5
+  usecase "Build the\nproject team"            as UC6
+  usecase "Plan the workload"                  as UC7
+  usecase "Submit actual\nworkload"            as UC8
+  usecase "Validate workload"                  as UC9
+  usecase "Manage billing\nand amendments"     as UC10
+  usecase "Manage missions"                    as UC11
+  usecase "Manage project\ngovernance"         as UC12
+  usecase "Conduct the\nmonthly review"        as UC13
+  usecase "Consult KPIs\nand dashboards"       as UC14
+  usecase "Close the project"                  as UC15
 
+  usecase "Archive the project"                as UC16
+  usecase "Authenticate"                       as AUTH
 }
 
 Admin --> UC1
-Admin --> UC3
+Admin --> UC2
 
-Dir --> UC1
+Dir --> UC3
 Dir --> UC4
-Dir --> UC_PM
 Dir --> UC5
-Dir --> UC11
+Dir --> UC6
+Dir --> UC14
+Dir --> UC15
 
-PM  --> UC1
-PM  --> UC5
-PM  --> UC6
-PM  --> UC7
-PM  --> UC8
-PM  --> UC11
+PM --> UC6
+PM --> UC7
+PM --> UC9
+PM --> UC10
+PM --> UC11
+PM --> UC12
+PM --> UC13
+PM --> UC14
 
-Dev --> UC1
-Dev --> UC9
-Dev --> UC11
+Dev --> UC8
+Dev --> UC14
 
-Kimai --> UC10
+UC1  ..> AUTH : <<include>>
+UC2  ..> AUTH : <<include>>
+UC3  ..> AUTH : <<include>>
+UC4  ..> AUTH : <<include>>
+UC5  ..> AUTH : <<include>>
+UC6  ..> AUTH : <<include>>
+UC7  ..> AUTH : <<include>>
+UC8  ..> AUTH : <<include>>
+UC9  ..> AUTH : <<include>>
+UC10 ..> AUTH : <<include>>
+UC11 ..> AUTH : <<include>>
+UC12 ..> AUTH : <<include>>
+UC13 ..> AUTH : <<include>>
+UC14 ..> AUTH : <<include>>
+UC15 ..> AUTH : <<include>>
 
-note right of UC11
-  Vue filtrée selon le rôle :
-  Directeur → portefeuille complet
-  Chef de Projet → ses projets
-  Développeur → ses affectations
-end note
+UC16 ..> UC15 : <<extend>>
 
 note right of UC5
-  Directeur et Chef de Projet
-  partagent cette fonctionnalité.
+  Restricted access: sensitive commercial data.
 end note
 
 @enduml

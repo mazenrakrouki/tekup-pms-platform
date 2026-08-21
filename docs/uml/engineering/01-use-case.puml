@@ -1,5 +1,5 @@
 @startuml use_case
-title Diagramme de Cas d'Utilisation — Plateforme PMS
+title Use Case Diagram — PMS Platform
 
 left to right direction
 
@@ -16,25 +16,25 @@ skinparam ArrowColor #444444
 skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 
-actor "Administrateur"           as Admin
-actor "Directeur"                as Dir
-actor "Chef de Projet"           as PM
-actor "Développeur"              as Dev
-actor "KIMAI\n(système externe)" as Kimai
+actor "Administrator"        as Admin
+actor "Director"             as Dir
+actor "Project Manager"      as PM
+actor "Developer"            as Dev
+actor "KIMAI\n(external system)" as Kimai
 
-rectangle "Plateforme PMS" {
+rectangle "PMS Platform" {
 
-  usecase "Gérer les utilisateurs et les droits"           as UC3
-  usecase "Créer et configurer un projet"                  as UC4
-  usecase "Affecter le chef de projet"                     as UC_PM
-  usecase "Constituer l'équipe projet"                     as UC5
-  usecase "S'authentifier\n(changement de mot de passe\nà la première connexion)" as UC1
-  usecase "Planifier la charge de travail"                 as UC6
-  usecase "Gérer la facturation et les jalons"             as UC7
-  usecase "Gérer les risques et les livrables"             as UC8
-  usecase "Consulter les KPI et tableaux de bord"          as UC11
-  usecase "Saisir les charges réelles"                     as UC9
-  usecase "Importer les charges (KIMAI)"                   as UC10
+  usecase "Manage users and rights"                        as UC3
+  usecase "Create and configure a project"                 as UC4
+  usecase "Assign the project manager"                     as UC_PM
+  usecase "Build the project team"                         as UC5
+  usecase "Authenticate\n(password change\non first login)" as UC1
+  usecase "Plan the workload"                               as UC6
+  usecase "Manage billing and milestones"                   as UC7
+  usecase "Manage risks and deliverables"                   as UC8
+  usecase "View KPIs and dashboards"                        as UC11
+  usecase "Submit actual workload"                          as UC9
+  usecase "Import workload (KIMAI)"                         as UC10
 
 }
 
@@ -61,15 +61,11 @@ Dev --> UC11
 Kimai --> UC10
 
 note right of UC11
-  Vue filtrée selon le rôle :
-  Directeur → portefeuille complet
-  Chef de Projet → ses projets
-  Développeur → ses affectations
+  Role-based view: Director → full portfolio, Project Manager → own projects, Developer → own assignments.
 end note
 
 note right of UC5
-  Directeur et Chef de Projet
-  partagent cette fonctionnalité.
+  Director and Project Manager share this capability.
 end note
 
 @enduml

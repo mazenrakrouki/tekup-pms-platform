@@ -1,5 +1,5 @@
 @startuml seq_login
-title Séquence : Connexion et Authentification
+title Sequence: Login and Authentication
 
 autonumber
 
@@ -16,44 +16,44 @@ skinparam noteBackgroundColor #FFFDE7
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
 
-actor      "Utilisateur"              as User
-participant "Interface Web"           as UI
-participant "Service d'authentification" as AUTH
-participant "Base de données"         as DB
+actor      "User"                   as User
+participant "Web Interface"         as UI
+participant "Authentication Service" as AUTH
+participant "Database"              as DB
 
-User -> UI   : saisir email + mot de passe
-UI   -> AUTH : authentifier(email, motDePasse)
-AUTH -> DB   : rechercher l'utilisateur par email
-DB   --> AUTH : données du compte
+User -> UI   : enter email + password
+UI   -> AUTH : authenticate(email, password)
+AUTH -> DB   : look up the user by email
+DB   --> AUTH : account data
 
-alt compte inactif ou introuvable
-  AUTH --> UI   : erreur d'authentification
-  UI   --> User : message d'erreur
+alt inactive or unknown account
+  AUTH --> UI   : authentication error
+  UI   --> User : error message
 
-else mot de passe incorrect
-  AUTH --> UI   : identifiants invalides
-  UI   --> User : message d'erreur
+else wrong password
+  AUTH --> UI   : invalid credentials
+  UI   --> User : error message
 
-else authentification réussie
-  AUTH -> AUTH  : vérifier le mot de passe (hachage)
-  AUTH -> AUTH  : générer le jeton d'accès JWT
-  AUTH --> UI   : jeton JWT + indicateur première connexion
+else authentication successful
+  AUTH -> AUTH  : verify the password (hash)
+  AUTH -> AUTH  : generate the JWT access token
+  AUTH --> UI   : JWT token + first-login flag
 
-  alt première connexion
-    UI --> User : redirection vers le changement de mot de passe
-    note right : L'accès est limité\njusqu'au changement de mot de passe.
-  else connexion normale
-    UI --> User : accès au tableau de bord
+  alt first login
+    UI --> User : redirect to password change
+    note right : Access is restricted\nuntil the password is changed.
+  else normal login
+    UI --> User : access to the dashboard
   end
 
 end
 
-== Requête suivante ==
+== Next request ==
 
-User -> UI   : naviguer dans l'application
-UI   -> AUTH : vérifier le jeton JWT
-AUTH -> AUTH : valider la version du jeton
-AUTH --> UI  : accès autorisé ou refusé
-UI   --> User : contenu de la page
+User -> UI   : navigate the application
+UI   -> AUTH : validate the JWT token
+AUTH -> AUTH : check the token version
+AUTH --> UI  : access granted or denied
+UI   --> User : page content
 
 @enduml

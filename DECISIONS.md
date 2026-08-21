@@ -245,7 +245,9 @@ the resolution as an ADR:
 
 ## ADR-014 — Native local deployment (no Docker)
 
-- **Status:** Accepted (user decision, Phase 2)
+- **Status:** ~~Accepted~~ **Superseded by [ADR-026](#adr-026--containerized-deployment-docker-compose--cicd)**
+  — native execution remains the primary *development* loop, but it is no longer the deployment
+  strategy.
 - **Context:** The build machine already runs PostgreSQL 17 (service `postgresql-x64-17`), Node 22,
   Maven 3.9.16, and Docker 28.4.0.
 - **Decision:** Run and deploy **natively**: backend via `./mvnw spring-boot:run` (Java 21), frontend
@@ -483,6 +485,91 @@ the resolution as an ADR:
   preserved for maintenance; both levels stay in sync because each Level-1 file is the simplified
   view of its Level-2 counterpart (same names, same structure, less detail).
 
+## ADR-025 — Internationalization (i18n): runtime multilingual UI, backend language-independent
+
+- **Status:** Accepted (user directive — bilingual FR/EN platform, scalable to more languages)
+- **Context:** The platform must ship a fully bilingual UI (**French default, English**), switchable
+  **instantly without page reload**, and be extensible to further languages **without touching
+  application code**. i18n is treated as a first-class architectural concern, not a UI polish task.
+- **Decision:**
+  1. **Library — Transloco (`@jsverse/transloco`).** Chosen over Angular's built-in `@angular/localize`
+     (compile-time; needs one build per locale; **cannot** switch at runtime) and over ngx-translate
+     (weaker native scoping). Transloco offers **runtime switching**, **reactive re-render**
+     (`reRenderOnLangChange`), and **first-class per-module lazy scopes**. Peer dep `@angular/core >=16`
+     covers Angular 21.
+  2. **Catalog architecture — module scopes, never one flat file.** A **root** catalog
+     (`public/i18n/{lang}.json`) holds the always-loaded shared namespaces (`common`, `nav`, `roles`,
+     `status`, `validation`, `notification`, `pagination`, `palette`, `app`, `lang`, `theme`).
+     Each **feature** owns a **lazy scope** (`public/i18n/<scope>/{lang}.json`, e.g. `auth`, `dashboard`,
+     `project`, `user`, `billing`, `workload`, `mission`, `kpi`, `tcc`, `governance`, `di`) registered
+     with `provideTranslocoScope('<scope>')` in the feature component. Keys are addressed fully-qualified
+     via the `transloco` pipe (`{{ 'project.list.title' | transloco }}`).
+  3. **No hardcoded UI strings.** Every visible string — menus, buttons, labels, placeholders,
+     validation, errors, notifications, dialogs, tables, tooltips, widgets, breadcrumbs, page titles,
+     role badges, KPI labels, module names — resolves from a catalog. Error signals store the **i18n
+     key** (not a literal), so messages stay correct after a language switch.
+  4. **Backend stays language-independent (reaffirms the existing model).** The API returns **stable
+     enum codes** (`ACTIVE`, `DRAFT`, `ON_HOLD`, `COMPLETED`, `CANCELLED`; role codes `ADMIN`,
+     `DIRECTEUR`, `CHEF_PROJET`, `DEVELOPPEUR`). The Angular layer maps codes → labels via `status.*`
+     / `roles.*`. The database never stores translated UI labels.
+  5. **Persistence — localStorage + browser detection.** Resolution order at bootstrap
+     (`APP_INITIALIZER` → `LanguageService.init()`): stored `pms_lang` → `navigator.language` →
+     default `fr`. Deliberately **not** tied to the user profile/backend, because language is a
+     device/browser preference, must work on the login screen **before** authentication, and keeps the
+     backend language-independent.
+  6. **Future-proofing.** Adding a language = add `availableLangs` entry + drop the matching
+     `<lang>.json` files (root + scopes). **Zero component changes.** A missing key falls back to the
+     `fallbackLang` (`fr`) via `useFallbackTranslation`.
+- **Reason:** runtime switch + reactive render is a hard requirement the built-in i18n cannot meet;
+  module scopes keep catalogs small and lazily loaded; code-free language addition is the canonical
+  proof of the architecture (mirrors the ADR-001 philosophy — behavior changes as *data*, not code).
+- **Consequences:**
+  - New infra: `core/i18n/` (`transloco-loader.ts`, `language.service.ts`, `transloco.providers.ts`),
+    `layout/language-switcher/` (reusable `<app-language-switcher>` in the sidebar footer **and** the
+    pre-auth login screen), catalogs under `public/i18n/`.
+  - Every feature component imports `TranslocoModule` and (for feature strings) declares its scope.
+  - Rollout is incremental and mechanical: chrome (sidebar/nav) + shared tokens (`roles`, `status`,
+    `common`) + `auth` are live; remaining feature pages follow the identical pattern (tracked in
+    `PROJECT_MAP.md` / `docs/FRONTEND_I18N.md`).
+  - The pre-existing hardcoded `ROLE_LABELS` maps (with the `DEVELOPER` vs `DEVELOPPEUR` typo) are
+    superseded by `roles.<code>` keys, incidentally fixing that latent bug.
+
+## ADR-026 — Containerized deployment (Docker Compose) + CI/CD
+
+- **Status:** Accepted — **supersedes ADR-014**.
+- **Context:** ADR-014 chose native execution and explicitly excluded Docker. That served
+  development well, but left the project with no reproducible deployment and no automated
+  verification: `DEPLOYMENT.md` did not exist (open item DOC-2), the `prod` profile had never been
+  executed, and nothing prevented a change from breaking the build. Three latent defects were only
+  discovered when preparing this work — `angular.json` never applied `fileReplacements` (the
+  production bundle contained the development API URL), the Maven wrapper did not exist despite
+  being documented, and `.env.example` was matched by a `.gitignore` rule.
+- **Decision:**
+  1. **Three containers** — `db` (PostgreSQL 17), `backend` (Spring Boot, profile `prod`),
+     `frontend` (nginx serving the Angular build and reverse-proxying `/api`). Orchestrated by
+     `docker-compose.yml`, configured entirely through `.env`.
+  2. **Single browser entry point** (`http://localhost:8081`). Application and API share an origin,
+     so the refresh cookie (`SameSite=Strict`) works with no CORS involved.
+  3. **GitHub Actions** — `backend` and `frontend` build/test on every PR and push; `images` builds
+     both Dockerfiles; `smoke` runs the full stack and performs a real login through nginx on
+     integration branches; `publish` pushes to GHCR from `main` only.
+  4. **The native loop is preserved deliberately.** Host ports are offset (5433 / 8091 / 8081) so
+     the containerized stack and `mvn spring-boot:run` + `ng serve` coexist without collision.
+- **Reason:** A deployable artefact and an automated gate are prerequisites for delivery; the cost
+  is proportionate. Kubernetes, cloud infrastructure and microservices are explicitly rejected as
+  disproportionate to an internal, single-company deployment.
+- **Consequences:**
+  - **ADR-016 (modular monolith) is unaffected** — three containers are not three services: one
+    application, its database and its static server. **ADR-019 (Flyway owns the schema)** is
+    unchanged, and now runs against a pristine volume on every fresh start.
+  - Running the `prod` profile in CI forced the removal of the insecure fallbacks for
+    `DB_PASSWORD` and `JWT_SECRET`: a misconfigured start now fails fast instead of silently using
+    a known secret.
+  - `/actuator/health` is exposed unauthenticated (`show-details: never`) so containers can be
+    probed.
+  - The demo accounts seeded by `DataInitializer` run under `prod` too. They are now gated behind
+    `pms.demo.seed-users` and documented with an explicit warning in `docs/DEPLOYMENT.md`.
+
 ---
 
 ## Decision index
@@ -513,3 +600,5 @@ the resolution as an ADR:
 | 022 | Separation of User and Resource | Domain model |
 | 023 | UML tooling: PlantUML source of truth + Mermaid mirrors | Process/UML |
 | 024 | Two-level UML: Level 1 (report, simple) vs Level 2 (engineering) | Process/UML |
+| 025 | Internationalization (Transloco, runtime FR/EN, backend language-independent) | i18n / UX |
+| 026 | Containerized deployment (Docker Compose) + CI/CD — supersedes ADR-014 | Delivery / DevOps |

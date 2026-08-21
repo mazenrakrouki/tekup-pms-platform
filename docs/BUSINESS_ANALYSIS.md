@@ -379,3 +379,29 @@ generate the report chapter at the end of each phase.
 
 *End of Business Analysis (Phase 1, business-only). Technical design begins in Phase 2 (Architecture)
 after approval.*
+
+---
+
+## 16. Data-Source Constraints — Excel Reference File
+
+The canonical project-realization data is maintained in an Excel workbook that accompanies this application.
+That workbook contains several tabs; **one tab — "DI" — is intentionally excluded from the application**.
+
+**Why it is excluded:** The DI tab holds values that are commercially and contractually sensitive to the
+company. Exposing or reconstructing these figures in the application (in any form — screen, API response,
+report, or database field) is explicitly prohibited.
+
+**Operational rule for developers and maintainers (amended 2026-07-05, management decision):**
+- The DI **structure** (Devis Interne line model: sections honoraires/frais/autres frais, charge
+  vendue, prix de vente, quantité interne, coût unitaire, computed montants and marges) **may** be
+  implemented in the application — as an **empty template only**.
+- Do **not** seed, hardcode, import, or copy the company's real DI **values** (salaries, unit
+  costs, per-line or aggregate margins) into code, migrations, fixtures, tests, demo data, or
+  documentation. The company enters its values privately in its own deployment.
+- Computed amounts (montant TND, marge) are always derived at read time from devise × taux —
+  never stored independently.
+- Access to DI data in the application is restricted to a dedicated permission (management level).
+- Do **not** attempt to reconstruct the original DI tab data from other available data.
+
+All other tabs in the Excel workbook are legitimate sources that may be referenced and imported into
+the application as needed.

@@ -1,5 +1,5 @@
 @startuml class_kpi
-title Classes — Suivi des Charges et Indicateurs KPI
+title Classes — Workload and KPI Engine (EVM)
 
 top to bottom direction
 
@@ -14,67 +14,66 @@ skinparam ArrowThickness 1.5
 skinparam noteBorderColor #999999
 skinparam noteBackgroundColor #FFFDE7
 hide circle
+hide empty methods
 
-class Projet {
+class Project {
   - code : String
-  - nom : String
-  - budget : double
+  - soldWorkloadDays : BigDecimal
 }
 
-class Ressource {
-  - nomComplet : String
-  - profil : String
+class User {
+  - email : String
 }
 
-class TCC {
-  - annee : int
-  - coutAnnuelCharge : double
-  --
-  + getTauxJournalier() : double
+class Resource {
+  - dailyRate : BigDecimal
+  - tccRate : BigDecimal
 }
 
-class PlanCharge {
-  - mois : Date
-  - joursPlanifies : double
+class AnnualTcc {
+  - year : int
+  - dailyRate : BigDecimal
+  - tccRate : BigDecimal
 }
 
-class ChargeReelle {
-  - mois : Date
-  - joursReels : double
-  - source : String
-  --
-  + valider() : void
-  + accepter() : void
+class WorkloadPlan {
+  - period : LocalDate
+  - plannedDays : BigDecimal
 }
 
-class SnapshotKPI {
-  - moisSnapshot : Date
-  - eac : double
-  - margeEAC : double
-  - budgetRestant : double
-  - progressionFacturation : double
-  --
-  + calculerEAC() : double
-  + calculerMarge() : double
+class ActualWorkload {
+  - period : LocalDate
+  - actualDays : BigDecimal
+  - submittedAt : LocalDateTime
+  - validatedAt : LocalDateTime
 }
 
-Ressource "1"   *--  "1..*" TCC          : coût par année
-Projet    "1"   *--  "*"    PlanCharge   : charge prévisionnelle
-PlanCharge "*"  -->  "1"    Ressource    : concerne >
-Projet    "1"   *--  "*"    ChargeReelle : charge réelle
-ChargeReelle "*" --> "1"    Ressource    : concerne >
-Projet    "1"   *--  "*"    SnapshotKPI  : historique KPI
+class KpiSnapshot {
+  - snapshotDate : LocalDate
+  - evPct : BigDecimal
+  - deliveryPct : BigDecimal
+  - driftDays : BigDecimal
+  - productionRevenue : BigDecimal
+  - unbilledRevenue : BigDecimal
+  - eac : BigDecimal
+  - margin : BigDecimal
+  - highlights : String
+}
 
-note right of SnapshotKPI
-  EAC = coûts réels
-  + coûts restants estimés.
-  Calculé automatiquement
-  après chaque saisie de charges.
+Resource "0..1" --> "1" User : cost of >
+Resource "1" *-- "*" AnnualTcc : rate per year >
+Project "1" *-- "*" WorkloadPlan
+WorkloadPlan "*" --> "1" User : for >
+Project "1" *-- "*" ActualWorkload
+ActualWorkload "*" --> "1" User : for >
+Project "1" *-- "*" KpiSnapshot : monthly reviews >
+
+note right of AnnualTcc
+  The daily cost uses the TCC rate for the year of the reported period.
 end note
 
-note right of ChargeReelle
-  source : MANUEL
-  ou import KIMAI
+note right of KpiSnapshot
+  The snapshot freezes the state of the monthly review (EV % entered by the PM).
 end note
 
 @enduml
