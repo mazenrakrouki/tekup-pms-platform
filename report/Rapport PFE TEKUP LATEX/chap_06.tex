@@ -1,253 +1,307 @@
-\chapter{Implémentation --- Socle technique}
+\chapter{Release 3 --- Financial Management and Governance}
 
 \section*{Introduction}
-Ce chapitre décrit la mise en \oe{}uvre des trois premiers modules backend de la plateforme PMS~:
-l'authentification et le contrôle d'accès basé sur les rôles dynamiques (phases~5 et~6), la gestion
-des utilisateurs et des ressources humaines (phase~6), et le cycle de vie des projets (phase~7).
-Ces modules constituent le \textbf{socle technique} sur lequel reposent tous les modules métier
-décrits dans les chapitres suivants.
+This release delivers the value for which the platform was commissioned: replacing the financial
+logic of the Excel workbook. Sprint~5 records the revenue side (billing milestones, payments,
+amendments) and the mission expenses that weigh on the margin. Sprint~6 adds the governance
+registers that document the life of a project. Sprint~7 closes the loop with the internal quote and
+the indicator engine, which consumes everything built since Release~1.
 
-L'implémentation utilise Java~21, Spring Boot~3.3.6, Spring Security, l'ORM JPA/Hibernate, les
-migrations de schéma Flyway, le mappeur MapStruct~1.5.5 et PostgreSQL~17 en base de données de
-production. Chaque décision clé est tracée vers son ADR correspondant.
+% =====================================================================
+\section{Sprint 5 --- Billing and Missions}
 
-\section{Architecture de l'application Spring Boot}
+\subsection{Sprint Objective}
+Record what the project earns and what it spends outside labour: billing milestones with their
+payments, contractual amendments, and business-trip costs.
 
-\subsection{Structure des modules}
+\subsection{Functional Scope}
+This sprint covers user stories US-15 to US-18: defining billing milestones, recording payments,
+recording amendments, and recording missions with their expenses.
 
-L'application suit une architecture de \textbf{monolithe modulaire} (ADR-016)~: le code est organisé
-en paquetages fonctionnels indépendants, chacun exposant sa propre couche Contrôleur~→
-Service~→~Référentiel~→~Domaine. Les modules sont~: \texttt{auth}, \texttt{user}, \texttt{project},
-\texttt{team}, \texttt{workload}, \texttt{kpi}, \texttt{billing}, \texttt{mission},
-\texttt{governance} et \texttt{shared}.
-
-\subsection{Entité de base et audit automatique}
-
-Toutes les entités métier héritent de \texttt{BaseEntity}, qui centralise~:
-
+\subsection{Features Implemented}
 \begin{itemize}
-  \item la clé primaire auto-générée (\texttt{@GeneratedValue}),
-  \item les horodatages \texttt{createdAt} / \texttt{updatedAt} via \texttt{@PrePersist} /
-        \texttt{@PreUpdate},
-  \item le marqueur \texttt{deleted} (suppression douce, ADR-009).
+  \item Billing milestones expressed as a percentage of the contract, with a lifecycle.
+  \item Payments recorded against a milestone.
+  \item Contractual amendments adjusting the revised budget.
+  \item Missions with multi-currency cost components and automatic total.
 \end{itemize}
 
-La suppression douce garantit la traçabilité complète~: aucune donnée n'est physiquement effacée.
-Tous les référentiels filtrent implicitement sur \texttt{deleted = false}.
+\subsection{Technical Realisation}
 
-\subsection{Migrations Flyway}
+\subsubsection{Billing milestones}
+A milestone belongs to one project and carries a label, a percentage of the contract, an amount, a
+due date and a status. The amount is derived from the effective budget and the percentage, so that
+an amendment automatically propagates to the milestones still to be invoiced.
 
-La structure de la base de données est gérée exclusivement par Flyway (ADR-019)~:
-\texttt{spring.jpa.hibernate.ddl-auto=validate} interdit tout DDL implicite d'Hibernate. Les onze
-migrations versionnées (\texttt{V1} à \texttt{V11}) sont idempotentes et constituent la
-documentation vivante du schéma.
+The structural rule inherited from the workbook is enforced in the service layer: the \textbf{sum of
+milestone percentages may not exceed 100~\%} of the contract. Attempting to exceed it is rejected
+rather than silently accepted, which the spreadsheet allowed.
 
-\section{Authentification et sécurité JWT}
+\subsubsection{Milestone lifecycle}
+A milestone moves through three states: \texttt{PREVU} (planned), \texttt{FACTURE} (invoiced) and
+\texttt{PAYE} (paid). Invoicing records the invoice date; a payment recorded against an invoiced
+milestone moves it to paid. Payments are kept as individual rows rather than as a single settled
+amount, so that partial settlements remain visible.
 
-\subsection{Principe d'émission des jetons}
+\subsubsection{Amendments}
+An amendment carries a reference, an amount and an impact on the sold workload. It is the
+\textbf{single writer} of the revised budget introduced in Sprint~3: no other operation may modify
+it. This constraint is what keeps the contractual and financial history coherent.
 
-À la connexion (\texttt{POST /api/auth/login}), le service d'authentification~:
+\subsubsection{Missions and multi-currency}
+A mission belongs to a project and an employee, and its total cost is the sum of its components ---
+per diem, ticket, accommodation, transport, stamp. Because a mission may be incurred in a currency
+different from the reporting currency, each component is converted \textbf{before} summation using
+the rate at the mission date. Summing first and converting afterwards would mix currencies and
+distort the total.
 
-\begin{enumerate}
-  \item vérifie l'e-mail et compare le mot de passe fourni avec le haché BCrypt (force~12),
-  \item vérifie que le compte est actif (\texttt{active = true}),
-  \item émet un \textbf{jeton d'accès JWT} à courte durée de vie (signé \texttt{HMAC-SHA512}),
-        contenant l'e-mail, la version du jeton (\texttt{tokenVersion}) et la liste des codes de
-        permission~,
-  \item place un \textbf{jeton de rafraîchissement} opaque dans un cookie \texttt{HttpOnly} /
-        \texttt{Secure} / \texttt{SameSite=Strict}.
-\end{enumerate}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/class_financial.png}
+  \caption{Class diagram --- financial management}
+  \label{fig:class-fin}
+\end{figure}
 
-La séparation des deux jetons (accès en mémoire, rafraîchissement en cookie) protège contre les
-attaques de type XSS~: le jeton de rafraîchissement, le plus puissant, n'est jamais accessible
-depuis JavaScript.
+% TODO: capture as img/ui_billing.png, then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/ui_billing.png}
+%   \caption{Billing milestones interface}
+%   \label{fig:ui-billing}
+% \end{figure}
 
-\subsection{Révocation instantanée par version de jeton}
+\subsection{Tests and Validation}
 
-La mécanique de révocation est fondée sur un champ \texttt{token\_version} persisté dans la table
-\texttt{users} (ADR-017). À chaque émission, la version courante est incluse dans le jeton JWT.
-Le filtre \texttt{JwtAuthenticationFilter} compare, à chaque requête, la version présente dans
-le jeton avec la valeur lue dans le cache Caffeine (\texttt{email:tokenVersion}). Si les valeurs
-diffèrent, la requête est rejetée avec \texttt{401 Unauthorized}.
-
-\begin{itemize}
-  \item Lors d'une déconnexion, \texttt{token\_version} est incrémenté en base et
-        le cache est immédiatement invalide pour cette identité.
-  \item Lors d'un changement de mot de passe, la même incrémentation invalide toutes les sessions
-        actives sur d'autres appareils.
-\end{itemize}
-
-Le cache Caffeine évite un accès en base à chaque requête et garantit la cohérence sans état
-distribué.
-
-\subsection{Changement de mot de passe à la première connexion}
-
-Lors de la création d'un compte, l'Administrateur définit un mot de passe temporaire. Le champ
-\texttt{first\_login} est positionné à \texttt{true}. Le jeton JWT émis à la première connexion
-possède un droit restreint~: seul l'appel \texttt{POST /api/auth/change-password} est autorisé.
-Une fois le mot de passe modifié, \texttt{first\_login} est mis à \texttt{false} et un nouveau
-jeton sans restriction est émis (ADR-010).
-
-\section{Contrôle d'accès basé sur les rôles dynamiques (ADR-001)}
-
-\subsection{Modèle Permission-Rôle-Utilisateur}
-
-Le RBAC est \textbf{entièrement dynamique}~: les permissions ne sont pas codées en dur dans
-l'application. La table \texttt{role\_permissions} associe un ensemble de permissions à un rôle.
-Un utilisateur n'a qu'un seul rôle actif, mais ce rôle peut être reconfiguré à tout moment par
-l'Administrateur sans redéploiement.
-
-La migration \texttt{V2\_\_seed\_rbac.sql} initialise les quatre rôles par défaut (Administrateur,
-Directeur, Chef de Projet, Développeur) avec dix-huit codes de permission répartis en sept modules
-(\texttt{ADMIN}, \texttt{PROJET}, \texttt{EQUIPE}, \texttt{CHARGE}, \texttt{FACTURATION},
-\texttt{KPI}, \texttt{GOV}).
-
-\subsection{Propagation vers Spring Security}
-
-Au démarrage de la session, \texttt{JwtAuthenticationFilter} charge les codes de permission depuis
-le jeton JWT et les convertit en objets \texttt{SimpleGrantedAuthority}. Chaque point d'entrée REST
-est protégé par une annotation de la forme~:
-
-\begin{verbatim}
-@PreAuthorize("hasAuthority('CREATE_PROJECT')")
-\end{verbatim}
-
-La règle absolue est~: aucune vérification de \emph{nom de rôle} dans le code applicatif. Seuls les
-codes de permission sont utilisés.
-
-\subsection{Menu dynamique}
-
-L'endpoint \texttt{GET /api/me/context} renvoie, pour l'utilisateur authentifié, la liste de ses
-permissions ainsi que les informations de profil. Le frontend Angular utilise cette réponse pour
-construire dynamiquement le menu de navigation~: un élément n'est affiché que si l'utilisateur
-possède le code de permission requis.
-
-\subsection{Endpoint \texttt{GET /api/me/context}}
-
-\begin{longtable}{|m{4.5cm}|m{10cm}|}
+\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
 \hline
-\textbf{Champ de la réponse} & \textbf{Description} \\
+\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-\texttt{userId} & Identifiant de l'utilisateur \\
+Percentage ceiling & Create milestones whose percentages exceed 100~\% & Rejected, ceiling enforced
+\\
 \hline
-\texttt{email} & Adresse e-mail \\
+Milestone lifecycle & Invoice then settle a milestone & Status moves \texttt{PREVU} $\rightarrow$
+\texttt{FACTURE} $\rightarrow$ \texttt{PAYE} \\
 \hline
-\texttt{firstName}, \texttt{lastName} & Prénom et nom \\
+Partial payment & Record two payments on one milestone & Both retained, settlement traceable \\
 \hline
-\texttt{roleName} & Nom du rôle actif \\
+Amendment impact & Add an amendment & Revised budget updated, milestones recomputed \\
 \hline
-\texttt{permissions} & Liste des codes de permission (\texttt{String[]}) \\
+Mission in a foreign currency & Record components in another currency & Each converted at the
+mission date before summation \\
 \hline
-\texttt{firstLogin} & Vrai si le mot de passe doit être changé \\
-\hline
-\caption{Structure de la réponse \texttt{GET /api/me/context}}
-\label{tab:mecontext}
+\caption{Test cases --- Sprint 5}
+\label{tab:tests-s5}
 \end{longtable}
 
-\section{Gestion des utilisateurs et des ressources}
+\subsection{Sprint Outcome}
+The revenue and expense sides of a project are now recorded under the same rules the workbook
+applied, but enforced rather than merely intended. Together with the labour cost from Sprint~4, the
+platform holds every input the margin computation requires.
 
-\subsection{Utilisateurs}
+\subsection{Transition to the Next Sprint}
+Financial tracking answers ``how much''; it does not answer ``what is threatening this project''.
+Sprint~6 adds the governance registers that document risks, deliverables and changes.
 
-Le module \texttt{user} expose un CRUD complet protégé par la permission \texttt{MANAGE\_USERS}.
-Les points clés d'implémentation sont~:
+% =====================================================================
+\section{Sprint 6 --- Project Governance}
 
+\subsection{Sprint Objective}
+Deliver the governance registers of the reference workbook: risks, deliverables, stakeholders and
+change requests, so that the qualitative life of a project is documented alongside its financial
+figures.
+
+\subsection{Functional Scope}
+This sprint covers user stories US-19 to US-21.
+
+\subsection{Features Implemented}
 \begin{itemize}
-  \item La \textbf{création} génère un hachage BCrypt du mot de passe temporaire fourni et positionne
-        \texttt{first\_login = true}.
-  \item L'\textbf{activation / désactivation} (\texttt{PUT /api/users/{id}/activate} et
-        \texttt{/deactivate}) fait basculer le champ \texttt{active}. Un utilisateur désactivé ne
-        peut pas s'authentifier.
-  \item L'\textbf{attribution de rôle} charge l'entité \texttt{Role} et la lie à l'utilisateur~; la
-        session en cours du titulaire reste valide jusqu'à expiration du jeton (révocation possible
-        via déconnexion forcée).
+  \item Risk register with probability, impact, status and mitigation plan.
+  \item Deliverable register with due date and delivery status.
+  \item Stakeholder register with role and influence.
+  \item Change request register with priority and decision status.
 \end{itemize}
 
-\subsection{Ressources humaines}
+\subsection{Technical Realisation}
+The four registers share the same shape: each is composed by the project, is governed by a small
+business enumeration, and is edited by the project manager. Their value lies less in their
+individual complexity than in being attached to the project rather than kept in a separate
+document, which is what the spreadsheet process could not guarantee.
 
-La distinction \textbf{Utilisateur vs Ressource} est formalisée dans ADR-022. Une \texttt{Resource}
-représente une personne physiquement active dans un projet (son coût, son taux journalier, son TCC)
-et peut exister \emph{sans} compte utilisateur (consultants, sous-traitants externes). Le lien
-\texttt{user\_id} est optionnel.
+The \textbf{deliverable register} carries a functional responsibility beyond documentation: the
+delivery rate used by the indicator engine of Sprint~7 is derived from it, as the ratio of
+delivered and validated deliverables to planned deliverables. This is why deliverables carry a
+controlled status rather than a free-text field.
 
-Chaque ressource porte~:
-\begin{itemize}
-  \item \texttt{tarifJournalier} (coût direct journalier en TND),
-  \item \texttt{tauxTcc} (taux de charges indirectes, défaut 70\%, paramétrable, ADR-008),
-  \item des entrées \texttt{TCC} annuelles qui permettent de recalculer le coût complet au fil du
-        temps (ADR-002).
-\end{itemize}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/class_governance.png}
+  \caption{Class diagram --- project governance}
+  \label{fig:class-gov}
+\end{figure}
 
-\subsection{Mappers MapStruct}
+% TODO: capture as img/ui_governance.png, then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/ui_governance.png}
+%   \caption{Governance interface}
+%   \label{fig:ui-gov}
+% \end{figure}
 
-Conformément à ADR-018, tout mapping entité~↔~DTO est géré par des interfaces MapStruct
-(\texttt{UserMapper}, \texttt{ResourceMapper}). Les classes sont générées à la compilation~; aucune
-réflexion n'est utilisée à l'exécution, ce qui garantit à la fois la performance et la visibilité
-des erreurs à la compilation.
+\subsection{Tests and Validation}
 
-\section{Cycle de vie des projets}
-
-\subsection{États et transitions}
-
-Un projet suit un cycle de vie linéaire à six états~:
-
-\begin{center}
-\texttt{PROSPECT} → \texttt{EN\_COURS} → \texttt{EN\_PAUSE} → \texttt{TERMINE} → \texttt{ANNULE}
-\end{center}
-
-\noindent accompagné d'un état \texttt{ARCHIVE} atteignable depuis \texttt{TERMINE}. Les transitions
-invalides sont rejetées en service avec une \texttt{IllegalStateException} traduite en
-\texttt{400 Bad Request}.
-
-\subsection{Budget effectif}
-
-Le budget de référence d'un projet est son \texttt{initialBudget}. Dès lors qu'un avenant
-(\texttt{Avenant}) est approuvé, le service recalcule le \texttt{revisedBudget} (budget révisé). Le
-\textbf{budget effectif} utilisé par le moteur de KPI est~:
-
-\begin{verbatim}
-effectiveBudget = (revisedBudget != null) ? revisedBudget : initialBudget
-\end{verbatim}
-
-\subsection{Affectation du chef de projet}
-
-L'endpoint \texttt{PUT /api/projects/{id}/assign-chef} (permission \texttt{ASSIGN\_CHEF\_PROJET})
-crée une ligne dans \texttt{project\_manager\_assignments} avec \texttt{startDate} = aujourd'hui.
-Si un chef de projet est déjà actif, son \texttt{endDate} est clôturée à hier~: l'historique est
-intégralement préservé.
-
-\subsection{Endpoints du module Projets}
-
-\begin{longtable}{|m{2cm}|m{5.5cm}|m{3.5cm}|m{3cm}|}
+\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
 \hline
-\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Réponse} \\
+\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-GET & \texttt{/api/projects} & \texttt{VIEW\_PROJECT} & 200 liste \\
+Register creation & Add a risk, a deliverable, a stakeholder and a change request & All attached to
+the project \\
 \hline
-GET & \texttt{/api/projects/\{id\}} & \texttt{VIEW\_PROJECT} & 200 / 404 \\
+Deliverable status & Move a deliverable to delivered & Delivery rate recomputed accordingly \\
 \hline
-POST & \texttt{/api/projects} & \texttt{CREATE\_PROJECT} & 201 + Location \\
+Authorization & Access a register without the governance permission & HTTP 403 \\
 \hline
-PUT & \texttt{/api/projects/\{id\}} & \texttt{EDIT\_PROJECT} & 200 mis à jour \\
+Logical deletion & Delete a register entry & Entry deactivated, history preserved \\
 \hline
-DELETE & \texttt{/api/projects/\{id\}} & \texttt{DELETE\_PROJECT} & 204 \\
-\hline
-PUT & \texttt{/api/projects/\{id\}/assign-chef} & \texttt{ASSIGN\_CHEF\_PROJET} & 200 \\
-\hline
-\caption{Endpoints REST du module Projets}
-\label{tab:projects-api}
+\caption{Test cases --- Sprint 6}
+\label{tab:tests-s6}
 \end{longtable}
+
+\subsection{Sprint Outcome}
+The qualitative dimension of project steering is now captured in the platform, and the deliverable
+register provides the delivery rate the indicator engine needs.
+
+\subsection{Transition to the Next Sprint}
+Every input is now available: labour cost, other costs, invoiced revenue, delivery progress. Sprint~7
+assembles them into the indicators that were the original purpose of the project.
+
+% =====================================================================
+\section{Sprint 7 --- Internal Quote and Indicator Engine}
+
+\subsection{Sprint Objective}
+Deliver the economic baseline of a project, the internal quote, and the engine that computes
+the earned-value indicators, together with the dashboards that expose them.
+
+\subsection{Functional Scope}
+This sprint covers user stories US-22 to US-25: defining the internal quote, computing the
+indicators automatically, freezing a monthly review, and providing the portfolio dashboard.
+
+\subsection{Features Implemented}
+\begin{itemize}
+  \item Internal quote structured by section, with restricted access.
+  \item Automatic computation of the earned-value indicators.
+  \item Frozen monthly review preserving the official state of the project.
+  \item Per-project and portfolio dashboards.
+\end{itemize}
+
+\subsection{Technical Realisation}
+
+\subsubsection{The internal quote}
+The internal quote is the economic baseline of the project: line items grouped by section (fees,
+expenses, other expenses), each carrying a sold quantity and unit price on the revenue side, and
+an internal quantity and unit cost on the cost side.
+
+Two design decisions govern this module. First, access is restricted by a dedicated permission,
+because unit costs and margins are commercially sensitive. Second, \textbf{amounts and margins are
+never stored}: they are recomputed at read time from quantities, unit values and the exchange rate.
+Persisting them would duplicate sensitive figures and risk divergence between the stored value and
+its inputs.
+
+\subsubsection{The hybrid indicator engine}
+The engine implements the architecture decided in Chapter~3. On each read it recomputes, from live
+data, the indicators of the reference workbook:
+
+\begin{itemize}
+  \item \textbf{Actual cost} --- consumed man-days valued at the cost rate of their own year;
+  \item \textbf{ETC} --- remaining man-days valued the same way;
+  \item \textbf{EAC} --- actual cost plus ETC;
+  \item \textbf{Production revenue} --- contract total weighted by the earned value percentage;
+  \item \textbf{Accrued income} --- production revenue minus the invoiced total;
+  \item \textbf{Margin} --- effective budget minus EAC, in value and in percentage;
+  \item \textbf{Drift} --- sold workload minus consumed minus remaining.
+\end{itemize}
+
+Nothing is written during this computation: a dashboard read has no side effect.
+
+\subsubsection{The frozen monthly review}
+The earned value percentage is a judgement, not a measurement: it is entered by the project manager
+during the monthly review. Submitting it creates a \textbf{snapshot} that freezes the indicators of
+that month, together with the highlights recorded by the manager.
+
+This is the digital equivalent of the monthly column of the statistics sheet: live figures for
+steering, frozen figures for history. A snapshot is immutable, so the history of past reviews
+cannot be rewritten by a later correction.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/class_kpi.png}
+  \caption{Class diagram --- workload and indicator engine}
+  \label{fig:class-kpi}
+\end{figure}
+
+Figure~\ref{fig:seq-kpi} shows the complete chain, from workload submission to the frozen review.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/seq_submit_workload.png}
+  \caption{Sequence --- workload entry and indicator computation}
+  \label{fig:seq-kpi}
+\end{figure}
+
+% TODO: capture as img/ui_kpi.png, then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/ui_kpi.png}
+%   \caption{KPI dashboard interface}
+%   \label{fig:ui-kpi}
+% \end{figure}
+
+\subsection{Tests and Validation}
+Validation of this sprint is comparative: the indicators computed by the platform are checked
+against the figures produced by the reference workbook for the same inputs.
+
+\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
+\hline
+\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Cost rate by year & Book effort across two years & Each year valued at its own rate \\
+\hline
+EAC computation & Compare with the workbook on identical inputs & Identical result \\
+\hline
+Read has no side effect & Read the indicators twice & No data written, identical result \\
+\hline
+Snapshot immutability & Attempt to modify a past snapshot & Refused \\
+\hline
+Financial confidentiality & Read the indicators as a developer & Financial data not exposed \\
+\hline
+Internal quote access & Read the quote without the dedicated permission & HTTP 403 \\
+\hline
+\caption{Test cases --- Sprint 7}
+\label{tab:tests-s7}
+\end{longtable}
+
+\subsection{Sprint Outcome}
+The platform now reproduces the financial logic of the Excel workbook, automatically and under
+access control. The functional objective of the project is met: a project manager obtains their
+indicators without opening a spreadsheet, and a director sees the whole portfolio.
+
+\subsection{Transition to the Next Sprint}
+The functional scope is complete. What remains is to make the platform pleasant, verified and
+deployable, the object of Release~4.
 
 \section*{Conclusion}
-Le socle technique de la plateforme PMS est constitué de trois modules qui instaurent les invariants
-de sécurité et de gouvernance des données valables pour l'ensemble de l'application~: la révocation
-instantanée des jetons par version, le RBAC strictement basé sur les codes de permission (jamais sur
-les noms de rôle), la suppression douce systématique et le budget effectif dynamique par avenants.
-Le chapitre suivant décrit les modules opérationnels~: équipes, charges de travail et moteur de KPI.
+Release~3 delivered the core value of PMS: billing and expenses, the governance registers, the
+internal quote and above all the indicator engine that replaces the two thousand formulas of the
+reference workbook. The hybrid design, live computation for steering and frozen snapshots for
+history, reproduces the strengths of the spreadsheet while removing its fragility.

@@ -1,108 +1,266 @@
-\chapter{Conception de la base de données}
+\chapter{Release 1 --- Foundation and Security}
 
 \section*{Introduction}
-Ce chapitre traduit le modèle métier et l'architecture en un schéma relationnel concret pour
-PostgreSQL~17. Il présente les conventions de modélisation, le modèle logique (entités et
-relations), le catalogue des entités, le modèle temporel mensuel et les instantanés de KPI, la
-gestion multi-devises et des paramètres, l'audit, les données de référence et la stratégie de
-migration. Le schéma compte environ vingt-six tables et constitue la source de vérité du modèle de
-données.
+This chapter presents the first release of the PMS platform. Its purpose is to make the application
+usable and secure before any business functionality is built on top of it. It gathers two sprints:
+Sprint~1 establishes the technical foundation and authentication, Sprint~2 delivers the dynamic
+access control together with the management of users and resources.
 
-\section{Conventions de modélisation}
+At the end of this release, the platform authenticates its users, applies a configurable
+authorization policy, and holds the reference data (users, resources, cost rates) that the
+operational modules of Release~2 will consume.
+
+% =====================================================================
+\section{Sprint 1 --- Technical Foundation and Authentication}
+
+\subsection{Sprint Objective}
+Establish the technical skeleton of the backend application and deliver a complete, secure
+authentication chain. No business functionality is addressed in this sprint: the goal is to obtain
+a running, testable and secured application shell.
+
+\subsection{Functional Scope}
+This sprint covers user stories US-01 to US-03 of the backlog
+(Table~\ref{tab:backlog}): signing in, the forced password change on first login, and the immediate
+revocation of active sessions.
+
+\subsection{Features Implemented}
 \begin{itemize}
-    \item Tables en \texttt{snake\_case} au pluriel~; clé primaire \texttt{id} en identité
-    (\texttt{generated always as identity}).
-    \item Clés étrangères nommées \texttt{<entité>\_id}~; horodatages en \texttt{timestamptz}.
-    \item Montants en \texttt{numeric(18,3)} associés à une devise (\texttt{*\_currency}), jamais en
-    flottant.
-    \item Les mois sont stockés comme le \textbf{premier jour du mois} (série temporelle).
-    \item Énumérations exprimées par \texttt{varchar} + contrainte \texttt{CHECK}.
-    \item Audit (\texttt{created\_by/at}, \texttt{modified\_by/at}) et suppression logique
-    (\texttt{active}, \texttt{deleted\_at}) sur chaque table métier.
+  \item Modular Spring Boot application skeleton.
+  \item Automatic auditing and logical deletion shared by all business entities.
+  \item Versioned database schema management through Flyway migrations.
+  \item Login by e-mail and password with JWT access token and refresh token.
+  \item Immediate session revocation by token version.
+  \item Mandatory password change on first login.
 \end{itemize}
 
-\section{Modèle logique}
-Le cœur du modèle est le contrôle d'accès dynamique~: un \texttt{users} possède un \texttt{roles},
-et \texttt{roles} et \texttt{permissions} sont liés par la table d'association
-\texttt{role\_permissions} (relation plusieurs-à-plusieurs). Un \texttt{projects} référence un
-directeur (utilisateur) et regroupe ses entités filles~: affectations du chef de projet
-(exactement une active à la fois), affectations d'équipe, plan de charge, charges réelles, jalons de
-facturation, missions, ainsi que les registres de gouvernance (risques, livrables, parties
-prenantes, changements, actions, avenants) et les instantanés de KPI. Une ressource possède un TCC
-par année et peut être rattachée à un compte utilisateur.
+\subsection{Technical Realisation}
 
-\section{Catalogue des entités}
-Les entités sont regroupées par domaine fonctionnel et rattachées aux modules de la plateforme.
+\subsubsection{Modular monolith structure}
+The application follows a \textbf{modular monolith} architecture: the code is organised into
+independent functional packages, each exposing its own Controller $\rightarrow$ Service
+$\rightarrow$ Repository $\rightarrow$ Domain layering. The modules are \texttt{auth},
+\texttt{user}, \texttt{project}, \texttt{team}, \texttt{workload}, \texttt{kpi}, \texttt{billing},
+\texttt{mission}, \texttt{governance} and \texttt{shared}. This structure allows each subsequent
+sprint to add its module without touching the previous ones.
 
-\begin{longtable}{|m{3.2cm}|m{7.3cm}|m{4cm}|}
+\subsubsection{Base entity and automatic auditing}
+All business entities inherit from \texttt{BaseEntity}, which centralises the auto-generated
+primary key, the \texttt{createdAt} / \texttt{updatedAt} timestamps managed by \texttt{@PrePersist}
+and \texttt{@PreUpdate}, and the \texttt{deleted} marker implementing logical deletion. No data is
+ever physically erased, and every repository implicitly filters on \texttt{deleted = false}. This
+guarantees the traceability required by the auditability requirement (NFR-008).
+
+\subsubsection{Schema management through Flyway}
+The database structure is managed exclusively by Flyway. Hibernate never emits implicit DDL:
+the property \texttt{spring.jpa.\allowbreak hibernate.\allowbreak ddl-auto} is set to \texttt{validate}.
+The versioned migrations are idempotent and constitute the living documentation of the schema.
+
+\subsubsection{Token issuance}
+On \texttt{POST /api/auth/login}, the authentication service verifies the e-mail and compares the
+supplied password with the BCrypt hash (strength~12), checks that the account is active, then
+issues:
+
+\begin{itemize}
+  \item a short-lived \textbf{JWT access token} signed with \texttt{HMAC-SHA512}, carrying the
+        e-mail, the token version and the list of permission codes;
+  \item an opaque \textbf{refresh token} placed in an \texttt{HttpOnly} / \texttt{Secure} /
+        \texttt{SameSite=Strict} cookie.
+\end{itemize}
+
+Separating the two tokens, access token in memory and refresh token in a cookie, protects
+against XSS attacks: the more powerful refresh token is never reachable from JavaScript.
+
+\subsubsection{Immediate revocation by token version}
+Revocation rests on a \texttt{token\_version} field persisted in the \texttt{users} table. The
+current version is embedded in every issued token. On each request, the
+\texttt{JwtAuthenticationFilter} compares the version carried by the token with the value read from
+the Caffeine cache; if they differ, the request is rejected with \texttt{401 Unauthorized}.
+
+Incrementing \texttt{token\_version} therefore invalidates every active session of that identity
+instantly: on logout, and on password change, which closes sessions opened on other devices. The
+cache avoids a database access on every request while keeping consistency without distributed
+state.
+
+\subsubsection{Forced password change on first login}
+When an account is created, the administrator sets a temporary password and \texttt{first\_login}
+is set to \texttt{true}. The token issued at the first connection carries a restricted right: only
+\texttt{POST /api/\allowbreak auth/\allowbreak change-password} is authorised. Once the password is changed,
+\texttt{first\_login} becomes \texttt{false} and an unrestricted token is issued.
+
+% --- Screenshot slot: uncomment once img/ui_login.png is captured ---
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.8\columnwidth]{img/ui_login.png}
+%   \caption{Login interface}
+%   \label{fig:ui-login}
+% \end{figure}
+
+\subsection{Tests and Validation}
+The authentication chain is covered by automated backend tests verifying the nominal path and the
+rejection paths.
+
+\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
 \hline
-\textbf{Domaine} & \textbf{Tables principales} & \textbf{Module} \\
+\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-Sécurité / RBAC & \texttt{users}, \texttt{roles}, \texttt{permissions}, \texttt{role\_permissions} & Authentification \& RBAC \\ \hline
-Référentiel & \texttt{currencies}, \texttt{exchange\_rates}, \texttt{parameters}, échelles de risque & Configuration \\ \hline
-Ressources & \texttt{resources}, \texttt{tcc} & Gestion du TCC \\ \hline
-Projets & \texttt{projects}, \texttt{project\_manager\_assignments} & Gestion de projet \\ \hline
-Équipes & \texttt{team\_assignments}, \texttt{stakeholders} & Équipes / Parties prenantes \\ \hline
-Charges & \texttt{workload\_plan}, \texttt{actual\_workload} & Plan de charge / Charges réelles \\ \hline
-Facturation & \texttt{billing\_milestones}, \texttt{payments}, \texttt{avenants} & Facturation / Avenants \\ \hline
-Missions & \texttt{missions} & Gestion des missions \\ \hline
-Gouvernance & \texttt{risks}, \texttt{deliverables}, \texttt{change\_requests}, \texttt{actions} & Risques / Livrables / Changements \\ \hline
-KPI & \texttt{kpi\_snapshots} & KPI \& Reporting \\ \hline
-\caption{Catalogue des entités par domaine}
-\label{tab:entites}
+Successful login & Submit a valid e-mail and password on an active account & HTTP 200, access token
+returned and refresh cookie set \\
+\hline
+Wrong password & Submit a valid e-mail with an incorrect password & HTTP 401, no token issued \\
+\hline
+Inactive account & Submit valid credentials on a deactivated account & HTTP 401, access refused \\
+\hline
+First login & Call a business endpoint with a first-login token & Access refused; only the password
+change endpoint is reachable \\
+\hline
+Revocation & Call an endpoint with a token issued before a password change & HTTP 401, stale token
+version detected \\
+\hline
+\caption{Test cases --- Sprint 1}
+\label{tab:tests-s1}
 \end{longtable}
 
-\section{Modèle temporel mensuel et instantanés de KPI}
-Le classeur Excel est fondamentalement une grille \emph{ressource $\times$ mois}. Plutôt que de
-reproduire vingt-cinq colonnes de mois, le modèle est \textbf{normalisé}~: une ligne par
-\texttt{(projet, ressource, mois)} dans \texttt{workload\_plan} (charges planifiées) et
-\texttt{actual\_workload} (charges réelles), facilitant l'agrégation et l'extension au-delà de
-vingt-cinq mois.
+\subsection{Sprint Outcome}
+At the end of Sprint~1 the platform is a running, secured application shell: a user can sign in,
+is forced to choose a personal password, and their sessions can be cut off immediately. The
+auditing, logical deletion and schema-migration mechanisms are in place and will be inherited by
+every module built afterwards.
 
-La table \texttt{kpi\_snapshots} stocke un instantané par \texttt{(projet, mois)} ainsi qu'un cumul
-courant. Elle conserve l'historique des indicateurs (courbes d'évolution) et permet des lectures de
-tableaux de bord rapides. Conformément à la correction de la phase précédente, elle distingue le
-\textbf{coût de main-d'œuvre} (\texttt{actual\_labor\_cost}, somme JH $\times$ TCC) des
-\textbf{autres coûts} (\texttt{actual\_other\_cost}, missions et frais), le coût total réel
-(\texttt{actual\_total\_cost}) agrégeant les deux.
+\subsection{Transition to the Next Sprint}
+The application authenticates its users but does not yet distinguish what each of them may do:
+the token carries permission codes that nothing populates yet. Sprint~2 therefore builds the
+dynamic authorization model that fills this gap, together with the management of the users and
+resources it applies to.
 
-Les charges réelles sont \textbf{bi-sources}~: la table \texttt{actual\_workload} conserve une ligne
-par source (saisie manuelle et import KIMAI) grâce à une unicité sur
-\texttt{(projet, ressource, mois, source)}, complétée d'un indicateur \texttt{accepted} et d'un index
-unique partiel garantissant une seule valeur retenue par cellule~; c'est cette valeur réconciliée qui
-alimente le moteur de KPI (décision D2).
+% =====================================================================
+\section{Sprint 2 --- Dynamic Access Control, Users and Resources}
 
-\section{Multi-devises, paramètres et audit}
-Chaque montant est associé à une devise~; les conversions s'appuient sur des taux datés
-(\texttt{exchange\_rates}), la devise de restitution (TND) étant un paramètre. La table
-\texttt{parameters} et les tables d'échelles de risque portent toutes les constantes métier
-(facteur de frais généraux, jours ouvrés, heures par jour, taux de PPR, plafond de facturation),
-qui ne sont jamais codées en dur. Chaque conversion utilise le taux en vigueur à la \textbf{date
-métier} du montant (date de facture pour la facturation, mois pour les coûts mensuels, date de
-mission pour les déplacements)~; les instantanés de KPI portent une colonne de devise explicite. Le
-\textbf{budget effectif} (budget initial $+$ avenants validés) est calculé dans l'instantané, et le
-budget restant en découle (« budget total, avenants inclus »). L'audit et la suppression logique
-préservent l'historique (charges, affectations, TCC, facturation).
+\subsection{Sprint Objective}
+Deliver the authorization model that structures the whole platform, the
+``Role $\rightarrow$ Permission $\rightarrow$ Module'' chain introduced in
+Section~\ref{sec:rbac}, and the administration screens that feed it with reference data.
 
-\section{Données de référence}
-Un jeu de données initial (livré comme migration de \emph{seed}) crée les quatre rôles, le
-catalogue complet des permissions, la matrice rôle--permission par défaut (avec
-\texttt{ASSIGN\_DEVELOPER} accordée au Directeur \emph{et} au Chef de Projet, décision D4), les
-devises, les paramètres, les échelles de risque et un compte administrateur d'amorçage.
+\subsection{Functional Scope}
+This sprint covers user stories US-04 to US-07: assigning permissions to roles, adapting the
+interface to the rights held, managing user accounts, and recording resources with their yearly
+cost rate.
 
-\section{Stratégie de migration}
-La gestion du schéma s'appuie sur \textbf{Flyway} avec des migrations SQL versionnées~; le schéma de
-base de données fait foi et JPA s'exécute en mode \texttt{validate} (les entités doivent
-correspondre au schéma, sans jamais le générer). Le schéma de la présente phase
-(\texttt{docs/schema.sql}) deviendra la première migration \texttt{V1} lors de la réalisation.
+\subsection{Features Implemented}
+\begin{itemize}
+  \item Permission--Role--User model persisted in the database.
+  \item Propagation of permissions to Spring Security and protection of every endpoint.
+  \item Navigation menu built dynamically from the rights held.
+  \item User account management: creation, modification, activation and deactivation.
+  \item Resource management and entry of the yearly loaded cost rate (TCC).
+\end{itemize}
+
+\subsection{Technical Realisation}
+
+\subsubsection{Permission--Role--User model}
+Access control is \textbf{entirely dynamic}: permissions are not hard-coded in the application. The
+\texttt{role\_permissions} table associates a set of permissions with a role. A user holds a single
+active role, but that role can be reconfigured at any time by the administrator without
+redeployment.
+
+A dedicated migration initialises the four default roles (Administrator, Director, Project Manager,
+Developer) with eighteen permission codes spread over seven modules (\texttt{ADMIN},
+\texttt{PROJET}, \texttt{EQUIPE}, \texttt{CHARGE}, \texttt{FACTURATION}, \texttt{KPI},
+\texttt{GOV}).
+
+\subsubsection{Propagation to Spring Security}
+The \texttt{JwtAuthenticationFilter} reads the permission codes from the token and converts them
+into \texttt{SimpleGrantedAuthority} objects. Every REST entry point is then protected by an
+annotation of the form:
+
+\begin{verbatim}
+@PreAuthorize("hasAuthority('CREATE_PROJECT')")
+\end{verbatim}
+
+The absolute rule is that \textbf{no role name is ever tested in application code}: only permission
+codes are used. This is what makes the authorization policy a matter of data rather than of source
+code.
+
+\subsubsection{Dynamic menu}
+The \texttt{GET /api/me/context} endpoint returns, for the authenticated user, the list of their
+permissions together with their profile information. The Angular frontend uses this response to
+build the navigation menu: an item is displayed only if the user holds the required permission
+code. The interface therefore reflects the authorization policy automatically, with no duplicated
+rule on the client side.
+
+\subsubsection{Users and resources}
+The \texttt{user} module manages accounts (creation by the administrator with a temporary password,
+modification, activation and deactivation, role assignment) and the human resources with their
+daily rate and loaded cost rate. The distinction between the two notions is deliberate: a resource
+represents a cost-bearing capacity, which may or may not be linked to a platform account. Object
+conversions between entities and DTOs are handled by MapStruct mappers.
+
+The loaded cost rate is recorded \textbf{per resource and per year}, so that the cost of a man-day
+uses the rate of the year in which the effort was booked, a requirement drawn directly from the
+Excel workbook.
+
+% --- Screenshot slots: uncomment once captured ---
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.9\columnwidth]{img/ui_users.png}
+%   \caption{User management interface}
+%   \label{fig:ui-users}
+% \end{figure}
+%
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.9\columnwidth]{img/ui_roles.png}
+%   \caption{Role and permission management interface}
+%   \label{fig:ui-roles}
+% \end{figure}
+
+\subsection{Tests and Validation}
+Validating this sprint means proving that authorization really is data-driven: that granting a
+permission changes behaviour without any code change.
+
+\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
+\hline
+\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Permission held & Call a protected endpoint with a role holding the required permission & HTTP 200,
+operation performed \\
+\hline
+Permission missing & Call the same endpoint with a role that does not hold it & HTTP 403,
+operation refused \\
+\hline
+Permission granted at runtime & Add the permission to the role, then repeat the call & HTTP 200
+without redeployment \\
+\hline
+Menu adaptation & Sign in with two different roles & Each interface exposes only the authorised
+sections \\
+\hline
+Yearly cost rate & Book effort in two different years & Each computation uses the rate of its own
+year \\
+\hline
+\caption{Test cases --- Sprint 2}
+\label{tab:tests-s2}
+\end{longtable}
+
+\subsection{Sprint Outcome}
+The platform now knows not only \emph{who} the user is but \emph{what they may do}, and the
+authorization policy can be modified by an administrator without touching the code. The reference
+data required by the business modules (users, resources, yearly cost rates) is in place.
+
+\subsection{Transition to the Next Sprint}
+Release~1 delivers a secured and administrable platform, but it manages no project yet. Release~2
+opens operational steering, starting in Sprint~3 with the central entity of the whole domain: the
+project.
 
 \section*{Conclusion}
-Le modèle relationnel normalise le classeur Excel en environ vingt-six tables, plaçant le contrôle
-d'accès dynamique au centre, avec une série temporelle mensuelle pour les charges, des instantanés
-de KPI historisés, la gestion multi-devises et des paramètres, ainsi que l'audit et la suppression
-logique. La conception détaillée se poursuivra par la modélisation UML, avant d'entamer la
-réalisation des modules.
+Release~1 established the foundations on which the entire platform rests: a modular application
+skeleton with auditing and controlled migrations, a robust authentication chain, and above all a
+dynamic authorization model that makes the security policy configurable data rather than compiled
+code. The next release exploits this foundation to deliver the operational management of projects
+and workload.

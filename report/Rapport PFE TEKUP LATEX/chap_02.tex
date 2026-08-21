@@ -1,345 +1,311 @@
-\chapter{Analyse et spécification des besoins}
+\chapter{Requirements Analysis and Specification}
 
 \section*{Introduction}
-Ce chapitre formalise l'analyse métier du système PMS. Il identifie les acteurs, recense les
-besoins fonctionnels et non fonctionnels, présente les règles de gestion ainsi que le modèle
-d'autorisation dynamique qui structure toute la plateforme, et détaille le modèle financier et les
-indicateurs de performance (KPI) extraits de la réalité métier. Cette spécification constitue le
-socle des phases de conception ultérieures.
+This chapter formalises the business analysis of the PMS system. It identifies the actors, lists
+the functional and non-functional requirements, presents the business rules and the dynamic
+authorization model that structures the whole platform, and derives from them the global use case
+diagram. It closes with the product backlog and its distribution across the development
+sprints presented in the following chapters.
 
-\section{Identification des acteurs}
-Le système repose sur quatre rôles principaux, complétés par des acteurs secondaires (le système
-lui-même et l'outil externe de suivi des temps KIMAI).
+\section{Actor Identification}
+The system rests on four main roles. Each role is defined as much by what it may do as by what it
+is explicitly prevented from doing, a distinction that is central to a platform handling
+sensitive financial data.
 
 \begin{longtable}{|m{3cm}|m{6.5cm}|m{5cm}|}
 \hline
-\textbf{Acteur} & \textbf{Mission} & \textbf{Limite (ne peut pas)} \\
+\textbf{Actor} & \textbf{Mission} & \textbf{Boundary (cannot)} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-Administrateur & Administration technique et fonctionnelle~: utilisateurs, rôles, permissions, TCC,
-paramétrage. & Piloter les projets~; accéder aux données financières des projets. \\
+Administrator & Technical and functional administration: users, roles, permissions, cost rates,
+configuration. & Steer projects; access project financial data. \\
 \hline
-Directeur & Gouvernance stratégique~: création des projets, budgets, affectation des chefs de
-projet, supervision du portefeuille, KPI exécutifs. & Gérer les opérations quotidiennes (délégué,
-non interdit). \\
+Director & Strategic governance: project creation, budgets, project manager assignment, portfolio
+supervision, executive KPIs. & Manage day-to-day operations (delegated, not forbidden). \\
 \hline
-Chef de Projet & Utilisateur opérationnel principal~: équipes, plan de charge, facturation,
-missions, suivi des coûts et de la rentabilité. & Gérer les utilisateurs, les rôles, le TCC et le
-paramétrage. \\
+Project Manager & Main operational user: teams, workload plan, billing, missions, cost and
+profitability tracking. & Manage users, roles, cost rates and configuration. \\
 \hline
-Développeur & Saisie des charges réelles~; consultation de ses affectations et missions. & Accéder
-à toute donnée financière (budget, marge, EAC, facturation). \\
+Developer & Entry of actual workload; consultation of own assignments and missions. & Access any
+financial data (budget, margin, EAC, billing). \\
 \hline
-\caption{Acteurs du système PMS et leurs limites}
+\caption{PMS actors and their boundaries}
 \label{tab:acteurs}
 \end{longtable}
 
-\section{Besoins fonctionnels}
-Les besoins fonctionnels sont organisés par module. Ils synthétisent les exigences du document SRS
-(FR-001 à FR-053) et les cas d'utilisation (UC-001 à UC-020).
+\section{Functional Requirements}
+Functional requirements are organised by module. They synthesise the requirements of the SRS
+document (FR-001 to FR-053) and the use cases (UC-001 to UC-020).
 
 \begin{longtable}{|m{3.5cm}|m{11cm}|}
 \hline
-\textbf{Module} & \textbf{Principaux besoins fonctionnels} \\
+\textbf{Module} & \textbf{Main functional requirements} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-Authentification & Connexion par e-mail / mot de passe, génération de jetons JWT et de
-rafraîchissement, changement obligatoire du mot de passe à la première connexion, déconnexion. \\
+Authentication & Login by e-mail and password, generation of JWT access and refresh tokens,
+mandatory password change on first login, logout. \\
 \hline
-Gestion des utilisateurs & Création par l'administrateur, génération automatique d'un mot de passe
-temporaire, modification, activation / désactivation, attribution d'un rôle. \\
+User management & Creation by the administrator, automatic generation of a temporary password,
+modification, activation and deactivation, role assignment. \\
 \hline
-Rôles et permissions & Gestion des rôles, des permissions et des associations rôle--permission. \\
+Roles and permissions & Management of roles, permissions and role--permission associations. \\
 \hline
-Gestion des projets & Création, modification, changement de statut, définition du budget,
-affectation d'un chef de projet, consultation du portefeuille. \\
+Project management & Creation, modification, status change, budget definition, project manager
+assignment, portfolio consultation. \\
 \hline
-Gestion des équipes & Affectation et retrait de développeurs, consultation des disponibilités,
-historisation des affectations. \\
+Team management & Assignment and removal of developers, availability consultation, assignment
+history. \\
 \hline
-Gestion du TCC & Saisie du coût chargé par ressource et par année, historisation, calcul du coût
-journalier. \\
+Cost rate (TCC) management & Entry of the loaded cost per resource and per year, history, daily
+cost computation. \\
 \hline
-Plan de charge & Planification mensuelle en jours-homme, totaux planifiés, calcul de l'ETC et des
-prévisions. \\
+Workload plan & Monthly planning in man-days, planned totals, ETC and forecast computation. \\
 \hline
-Charges réelles & Saisie des jours-homme réalisés (projets affectés uniquement), validation,
-historisation, import depuis KIMAI. \\
+Actual workload & Entry of man-days consumed (assigned projects only), validation, history. \\
 \hline
-Facturation & Création des jalons (pourcentage, montant, dates), suivi des statuts, calcul de
-l'avancement. \\
+Billing & Milestone creation (percentage, amount, dates), status tracking, progress computation. \\
 \hline
-Missions & Création des missions, saisie des frais, calcul automatique du coût total. \\
+Missions & Mission creation, expense entry, automatic total cost computation. \\
 \hline
-KPI et reporting & Calcul des indicateurs financiers, tableaux de bord projet et portefeuille,
-génération et export de rapports. \\
+KPI and reporting & Financial indicator computation, project and portfolio dashboards, report
+generation. \\
 \hline
-Gouvernance (avenants, risques, livrables, parties prenantes, changements) & Registres de suivi de
-la vie du projet, conformément au classeur Excel. \\
+Governance (amendments, risks, deliverables, stakeholders, changes) & Registers tracking the life
+of the project, in line with the Excel workbook. \\
 \hline
-\caption{Besoins fonctionnels par module}
+\caption{Functional requirements by module}
 \label{tab:besoins-fonctionnels}
 \end{longtable}
 
-\section{Besoins non fonctionnels}
+\section{Non-Functional Requirements}
 \begin{itemize}
-    \item \textbf{Performance}~: réponse en moins de deux secondes pour les opérations courantes
-    (NFR-001).
-    \item \textbf{Sécurité}~: authentification JWT obligatoire, mots de passe chiffrés (NFR-002).
-    \item \textbf{Autorisation}~: contrôle d'accès basé sur les permissions (RBAC dynamique,
-    NFR-003).
-    \item \textbf{Maintenabilité}~: architecture propre, modulaire et orientée fonctionnalités
-    (NFR-006).
-    \item \textbf{Évolutivité}~: support de la croissance et intégration future (ERP, RH,
-    comptabilité) sans refonte du cœur (NFR-005, BR-065).
-    \item \textbf{Auditabilité}~: conservation de l'historique et suppression logique (NFR-008).
-    \item \textbf{Ergonomie}~: interface intuitive, responsive et en langue française (NFR-007).
+    \item \textbf{Performance}: response in under two seconds for routine operations (NFR-001).
+    \item \textbf{Security}: mandatory JWT authentication, hashed passwords (NFR-002).
+    \item \textbf{Authorization}: permission-based access control (dynamic RBAC, NFR-003).
+    \item \textbf{Maintainability}: clean, modular, feature-oriented architecture (NFR-006).
+    \item \textbf{Scalability}: support for growth and future integration (ERP, HR, accounting)
+    without rewriting the core (NFR-005, BR-065).
+    \item \textbf{Auditability}: history preservation and logical deletion (NFR-008).
+    \item \textbf{Usability}: intuitive and responsive interface (NFR-007).
 \end{itemize}
 
-\section{Règles de gestion}
-Les règles de gestion proviennent du document BRS (65 règles, BR-001 à BR-065), enrichies par les
-règles extraites du fichier Excel. Les plus structurantes sont synthétisées ci-dessous.
+\section{Business Rules}
+The business rules come from the BRS document (65 rules, BR-001 to BR-065), enriched by the rules
+extracted from the Excel file. The most structuring ones are summarised below.
 
 \begin{longtable}{|m{3.5cm}|m{11cm}|}
 \hline
-\textbf{Domaine} & \textbf{Règles principales} \\
+\textbf{Domain} & \textbf{Main rules} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-Utilisateurs & Création réservée à l'administrateur~; pas d'auto-inscription~; un seul rôle par
-utilisateur~; e-mail unique~; mot de passe temporaire puis changement à la première connexion. \\
+Users & Creation reserved to the administrator; no self-registration; a single role per user;
+unique e-mail; temporary password then change on first login. \\
 \hline
-Projets & Création réservée au directeur~; exactement un directeur et un chef de projet actif par
-projet~; statut parmi \{DRAFT, ACTIVE, ON\_HOLD, COMPLETED, CANCELLED\}~; code projet unique~;
-budget strictement positif~; date de début antérieure à la date de fin. \\
+Projects & Creation reserved to the director; exactly one director and one active project manager
+per project; status among \{DRAFT, ACTIVE, ON\_HOLD, COMPLETED, CANCELLED\}; unique project code;
+strictly positive budget; start date before end date. \\
 \hline
-Équipes & Un développeur peut appartenir à plusieurs projets~; le retrait conserve l'historique~;
-l'affectation enregistre son auteur et sa date~; les développeurs inactifs ne peuvent être
-affectés. \\
+Teams & A developer may belong to several projects; removal preserves history; an assignment
+records its author and date; inactive developers cannot be assigned. \\
 \hline
-TCC & Géré par l'administrateur~; une valeur par ressource et par année~; valeur historique
-immuable après validation financière. \\
+Cost rates & Managed by the administrator; one value per resource and per year; historical value
+immutable after financial validation. \\
 \hline
-Charges & Charges exprimées en jours-homme, jamais négatives~; saisie réservée aux projets
-affectés~; historique préservé (aucune suppression). \\
+Workload & Workload expressed in man-days, never negative; entry restricted to assigned projects;
+history preserved (no deletion). \\
 \hline
-Facturation & Jalon rattaché à un projet~; statut parmi \{PENDING, INVOICED, PAID\}~; montant
-positif~; somme des pourcentages des jalons inférieure ou égale à 100~\%. \\
+Billing & A milestone belongs to one project; status among \{PENDING, INVOICED, PAID\}; positive
+amount; the sum of milestone percentages is at most 100~\%. \\
 \hline
-Missions & Mission rattachée à un projet et à un employé~; date de début antérieure à la date de
-fin~; coût total calculé automatiquement. \\
+Missions & A mission belongs to a project and an employee; start date before end date; total cost
+computed automatically. \\
 \hline
-KPI et sécurité & KPI financiers visibles uniquement par le directeur et le chef de projet~;
-calculs automatiques~; RBAC appliqué par permissions~; mots de passe chiffrés. \\
+KPI and security & Financial KPIs visible only to the director and the project manager; automatic
+computation; RBAC applied by permission; hashed passwords. \\
 \hline
-\caption{Synthèse des règles de gestion}
+\caption{Summary of business rules}
 \label{tab:regles-gestion}
 \end{longtable}
 
-\section{Le modèle d'autorisation dynamique}
+\section{The Dynamic Authorization Model}
 \label{sec:rbac}
-L'exigence architecturale centrale du projet est de \textbf{ne jamais coupler directement un rôle à
-un module}. Un tel couplage (\og{}~ROLE~$\rightarrow$~MODULE~\fg{}) imposerait de modifier le code
-source à chaque évolution des responsabilités. Le système adopte donc un modèle dynamique à trois
-niveaux~:
-\[
-\text{ROLE} \;\rightarrow\; \text{PERMISSION} \;\rightarrow\; \text{MODULE}
-\]
+The central architectural requirement of the project is to \textbf{never couple a role directly to
+a module}. Such a coupling (``ROLE $\rightarrow$ MODULE'') would require modifying and redeploying
+the code every time the company decides that a given profile may access an additional function.
 
-Les rôles sont des ensembles de permissions. L'autorisation côté serveur, la visibilité côté client
-et la \textbf{génération dynamique des menus} reposent toutes sur les permissions, jamais sur le nom
-du rôle. Le tableau~\ref{tab:permissions} présente l'attribution par défaut des principales
-permissions.
+The model retained therefore inserts an intermediate level:
 
-\begin{longtable}{|m{6cm}|m{8.5cm}|}
-\hline
-\textbf{Permission (extrait)} & \textbf{Rôles porteurs par défaut} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-\texttt{MANAGE\_USERS}, \texttt{MANAGE\_ROLES}, \texttt{MANAGE\_PERMISSIONS} & Administrateur \\
-\hline
-\texttt{MANAGE\_TCC}, \texttt{MANAGE\_PARAMETERS} & Administrateur \\
-\hline
-\texttt{CREATE\_PROJECT}, \texttt{EDIT\_PROJECT}, \texttt{CHANGE\_PROJECT\_STATUS},
-\texttt{MANAGE\_PROJECT\_BUDGET}, \texttt{ASSIGN\_PROJECT\_MANAGER} & Directeur \\
-\hline
-\texttt{ASSIGN\_DEVELOPER}, \texttt{REMOVE\_DEVELOPER} & Directeur \emph{et} Chef de Projet \\
-\hline
-\texttt{MANAGE\_WORKLOAD\_PLAN}, \texttt{MANAGE\_BILLING}, \texttt{MANAGE\_MISSIONS} & Chef de
-Projet \\
-\hline
-\texttt{VIEW\_FINANCIALS}, \texttt{VIEW\_KPI} & Directeur (tous projets), Chef de Projet (projets
-gérés) \\
-\hline
-\texttt{VIEW\_EXECUTIVE\_DASHBOARD} & Directeur \\
-\hline
-\texttt{SUBMIT\_ACTUAL\_WORKLOAD} & Développeur \\
-\hline
-\caption{Extrait de la matrice Rôle--Permission par défaut}
-\label{tab:permissions}
-\end{longtable}
-
-\subsection{Illustration~: l'affectation des développeurs}
-Les documents de spécification (plan de projet, SRS, cas d'utilisation) indiquent que seul le chef
-de projet peut affecter des développeurs. Le besoin métier validé exige cependant que le
-\emph{directeur} puisse également le faire. Plutôt que de modifier le code, il suffit d'attribuer la
-permission \texttt{ASSIGN\_DEVELOPER} au rôle \texttt{DIRECTEUR}~:
 \begin{center}
-Aujourd'hui~: \texttt{CHEF\_DE\_PROJET} $\rightarrow$ \texttt{ASSIGN\_DEVELOPER} \\
-Demain~: on ajoute \texttt{DIRECTEUR} $\rightarrow$ \texttt{ASSIGN\_DEVELOPER}
+\textbf{Role $\rightarrow$ Permission $\rightarrow$ Module}
 \end{center}
-Ce changement s'opère par une simple mise à jour de configuration en base de données, sans aucune
-modification du \emph{backend}, du \emph{frontend} ni de la logique métier. Cet exemple illustre
-concrètement la valeur du modèle d'autorisation dynamique.
 
-\section{Le modèle financier et les indicateurs de performance}
-Le cœur métier de la plateforme réside dans son modèle financier, fidèle à la réalité extraite du
-classeur Excel (onglets \emph{TCC}, \emph{Coût Prévisionnel}, \emph{Coût réel Actualisé},
-\emph{Avancement de facturation}, \emph{Missions} et \emph{Glossaire}). Les constantes métier
-(taux de frais généraux, jours ouvrés, provisions) sont paramétrables et jamais codées en dur.
+A role holds a set of permissions; each permission authorises a precise operation on a module. The
+role--permission matrix lives in the database, not in the source code: granting a new right becomes
+a data change, applied without redeployment. This principle governs the whole platform and is
+verified in Sprint~2 (Chapter~4).
 
-\begin{longtable}{|m{4cm}|m{10.5cm}|}
+\section{Global Use Case Diagram}
+Figure~\ref{fig:uc} presents the global use case diagram of the platform. The four actors are
+associated with the business use cases falling within their perimeter, in strict accordance with
+the boundaries stated in Table~\ref{tab:acteurs}: the administrator holds no project use case, and
+the developer holds no financial use case.
+
+Any functionality requiring a prior identification points to the ``Authenticate'' use case through
+an \textit{include} relation, which avoids repeating the same association on each actor. The
+``Archive the project'' use case, optional after closure, extends ``Close the project'' through an
+\textit{extend} relation.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/use_case.png}
+  \caption{Global use case diagram of the PMS platform}
+  \label{fig:uc}
+\end{figure}
+
+\section{Product Backlog}
+The product backlog gathers the functional needs expressed as user stories. Each item is attached
+to the sprint that delivered it, which makes the incremental construction of the platform legible.
+Priority is derived from technical dependency: a story is high priority when subsequent increments
+depend on it.
+
+\begin{longtable}{|m{0.9cm}|m{9.4cm}|m{1.9cm}|m{1.6cm}|}
 \hline
-\textbf{Indicateur} & \textbf{Définition / Calcul} \\
+\textbf{Id} & \textbf{User story} & \textbf{Priority} & \textbf{Sprint} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-TCC journalier & (coût annuel chargé $\times$ (1 + taux de frais généraux)) / jours ouvrés de
-l'année. Dans l'Excel~: facteur $\times 1{,}7$ (frais généraux $\approx 70$~\%) et 22 jours (2024)
-ou 20 jours (2025). \\
+US-01 & As a user, I want to sign in with my e-mail and password so that I can access the platform.
+& High & Sprint 1 \\
 \hline
-Coût Prévisionnel & somme, par mois, des jours-homme planifiés $\times$ TCC. \\
+US-02 & As a user, I want to be forced to change my password on first login so that my account is
+secured. & High & Sprint 1 \\
 \hline
-ETC (reste à faire) & somme des jours-homme restants $\times$ TCC. \\
+US-03 & As an administrator, I want a user's sessions to be revoked immediately when needed so that
+access can be cut off without waiting for token expiry. & High & Sprint 1 \\
 \hline
-Coût Actuel & somme des jours-homme consommés $\times$ TCC. \\
+US-04 & As an administrator, I want to assign permissions to roles so that authorization evolves
+without redeploying the application. & High & Sprint 2 \\
 \hline
-EAC & Coût Actuel $+$ ETC. \\
+US-05 & As a user, I want the menu to show only what I am entitled to so that the interface matches
+my rights. & High & Sprint 2 \\
 \hline
-Earned Value (EV~\%) & taux d'avancement réel du projet. \\
+US-06 & As an administrator, I want to create, modify and deactivate user accounts so that I can
+manage platform access. & High & Sprint 2 \\
 \hline
-Cumul CA Production & total du contrat $\times$ EV~\%. \\
+US-07 & As an administrator, I want to record resources and their yearly cost rate so that project
+costs can be computed. & High & Sprint 2 \\
 \hline
-FAE / Stock & Cumul CA Production $-$ total facturé. \\
+US-08 & As a director, I want to create and configure a project so that it can be tracked on the
+platform. & High & Sprint 3 \\
 \hline
-RAF (jours-homme) & charge planifiée restante $-$ charge consommée. \\
+US-09 & As a director, I want a project to follow a controlled lifecycle so that no invalid status
+transition is possible. & Medium & Sprint 3 \\
 \hline
-Dérive (jours-homme) & charges vendues $-$ charges consommées $-$ RAF. \\
+US-10 & As a director, I want to assign a project manager to a project so that its operational
+steering is delegated. & High & Sprint 3 \\
 \hline
-Marge nette vendue~\% & (prix de vente $-$ coût total) / prix de vente. \\
+US-11 & As a project manager, I want to build my project team so that I can allocate developers to
+it. & High & Sprint 4 \\
 \hline
-Marge nette actuelle & Cumul CA Production $-$ Coût Actuel. \\
+US-12 & As a project manager, I want to plan the monthly workload so that I can forecast the effort
+required. & High & Sprint 4 \\
 \hline
-Marge nette EAC & Budget total $-$ (Coût Actuel $+$ Coût Prévisionnel), soit Budget $-$ EAC. \\
+US-13 & As a developer, I want to submit the man-days I worked so that actual consumption is
+tracked. & High & Sprint 4 \\
 \hline
-Avancement de facturation~\% & cumul facturé / total du contrat. \\
+US-14 & As a project manager, I want to validate the workload submitted so that only verified data
+feeds the indicators. & Medium & Sprint 4 \\
 \hline
-Coût de mission & perdiem (séjour $\times$ indemnité $\times$ taux de change) $+$ billet $+$ timbre
-($+$ transport, séjour). \\
+US-15 & As a project manager, I want to define billing milestones so that invoicing follows
+contractual progress. & High & Sprint 5 \\
 \hline
-\caption{Modèle financier et indicateurs de performance (modèle Excel complet)}
-\label{tab:kpi}
+US-16 & As a project manager, I want to record payments received against a milestone so that
+collection is tracked. & Medium & Sprint 5 \\
+\hline
+US-17 & As a project manager, I want to record amendments so that the revised budget reflects
+contractual changes. & Medium & Sprint 5 \\
+\hline
+US-18 & As a project manager, I want to record missions and their expenses so that travel costs are
+included in the project cost. & Medium & Sprint 5 \\
+\hline
+US-19 & As a project manager, I want to keep a risk register so that project risks are tracked and
+mitigated. & Medium & Sprint 6 \\
+\hline
+US-20 & As a project manager, I want to track deliverables and their status so that delivery
+progress is measurable. & Medium & Sprint 6 \\
+\hline
+US-21 & As a project manager, I want to record stakeholders and change requests so that project
+governance is documented. & Low & Sprint 6 \\
+\hline
+US-22 & As a director, I want to define the internal quote so that the project has an economic
+baseline. & High & Sprint 7 \\
+\hline
+US-23 & As a project manager, I want the platform to compute the financial indicators automatically
+so that I no longer depend on the Excel workbook. & High & Sprint 7 \\
+\hline
+US-24 & As a project manager, I want to freeze a monthly review so that the official state of the
+project is kept as history. & Medium & Sprint 7 \\
+\hline
+US-25 & As a director, I want a portfolio dashboard so that I can supervise all projects at a
+glance. & High & Sprint 7 \\
+\hline
+US-26 & As a user, I want a consistent and responsive interface so that the platform is comfortable
+to use daily. & Medium & Sprint 8 \\
+\hline
+\caption{Product backlog of the PMS platform}
+\label{tab:backlog}
 \end{longtable}
 
-\subsection{KPI par rôle}
-Le développeur ne dispose d'aucun indicateur financier~: il ne consulte que ses propres charges. Il
-en fournit néanmoins la mesure brute, car sa saisie des jours-homme réels alimente la chaîne
-Coût Actuel $\rightarrow$ EAC $\rightarrow$ Marge. Le chef de projet exploite l'ensemble des KPI des
-projets qu'il gère afin de piloter leur rentabilité, tandis que le directeur dispose d'une vue
-consolidée du portefeuille via un tableau de bord exécutif. L'administrateur, enfin, n'accède à
-aucun KPI projet mais administre les intrants (TCC, paramètres) dont ils dépendent.
+\section{Release and Sprint Planning}
+The backlog is distributed across four releases grouping nine sprints. Each release brings the
+product to a coherent level of maturity: R1 makes the platform usable and secure, R2 opens
+operational steering, R3 delivers the financial and governance value, and R4 consolidates the
+whole.
 
-\section{Processus métier global}
-Le déroulement nominal de la plateforme enchaîne~: création des comptes par l'administrateur~;
-première connexion et changement de mot de passe~; création d'un projet et affectation d'un chef de
-projet par le directeur~; constitution de l'équipe~; planification de la charge~; définition des
-jalons de facturation et des missions~; saisie des charges réelles par les développeurs (ou import
-KIMAI)~; calcul automatique des KPI~; supervision du portefeuille par le directeur.
-
-\section{Analyse du classeur Excel existant}
-La source métier principale est le classeur de revue de projet
-(\textit{DEV\_Fiche\_revue\_projet}), composé de \textbf{21 onglets} et de \textbf{2\,088 formules}.
-Chaque onglet a été analysé (objet, propriétaire métier, règles, calculs) et rattaché à un module
-de la future plateforme. Le tableau~\ref{tab:excel-onglets} en présente la synthèse.
-
-\begin{longtable}{|m{4cm}|m{4cm}|m{6cm}|}
+\begin{longtable}{|m{3.2cm}|m{2.0cm}|m{4.2cm}|m{4.6cm}|}
 \hline
-\textbf{Onglet} & \textbf{Propriétaire métier} & \textbf{Module PMS} \\
+\textbf{Release} & \textbf{Sprint} & \textbf{Scope} & \textbf{User stories} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-Fiche Doc & Qualité / Direction & Gestion de projet (métadonnées) \\ \hline
-Fiche identification & Directeur & Gestion de projet \\ \hline
-TCC & Administrateur & Gestion du TCC \\ \hline
-Missions & Chef de projet & Gestion des missions \\ \hline
-Avancement\_Facturation & Chef de projet & Facturation \\ \hline
-Recap Facturation (2) & Chef de projet & Facturation \\ \hline
-Coût Prévisionnel & Chef de projet & Plan de charge + KPI \\ \hline
-Coût réel Actualisé & Développeur / Chef de projet & Charges réelles + KPI \\ \hline
-Recap Facturation & Chef de projet & Facturation \\ \hline
-S. Contractuelle & Directeur / Chef de projet & Gestion de projet + Facturation \\ \hline
-Situation actuelle & Chef de projet & KPI / Livrables \\ \hline
-Parties Prenantes & Chef de projet & Parties prenantes + Équipe \\ \hline
-Livrables projet & Chef de projet & Livrables \\ \hline
-Base des Risques & Chef de projet & Registre des risques \\ \hline
-Liste des actions & Chef de projet & Actions / Risques \\ \hline
-Registre Changement & Chef de projet & Registre des changements \\ \hline
-Avenants & Directeur / Chef de projet & Avenants \\ \hline
-Statistiques & Système (calcul) & Moteur de KPI \\ \hline
-Dashboard & Système / Directeur, CP & Tableaux de bord \\ \hline
-Glossaire & Référence & KPI (définitions) \\ \hline
-Paramètres & Administrateur & Configuration / Échelles de risque \\ \hline
-\caption{Analyse des 21 onglets du classeur Excel et rattachement aux modules PMS}
-\label{tab:excel-onglets}
+\multirow{2}{*}{R1 --- Foundation} & Sprint 1 & Technical foundation, authentication & US-01 to
+US-03 \\
+\cline{2-4}
+ & Sprint 2 & Dynamic RBAC, users, resources & US-04 to US-07 \\
+\hline
+\multirow{2}{*}{R2 --- Operations} & Sprint 3 & Projects and lifecycle & US-08 to US-10 \\
+\cline{2-4}
+ & Sprint 4 & Teams and workload & US-11 to US-14 \\
+\hline
+\multirow{3}{*}{R3 --- Finance} & Sprint 5 & Billing and missions & US-15 to US-18 \\
+\cline{2-4}
+ & Sprint 6 & Governance & US-19 to US-21 \\
+\cline{2-4}
+ & Sprint 7 & Internal quote and KPI engine & US-22 to US-25 \\
+\hline
+\multirow{2}{*}{R4 --- Delivery} & Sprint 8 & Consolidation, tests, deployment & US-26 \\
+\cline{2-4}
+ & Sprint 9 & Containerization and continuous delivery & Technical sprint, no user story \\
+\hline
+\caption{Distribution of the backlog across releases and sprints}
+\label{tab:planning}
 \end{longtable}
-
-\subsection{Couverture des formules}
-Les 2\,088 formules du classeur reposent sur un vocabulaire \emph{fini}, ce qui permet de garantir
-que chacune est rattachée à un calcul futur du système. Les catégories ci-dessous sont exhaustives.
-
-\begin{longtable}{|m{6.5cm}|m{2cm}|m{5.5cm}|}
-\hline
-\textbf{Catégorie de formule} & \textbf{Nombre} & \textbf{Calcul PMS associé} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-Fonctions de date (DATE, YEAR, MONTH, DAY, EDATE, TODAY) & 460 & Calendrier projet/sprint, sélection du mois courant, durées \\ \hline
-Agrégation SUM & 92 & Totaux mensuels et cumuls (coûts, facturation, charges) \\ \hline
-HLOOKUP (sélection du mois) & 31 & Instantané KPI du mois sélectionné \\ \hline
-IF / ISBLANK / IFERROR & 36 & Statuts conditionnels, valeurs sûres \\ \hline
-AVERAGE / MAX / COUNTA & 7 & Moyennes, maximum, comptage de livrables \\ \hline
-Arithmétique de coûts (JH $\times$ TCC, sommes, écarts) & 1\,421 & Coût prévisionnel, coût actuel, ETC, EAC, coût mission \\ \hline
-Pourcentages & 13 & Marges, avancement de facturation, PPR, Delivery \% \\ \hline
-Références inter-onglets & 1\,426 & Jointures relationnelles (charges $\leftrightarrow$ TCC $\leftrightarrow$ projet) \\ \hline
-Références cassées (\#REF!, \#VALUE!) & 169 & Non reproduites : recalcul propre à partir de données normalisées \\ \hline
-\caption{Cartographie des formules Excel vers les calculs du futur système}
-\label{tab:formules}
-\end{longtable}
-
-\noindent\textbf{Résultat de la vérification :} chacune des 2\,088 formules relève d'une catégorie
-de logique métier vivante (rattachée à un calcul PMS) ou d'un artefact cassé que la plateforme
-remplace par un recalcul propre. \emph{Aucune formule n'est laissée sans correspondance.}
 
 \section*{Conclusion}
-Ce chapitre a spécifié les acteurs, les besoins, les règles de gestion, le modèle d'autorisation
-dynamique, le modèle financier et l'analyse complète du classeur Excel existant. Ces éléments
-définissent sans ambiguïté le \emph{quoi} du système, strictement sur le plan métier. Les chapitres
-suivants aborderont le \emph{comment}~: l'architecture technique, la conception de la base de
-données, la modélisation UML puis la réalisation des modules.
+This chapter established what the platform must do, for whom, and under which rules, and translated
+those requirements into a product backlog distributed across the development sprints. The next chapter
+presents the architecture and the design models, the data model and the database schema, on which this
+construction rests.

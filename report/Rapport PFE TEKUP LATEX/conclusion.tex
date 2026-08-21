@@ -1,41 +1,67 @@
-\chapter*{Conclusion générale}
-\addcontentsline{toc}{chapter}{Conclusion générale}
-\markboth{\textbf{Conclusion générale}}{}
+\chapter*{General Conclusion and Perspectives}
+\addcontentsline{toc}{chapter}{General Conclusion and Perspectives}
+\markboth{General Conclusion}{General Conclusion}
 
-Le présent projet de fin d'études répondait à un besoin concret~: remplacer un processus de suivi de
-projets reposant sur des classeurs Excel dispersés --- source d'erreurs de calcul, de références
-rompues et d'un manque de visibilité sur la rentabilité réelle --- par une \textbf{plateforme web
-centralisée}, fiable et gouvernée. Le classeur de revue de projet réel, riche de plus de deux mille
-formules, a constitué la source métier de référence tout au long du travail.
+The objective of this final year project was to replace a scattered, spreadsheet-based project
+steering process with a centralised platform that preserves the richness of the existing financial
+model while removing its fragility. That objective is met: PMS covers the whole functional scope
+identified during the analysis of the reference workbook, from dynamic authorization to the
+earned-value indicator engine.
 
-Au terme de ce projet, la plateforme PMS couvre l'intégralité du cycle de gestion~: authentification
-et gestion des utilisateurs, définition des projets et de leur \textbf{fiche d'identification},
-constitution des équipes, planification et saisie des charges, moteur d'indicateurs financiers
-(coûts, EAC, marges, taux de consommation), facturation par jalons avec paiements et avenants,
-gestion des missions et de leurs composantes de coût, et gouvernance de projet (risques, livrables,
-parties prenantes, demandes de changement). L'ensemble repose sur un backend \textbf{Spring Boot}
-exposant plus de soixante-quinze points d'accès REST, une base \textbf{PostgreSQL} versionnée par
-Flyway, et un frontend \textbf{Angular} entièrement aligné sur le modèle métier.
+\section*{Assessment}
+The construction proceeded through nine increments, each demonstrable in isolation. Release~1
+delivered the technical foundation, authentication and above all the dynamic authorization model.
+Release~2 opened operational steering with projects, teams and workload. Release~3 delivered the
+core business value: billing, missions, governance and the indicator engine. Release~4
+consolidated the interface, verified the security model, and made the platform reproducibly
+deployable through containerization and a continuous integration pipeline.
 
-Trois apports se dégagent. D'abord, la \textbf{fidélité au modèle métier}~: la fiche d'identification
-et les grandeurs dérivées reproduisent exactement les valeurs du classeur de référence (budget
-converti, provision pour risques, durée), ce qui valide la transposition du modèle Excel en un
-système relationnel cohérent. Ensuite, et c'est l'apport central, le \textbf{contrôle d'accès
-dynamique}~: l'autorisation est modélisée comme un couple permission~$\wedge$~périmètre, piloté par
-des capacités et jamais par des noms de rôle. La capacité de ce modèle à absorber un changement de
-politique a été démontrée de façon probante --- la correction complète de la matrice d'autorisation
-s'est faite par une \textbf{simple migration de données, sans aucune modification de code}. Enfin, la
-\textbf{démarche d'ingénierie}~: un déroulement par phases validées, des décisions d'architecture
-tracées (ADR) et une priorité de sources de vérité explicite ont garanti la cohérence entre l'analyse
-métier, la conception et l'implémentation, le tout consolidé par cinquante et un tests d'intégration.
+Three design decisions structure the result and are, in retrospect, the ones that mattered most.
 
-Plusieurs \textbf{perspectives} prolongent naturellement ce travail. L'intégration de l'outil de
-pointage \textsc{KIMAI} automatiserait l'import des charges réelles. La gestion multi-devises pourrait
-être complétée par une table de taux de change datés afin d'auditer chaque conversion. Le moteur
-d'indicateurs gagnerait à exposer des courbes d'évolution mensuelle, à l'image des tableaux de bord du
-classeur d'origine. Enfin, des tests de bout en bout côté interface et une option de déploiement
-conteneurisé renforceraient encore la robustesse et la portabilité de la solution.
+The first is the \textbf{dynamic authorization model}. By inserting a permission level between
+roles and modules, and by keeping the role--permission matrix in the database, the platform makes
+its security policy configurable data rather than compiled code. Granting a new right is an
+administrative act, not a release.
 
-Au-delà du logiciel produit, ce projet aura été l'occasion de mettre en \oe uvre, sur un cas métier
-réaliste et exigeant, une chaîne complète d'ingénierie logicielle --- de l'analyse des besoins à la
-validation --- en plaçant la valeur métier et la qualité au centre de chaque décision.
+The second is the \textbf{hybrid indicator engine}. Rather than choosing between recomputing
+indicators on demand and persisting them, the platform does both: live computation guarantees that
+no dashboard displays a stale figure, while a frozen monthly snapshot preserves the official state
+of each review. This reproduces the strength of the original workbook, a live dashboard with monthly
+history, without its fragility.
+
+The third is the \textbf{normalisation of the monthly time series}. Replacing a grid of month
+columns with one row per project, resource and month turned a structural limitation of the
+spreadsheet into a simple insertion, and made integrity constraints expressible: no duplicate
+month, no entry on an unassigned project, no silent rewriting of a validated period.
+
+\section*{Skills Acquired}
+Beyond the technologies used, this project required reading a real business model out of an
+artefact that was never written as a specification, and arbitrating between what the workbook did,
+what the written specifications said, and what the code could reasonably guarantee. It also
+required designing for confidentiality: deciding that commercially sensitive amounts should be
+computed on read rather than stored is an engineering decision with a business justification, not a
+technical preference.
+
+\section*{Limitations and Perspectives}
+Several avenues remain open.
+
+\textbf{Automatic time-tracking import.} The workload model was designed to accept a second data
+source alongside manual entry, so that effort recorded in an external time-tracking tool could be
+imported and reconciled. The mechanism is anticipated in the design but not implemented; it is the
+most immediate extension.
+
+\textbf{Reporting and export.} The platform computes and displays the indicators; generating
+exportable review documents in the format the company already circulates would shorten the last
+manual step of the monthly review.
+
+\textbf{Integration with the information system.} The business rules explicitly anticipate future
+integration points with accounting, human resources and enterprise systems. The modular
+organisation of the code was chosen with that reversibility in mind: a module can be extracted
+behind an interface without restructuring the whole.
+
+\textbf{Scaling the deployment.} The current deployment targets the internal use of one company. A
+significant growth in the number of projects or users would justify revisiting the modular monolith,
+a decision deliberately taken as reversible rather than permanent.
+
+The platform delivered is therefore both an answer to an immediate operational need and a
+foundation on which the company's project steering can continue to evolve.

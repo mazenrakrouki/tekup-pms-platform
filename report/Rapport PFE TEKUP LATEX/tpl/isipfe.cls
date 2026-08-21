@@ -117,7 +117,7 @@
 
 %%%%%%%%%%%
 
-\frenchbsetup{LowercaseSuperscripts=false}
+\frenchbsetup{LowercaseSuperscripts=false,StandardLists=true}
 \usepackage{csquotes}
 \PassOptionsToPackage{%
     backend=biber, %instead of bibtex
@@ -163,7 +163,7 @@
         \begin{minipage}[l]{0.05\columnwidth}
             \textbf{=}
         \end{minipage}
-        \begin{minipage}[l]{0.85\columnwidth}
+        \begin{minipage}[l]{0.75\columnwidth}
             #2
         \end{minipage}
   }% Add entry description

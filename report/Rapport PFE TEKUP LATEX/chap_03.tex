@@ -1,170 +1,244 @@
-\chapter{Conception architecturale}
+\chapter{System Architecture and Design}
 
 \section*{Introduction}
-Après avoir spécifié les besoins métier au chapitre précédent, ce chapitre présente l'architecture
-technique retenue pour y répondre de manière maintenable, sécurisée et évolutive. Il décrit le style
-architectural, l'architecture globale en trois niveaux, l'architecture de sécurité, le mécanisme
-central de contrôle d'accès dynamique, les architectures \emph{backend} et \emph{frontend}, le moteur
-de calcul des indicateurs (KPI) ainsi que la stratégie de déploiement. Aucune ligne de code n'est
-produite à ce stade~: cette phase se conclut par une validation avant la conception de la base de
-données.
+This chapter translates the requirements of Chapter~2 into a technical design. It presents the
+architectural style retained, the layered organisation of the application, the cross-cutting design
+decisions that structure every module, the domain model, and the relational schema that supports
+it. These choices are made once here and are then applied uniformly by the nine sprints of
+Chapters~4 to~7.
 
-\section{Style architectural}
-La plateforme adopte un \textbf{monolithe modulaire en couches}. Il s'agit d'une application
-Spring~Boot unique, partitionnée en \textbf{modules fonctionnels} (authentification, utilisateurs,
-rôles, permissions, projets, équipes, TCC, plan de charge, charges réelles, facturation, missions,
-KPI, risques, livrables, etc.), chacun organisé selon les couches
-\textit{Contrôleur~$\rightarrow$~Service~$\rightarrow$~Référentiel~$\rightarrow$~Domaine}.
+\section{Architectural Style}
 
-Ce choix privilégie la \emph{simplicité} (principe directeur du projet)~: une seule base de données,
-une cohérence forte des données financières, une application simple à construire, à tester et à
-défendre, tout en conservant des frontières de modules nettes qui préservent la maintenabilité et
-laissent ouverte une éventuelle extraction de services ultérieure. L'approche microservices a été
-écartée comme une sur-ingénierie au regard des besoins.
+\subsection{A Three-Tier Modular Monolith}
+The platform follows a classical \textbf{three-tier} organisation (presentation, application,
+data), deployed as a \textbf{modular monolith}: a single deployable artefact whose code is
+partitioned into independent functional modules.
 
-\section{Architecture globale}
-L'architecture s'organise en trois niveaux~:
+This choice deserves justification, since a microservice architecture is often the default
+expectation for a management platform. Three arguments led to the monolith:
 
 \begin{itemize}
-    \item \textbf{Niveau client}~: une application monopage (SPA) Angular~21 (Bootstrap~5,
-    Chart.js, langue française) assurant l'authentification, le menu dynamique construit à partir des
-    permissions, et les tableaux de bord.
-    \item \textbf{Niveau serveur}~: une API REST Spring~Boot~3.3 (Java~21) — le monolithe modulaire —
-    comprenant la couche web (contrôleurs, filtre JWT, gardes d'autorisation), la couche service
-    (logique métier, moteur de KPI, conversion de devises, paramètres) et la couche d'accès aux
-    données (Spring~Data~JPA).
-    \item \textbf{Niveau données}~: une base PostgreSQL~17 (service Windows installé).
+  \item \textbf{Transactional consistency.} The PMS domain is strongly coupled: computing an
+        indicator reads workload, billing, cost rates and the internal quote at once. Keeping these
+        aggregates in a single transactional boundary avoids distributed transactions for no
+        functional gain.
+  \item \textbf{Deployment scale.} The platform targets the internal use of one company. The
+        operational cost of a distributed architecture would not be repaid by the load.
+  \item \textbf{Reversibility.} Partitioning the code into modules with explicit boundaries
+        preserves the option of extracting a module into a separate service later, should the need
+        arise.
 \end{itemize}
 
-\noindent La communication client/serveur s'effectue en HTTPS via REST, chaque requête portant un
-jeton JWT. L'outil externe de suivi des temps KIMAI alimente, par import, les charges réelles.
+Figure~\ref{fig:pkg} shows the ten functional packages and their dependencies.
 
-\begin{longtable}{|m{3.5cm}|m{11cm}|}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{img/package_diagram.png}
+  \caption{Functional modules and their main dependencies}
+  \label{fig:pkg}
+\end{figure}
+
+The dependency graph is deliberately acyclic and converges towards the \texttt{kpi} module, which
+consumes the others without being consumed by any: the indicator engine is the end of the chain,
+never a prerequisite.
+
+\subsection{Layered Organisation}
+Each module exposes the same internal layering:
+
+\begin{itemize}
+  \item \textbf{Controller} --- REST entry point, request validation, authorization annotation.
+  \item \textbf{Service} --- business logic, transaction boundary, rule enforcement.
+  \item \textbf{Repository} --- persistence access, implicit filtering of logically deleted rows.
+  \item \textbf{Domain} --- entities and enumerations carrying the business invariants.
+\end{itemize}
+
+Conversions between entities and data transfer objects are handled by generated mappers, so that
+persistence structures are never exposed directly by the API.
+
+\section{Cross-Cutting Design Decisions}
+
+\subsection{Authentication and Session Revocation}
+Authentication rests on a short-lived JWT access token paired with an opaque refresh token stored
+in an \texttt{HttpOnly} cookie. Revocation does not rely on a blacklist but on a version counter
+carried by the token and compared on every request, which allows a session to be cut off instantly
+without distributed state. The mechanism is detailed in Sprint~1.
+
+\subsection{Dynamic Authorization}
+The ``Role $\rightarrow$ Permission $\rightarrow$ Module'' model presented in
+Section~\ref{sec:rbac} is enforced by annotating every endpoint with the permission code it
+requires. No role name appears in application code. The role--permission matrix lives in the
+database, which makes the authorization policy configurable data. This is the single most
+structuring decision of the project and is validated in Sprint~2.
+
+\subsection{A Hybrid Indicator Engine}
+Financial indicators could be either recomputed on demand or persisted at each change. The design
+retained is \textbf{hybrid}:
+
+\begin{itemize}
+  \item indicators are \textbf{recomputed on read} from live data, which guarantees that a
+        dashboard never displays a stale figure;
+  \item a \textbf{monthly snapshot} freezes the official state of each review, which preserves the
+        history required to plot the evolution of a project.
+\end{itemize}
+
+This mirrors the reference workbook, where the dashboard reads live values while the statistics
+sheet keeps one column per month. Amounts derived from the internal quote are always computed at
+read time and never stored, so that no commercially sensitive value is duplicated in the database.
+
+\subsection{Multi-Currency Handling}
+Projects may be contracted in a currency different from the reporting currency. Every amount
+therefore carries its currency, and conversions use a \textbf{dated rate}: each conversion applies
+the rate at the business date of the amount: the invoice date for billing, the month for monthly
+costs, the mission date for travel. Mission cost components are converted before summation, so that
+currencies are never mixed within a total.
+
+\subsection{Auditability and Logical Deletion}
+Every business table carries creation and modification metadata and an \texttt{active} /
+\texttt{deleted\_at} pair. No row is physically removed: a deletion is a state change. This
+satisfies the auditability requirement and preserves the history on which the indicators depend.
+
+\section{Domain Model}
+Figure~\ref{fig:class-global} gives the overall map of the domain. The project is the aggregation
+root: most business entities exist only within a project and are composed by it, while users,
+roles, permissions and resources form an independent reference core.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/class_global.png}
+  \caption{Domain overview --- entities grouped by sub-domain}
+  \label{fig:class-global}
+\end{figure}
+
+Each sub-domain is detailed by its own class diagram, presented in the sprint that builds it:
+security in Sprint~2 (Figure~\ref{fig:class-sec}), projects and teams in Sprint~3, workload and
+indicators in Sprint~7, financial management in Sprint~5 and governance in Sprint~6.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/class_security.png}
+  \caption{Class diagram --- security and access control}
+  \label{fig:class-sec}
+\end{figure}
+
+\section{Database Design}
+
+\subsection{Modelling Conventions}
+The schema targets PostgreSQL and follows uniform conventions:
+
+\begin{itemize}
+  \item tables in \texttt{snake\_case}, plural; identity primary key \texttt{id};
+  \item foreign keys named \texttt{<entity>\_id}; timestamps in \texttt{timestamptz};
+  \item amounts stored as \texttt{numeric(18,3)} with an explicit currency column, never as
+        floating point, to avoid rounding drift on financial aggregates;
+  \item months stored as the \textbf{first day of the month}, making the workload a true time
+        series;
+  \item enumerations expressed as \texttt{varchar} constrained by \texttt{CHECK};
+  \item audit columns and logical deletion on every business table.
+\end{itemize}
+
+\subsection{Logical Model}
+The core of the schema is the dynamic access control: \texttt{users} references \texttt{roles}, and
+\texttt{roles} relates to \texttt{permissions} through the \texttt{role\_permissions} association.
+A project references its director and groups its child entities: project manager assignment (a
+single active one at a time), team assignments, workload plan, actual workload, billing milestones,
+missions, governance registers and KPI snapshots. A resource carries one cost rate per year and may
+be linked to a user account.
+
+\begin{longtable}{|m{3.6cm}|m{7.4cm}|m{3.4cm}|}
 \hline
-\textbf{Couche} & \textbf{Responsabilité} \\
+\textbf{Domain} & \textbf{Main tables} & \textbf{Module} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-Contrôleur & Points d'entrée REST, DTO de requête/réponse, validation~; aucune logique métier. \\ \hline
-Service & Logique métier, transactions, orchestration, moteur de KPI. \\ \hline
-Référentiel & Accès aux données via Spring Data JPA. \\ \hline
-Domaine & Entités, énumérations et règles de domaine. \\ \hline
-Transversal & Audit, suppression logique, validation, gestion des exceptions, journalisation asynchrone. \\ \hline
-\caption{Couches de l'architecture backend}
-\label{tab:couches}
+Security / RBAC & \texttt{users}, \texttt{roles}, \texttt{permissions},
+\texttt{role\_permissions} & Authentication \& RBAC \\
+\hline
+Reference data & \texttt{currencies}, \texttt{exchange\_rates}, \texttt{parameters}, risk scales &
+Configuration \\
+\hline
+Resources & \texttt{resources}, \texttt{tcc} & Cost rate management \\
+\hline
+Projects & \texttt{projects}, \texttt{project\_manager\_assignments} & Project management \\
+\hline
+Teams & \texttt{team\_assignments}, \texttt{stakeholders} & Teams \\
+\hline
+Workload & \texttt{workload\_plan}, \texttt{actual\_workload} & Planning / Actuals \\
+\hline
+Billing & \texttt{billing\_milestones}, \texttt{payments}, \texttt{avenants} & Billing \\
+\hline
+Missions & \texttt{missions} & Mission management \\
+\hline
+Governance & \texttt{risks}, \texttt{deliverables}, \texttt{change\_requests}, \texttt{actions} &
+Governance \\
+\hline
+Indicators & \texttt{kpi\_snapshots} & KPI \& Reporting \\
+\hline
+\caption{Catalogue of entities by domain}
+\label{tab:entities}
 \end{longtable}
 
-\section{Architecture de sécurité}
-L'authentification repose sur des jetons \textbf{JWT}. À la connexion, le serveur vérifie le mot de
-passe (haché en BCrypt) puis émet un \textbf{jeton d'accès} à durée de vie courte et un \textbf{jeton
-de rafraîchissement}. Si l'attribut \texttt{firstLogin} est vrai, l'utilisateur est contraint de
-changer son mot de passe avant tout autre accès (UC-002). Les requêtes suivantes portent l'en-tête
-\texttt{Authorization: Bearer}. À l'expiration, le point de terminaison de rafraîchissement délivre un
-nouveau jeton d'accès.
+\subsection{Monthly Time Series and Indicator Snapshots}
+The Excel workbook is a resource~$\times$~month grid. Rather than reproducing twenty-five month
+columns, the model is \textbf{normalised}: one row per (project, resource, month) in
+\texttt{workload\_plan} and \texttt{actual\_workload}. Adding a month becomes inserting a row rather
+than altering the schema.
 
-\textbf{Modèle de jeton (révocation par version).} Le jeton d'accès ne porte que l'\emph{identité}
-(\texttt{userId}, rôle, \texttt{token\_version})~; il ne contient pas les permissions. À chaque
-requête, le serveur vérifie la signature puis charge le \textbf{contexte de sécurité} de
-l'utilisateur depuis un petit cache en mémoire (\texttt{active}, \texttt{token\_version},
-permissions), rejette le jeton si l'utilisateur est désactivé ou si la version est obsolète, et
-autorise l'opération à partir des permissions du contexte. Ce cache étant invalidé lors des
-événements de sécurité, \textbf{toute modification de permission comme toute révocation prend effet
-immédiatement} — sans attendre l'expiration du jeton. L'authentification reste sans état~; seule
-cette vérification d'autorisation, légère et adossée au cache, est avec état~: le système n'est donc
-\emph{pas} entièrement sans état, et c'est un choix délibéré (BR-007). La \texttt{token\_version} est
-incrémentée lors d'une désactivation, d'une déconnexion forcée, d'un changement de mot de passe, de
-rôle ou de permissions. Le jeton d'accès est conservé en mémoire côté client, le jeton de
-rafraîchissement (renouvelé) dans un cookie \texttt{HttpOnly} sécurisé. La connexion est en outre
-protégée contre les attaques par force brute (BR-058).
+The \texttt{kpi\_snapshots} table stores one snapshot per (project, month), which yields both the
+history needed for evolution curves and fast reads for dashboards. It deliberately separates the
+\textbf{labour cost} (man-days $\times$ cost rate) from \textbf{other costs} (missions and
+expenses), the total aggregating the two. The original workbook blurred that distinction, which
+matters when analysing why a project drifts.
 
-\section{Le contrôle d'accès dynamique (RBAC)}
-Le mécanisme central de la plateforme applique le modèle
-\textbf{Rôle~$\rightarrow$~Permission~$\rightarrow$~Module}, jamais un couplage direct rôle/module.
-L'autorisation s'appuie sur les \emph{permissions} à trois niveaux.
+\subsection{Reference Data and Migration Strategy}
+A seed dataset creates the four roles, the full permission catalogue, the default role--permission
+matrix, the currencies, the business parameters, the risk scales and a bootstrap administrator.
 
-\begin{itemize}
-    \item \textbf{Backend — sécurité de méthode.} Chaque opération protégée déclare la permission
-    requise, par exemple \texttt{@PreAuthorize("hasAuthority('ASSIGN\_DEVELOPER')")}. Le filtre JWT
-    alimente le contexte de sécurité avec les autorités issues du jeton. Aucun code ne teste un nom
-    de rôle.
-    \item \textbf{Menu dynamique.} Le point de terminaison \texttt{GET /api/me/context} renvoie les
-    permissions et le menu autorisé~; le frontend construit la navigation à partir de cette réponse,
-    jamais en dur.
-    \item \textbf{Portée des données.} Certaines règles sont \emph{restreintes}~: le chef de projet ne
-    voit les finances que de ses projets gérés (BR-063), le développeur uniquement ses propres
-    charges (BR-064). Une couche de portée applique ce filtre d'appartenance \emph{après} la
-    vérification de permission.
-\end{itemize}
+The schema is managed exclusively by \textbf{Flyway} versioned SQL migrations, with the ORM in
+\texttt{validate} mode: the entities must match the schema, never generate it. The migrations
+constitute the living documentation of the database and make every schema change reviewable and
+reproducible.
 
-\noindent \textbf{Illustration (D4).} La permission \texttt{ASSIGN\_DEVELOPER} est attribuée par
-défaut au \textsc{Directeur} \emph{et} au \textsc{Chef de Projet}. Pour l'accorder demain à un autre
-rôle, l'administrateur ajoute une seule ligne d'association rôle--permission~: la garde
-\texttt{@PreAuthorize}, le menu et la directive frontend en tiennent compte aussitôt, \textbf{sans
-aucune modification de code}. C'est le bénéfice concret de l'architecture dynamique.
+\section{Deployment Architecture}
+Figure~\ref{fig:deploy} shows the target deployment: a browser running the single-page
+application, an application server exposing the REST API, and a database server. The whole
+platform is a single deployable artefact, consistent with the modular monolith decision.
 
-\section{Architecture backend}
-Le packaging est \textbf{orienté fonctionnalités} (\texttt{com.pms.<module>}). Les contrôleurs
-n'accèdent jamais directement aux référentiels~; les entités ne franchissent pas la frontière de
-l'API (ce sont des DTO qui circulent). La conversion entité~$\leftrightarrow$~DTO est assurée
-exclusivement par \textbf{MapStruct} (mappeurs générés à la compilation, typés et sans réflexion)~;
-le mappage manuel est proscrit. Les préoccupations transversales sont mutualisées~: audit
-(\texttt{createdBy/At}, \texttt{modifiedBy/At}) et suppression logique via une entité de base~;
-validation par Bean Validation et invariants métier dans les services~; gestion centralisée des
-exceptions renvoyant un corps d'erreur homogène~; journalisation \textbf{asynchrone et structurée}
-(non bloquante), conforme aux exigences non fonctionnelles.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.55\columnwidth]{img/deployment_diagram.png}
+  \caption{Deployment architecture}
+  \label{fig:deploy}
+\end{figure}
 
-\section{Le moteur de calcul des indicateurs (KPI)}
-Le calcul des indicateurs financiers adopte une \textbf{approche hybride}~: recalcul à la
-modification et stockage d'instantanés (\textit{snapshots}).
+\section{Technical Environment}
 
-\begin{itemize}
-    \item Un \texttt{KpiSnapshot} est stocké \textbf{par projet et par mois}~; il contient l'ensemble
-    des indicateurs (EV~\%, ETC, EAC, coût actuel, coût prévisionnel, cumul CA production, FAE, RAF,
-    dérive, les trois marges, budget restant, avancement de facturation, Delivery~\%).
-    \item Les indicateurs sont \textbf{recalculés} dès qu'évoluent le plan de charge, les charges
-    réelles, la facturation, les coûts de mission, les taux TCC ou le budget/avenants.
-    \item Les tableaux de bord \textbf{lisent les instantanés} plutôt que de tout recalculer, ce qui
-    garantit des temps de réponse courts (NFR-001).
-    \item La conservation des instantanés mensuels permet les \textbf{courbes d'évolution des KPI},
-    à l'image de la feuille « Evolution KPIs » du classeur Excel.
-\end{itemize}
-
-\noindent Toutes les valeurs monétaires transitent par le service de conversion de devises, et toutes
-les constantes (frais généraux, jours ouvrés, PPR, heures par jour) proviennent du magasin de
-paramètres avant agrégation. Le coût de main-d'œuvre ($\sum$ JH $\times$ TCC) et les autres coûts
-(missions, frais) constituent deux flux distincts~: le coût total réel et les marges agrègent les
-deux, sans confondre les missions avec le coût de main-d'œuvre.
-
-\section{Multi-devises et paramètres configurables}
-La plateforme gère plusieurs devises (FCFA, TND, EUR). Un service de conversion centralisé applique
-des taux de change \textbf{datés}~; la devise de restitution (TND) est elle-même un paramètre. Aucun
-facteur de conversion n'est codé en dur. De même, un \textbf{magasin de paramètres} (clé~$\rightarrow$
-valeur typée) fournit à l'exécution le taux de frais généraux (0,70), les jours ouvrés par année
-(22~/~20), les heures par jour (8), le taux de PPR (5~\%), le plafond de facturation (100~\%) et les
-échelles de risque. Ces paramètres sont administrés via la permission \texttt{MANAGE\_PARAMETERS}.
-
-\section{Architecture frontend}
-L'application Angular~21 est structurée par fonctionnalités, avec des composants autonomes
-(\textit{standalone}). Un intercepteur HTTP ajoute le jeton et gère le rafraîchissement~; des gardes
-de routes protègent l'accès (authentification, première connexion, permission requise)~; une
-\textbf{directive de permission} masque les éléments d'interface non autorisés
-(\texttt{*hasPermission}). Le menu latéral est construit dynamiquement à partir du contexte renvoyé
-par le serveur. Les tableaux de bord exploitent Chart.js et sont adaptés à chaque profil~: vue projet
-pour le chef de projet, vue exécutive du portefeuille pour le directeur, vue personnelle (sans
-finances) pour le développeur. L'interface est en français et responsive (Bootstrap~5).
-
-\section{Déploiement}
-Le déploiement est \textbf{natif}, sur l'outillage déjà installé, sans conteneur~: la base sur le
-service PostgreSQL~17 existant, le backend lancé via \texttt{mvnw} (Java~21, Maven~3.9.16) et le
-frontend via \texttt{ng serve} (Angular~21, Node~22). Deux profils Spring (\texttt{dev}, \texttt{prod})
-distinguent les configurations~; les paramètres sensibles sont externalisés via des variables
-d'environnement. Le schéma de base de données est traité à la phase suivante.
+\begin{longtable}{|m{3.6cm}|m{10.8cm}|}
+\hline
+\textbf{Layer} & \textbf{Technologies} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Backend & Java, Spring Boot, Spring Security, JPA/Hibernate, MapStruct \\
+\hline
+Database & PostgreSQL, Flyway migrations \\
+\hline
+Frontend & Angular, TypeScript, standalone components and signals \\
+\hline
+Security & JWT access and refresh tokens, BCrypt password hashing \\
+\hline
+Modelling & PlantUML for the UML diagrams, versioned as source \\
+\hline
+\caption{Technical environment of the project}
+\label{tab:stack}
+\end{longtable}
 
 \section*{Conclusion}
-Ce chapitre a défini une architecture concrétisant le contrôle d'accès dynamique
-\og{}~Rôle~$\rightarrow$~Permission~$\rightarrow$~Module~\fg{}, le modèle financier complet via un
-moteur de KPI à instantanés performant, la gestion multi-devises et les paramètres configurables, le
-tout dans un monolithe modulaire exécutable nativement. Le chapitre suivant traduira ce domaine en un
-schéma PostgreSQL concret lors de la conception de la base de données.
+The architecture retained, a three-tier modular monolith with dynamic authorization, a hybrid
+indicator engine and a normalised time-series schema, answers the requirements of Chapter~2
+while remaining proportionate to the scale of the target deployment. These decisions are now
+applied: the following chapters present the progressive construction of the platform, release by
+release and sprint by sprint.

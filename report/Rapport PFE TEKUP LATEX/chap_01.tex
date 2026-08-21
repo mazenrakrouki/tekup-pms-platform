@@ -1,120 +1,425 @@
-\chapter{Contexte général du projet}
+\chapter{Project Context and Methodology}
 
 \section*{Introduction}
-Ce premier chapitre situe le projet dans son contexte. Il présente l'organisme d'accueil, analyse
-le processus existant de suivi des projets — fondé sur des fichiers Excel — et en dégage les
-limites. De cette étude découlent la problématique, la solution proposée (la plateforme PMS) et la
-méthodologie d'ingénierie retenue pour la conduite du projet.
+This first chapter situates the project in its context. It presents the host organization,
+analyses the existing project-tracking process, built on Excel workbooks, and identifies its
+limitations. From this study follow the problem statement, the proposed solution (the PMS
+platform), and the development methodology adopted to build it.
 
-\section{Cadre du projet}
-Le présent travail constitue un Projet de Fin d'Études (PFE) en vue de l'obtention du Diplôme
-National d'Ingénieur. Il a été réalisé au sein d'une entreprise de services du numérique (ESN), qui
-conçoit et met en œuvre des systèmes d'information pour ses clients dans le cadre de projets
-contractualisés, le plus souvent au forfait (FP) ou en régie (T\&M).
+\section{Project Framework}
+This work constitutes a Final Year Project (\textit{Projet de Fin d'Études}) submitted for the
+National Engineering Diploma. It was carried out within a digital services company (ESN) that
+designs and implements information systems for its clients under contract, most often on a
+fixed-price (FP) or time-and-material (T\&M) basis.
 
-\section{Organisme d'accueil}
-L'entreprise d'accueil opère en tant qu'intégrateur de solutions logicielles. Son activité repose
-sur la conduite simultanée de plusieurs projets, mobilisant un \emph{pool} de ressources
-(développeurs, analystes métier, chefs de projet) affectées à des projets clients. La rentabilité
-de l'entreprise dépend directement de sa capacité à maîtriser, pour chaque projet, l'équilibre
-entre la charge vendue, la charge réellement consommée et le chiffre d'affaires facturé.
+\section{Host Organization}
+The host company operates as a software solutions integrator. Its activity rests on running
+several projects simultaneously, mobilising a pool of resources (developers, business analysts,
+project managers) assigned to client projects. The company's profitability depends directly on its
+ability to control, for each project, the balance between the workload sold, the workload actually
+consumed, and the revenue invoiced.
 
-\section{Étude de l'existant}
+\section{Study of the Existing System}
 
-\subsection{Le processus actuel}
-Le suivi de chaque projet est assuré au moyen d'un classeur Excel — la \og{}~fiche de revue de
-projet~\fg{} — comportant une vingtaine d'onglets interconnectés. Ce classeur centralise, pour un
-projet donné, l'ensemble des informations de pilotage~: identification et budget du projet, taux de
-coût chargé des ressources, plan de charge prévisionnel, charges réelles, jalons de facturation,
-missions, risques, livrables et tableaux de bord.
+\subsection{The Current Process}
+Each project is tracked through an Excel workbook, the ``project review sheet'', comprising
+around twenty interconnected tabs. For a given project, this workbook centralises all steering
+information: project identification and budget, resource cost rates, planned workload, actual
+workload, billing milestones, missions, risks, deliverables and dashboards.
 
 \begin{longtable}{|m{4.5cm}|m{10.5cm}|}
 \hline
-\textbf{Famille d'onglets} & \textbf{Rôle métier} \\
+\textbf{Tab family} & \textbf{Business role} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-Identification & Fiche d'identification du projet~: client, contrat, budget, devise, durée,
-chef de projet, charge vendue. \\
+Identification & Project identification sheet: client, contract, budget, currency, duration,
+project manager, workload sold. \\
 \hline
-Coûts (TCC, Coût Prévisionnel, Coût réel Actualisé) & Calcul du coût journalier des ressources et
-des coûts prévisionnels et réels par mois. \\
+Costs (TCC, Forecast Cost, Updated Actual Cost) & Computation of the daily cost of resources and of
+forecast and actual costs per month. \\
 \hline
-Facturation (Avancement, Récapitulatif) & Jalons de facturation en pourcentage du contrat, suivi
-des montants facturés et réglés. \\
+Billing (Progress, Summary) & Billing milestones as a percentage of the contract, tracking of
+invoiced and settled amounts. \\
 \hline
-Missions & Calcul des coûts de déplacement (perdiem, billet, séjour). \\
+Missions & Computation of travel costs (per diem, ticket, accommodation). \\
 \hline
-Pilotage (Statistiques, Dashboard, Glossaire) & Consolidation des indicateurs et définitions des
-KPI. \\
+Steering (Statistics, Dashboard, Glossary) & Consolidation of indicators and KPI definitions. \\
 \hline
-Gouvernance (Risques, Livrables, Parties Prenantes, Changements, Avenants) & Registres de suivi de
-la vie du projet. \\
+Governance (Risks, Deliverables, Stakeholders, Changes, Amendments) & Registers tracking the life
+of the project. \\
 \hline
-\caption{Structure fonctionnelle du classeur Excel de revue de projet}
+\caption{Functional structure of the Excel project review workbook}
 \label{tab:excel-structure}
 \end{longtable}
 
-\subsection{Critique de l'existant}
-Si ce classeur traduit une logique métier riche et éprouvée, son support — le tableur — engendre
-des limites structurelles~:
+\subsection{Analysis of the Reference Workbook}
+The workbook provided by the company (reference \texttt{F-AFF-13}, version~03) is the true
+functional specification of the platform: it contains twenty-one sheets and more than two thousand
+formulas that encode the company's real steering logic. Its analysis constituted the preparation
+phase of this project, and each PMS module derives directly from one or more of these sheets.
+
+The eight most representative sheets are presented below. The figures shown are
+\textbf{anonymised}: client name, contract reference, staff names and the amounts of the internal
+quote have been replaced by neutral values, as this information is covered by the confidentiality
+of the host company and of its client. The structure, the formulas and the business logic, the
+only elements relevant to this analysis, are preserved.
+
+% ---------------------------------------------------------------
+\subsubsection{Project identification sheet}
+% TODO: capture the anonymised sheet as img/xl_identification.png, then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/xl_identification.png}
+%   \caption{Excel workbook --- ``Fiche identification'' sheet (anonymised)}
+%   \label{fig:xl-identification}
+% \end{figure}
+
+\textbf{What it represents.} The identity card of the project: client, contract reference, funder,
+business model (alone or in consortium), engagement type (fixed price or time~\&~material), project
+manager, start and end dates, contract duration, project currency and initial budget.
+
+\textbf{Business purpose.} It is the entry point of every project review. It fixes the contractual
+and financial baseline against which all later indicators are measured.
+
+\textbf{Key information and calculations.} The sheet converts the budget from the project currency
+(here FCFA) into the reporting currency (TND) using a contractual exchange rate; it computes the
+risk provision \texttt{PPR = Budget $\times$ 5~\%}, the penalty provision (PPP), the total cost of
+the internal quote and the \emph{sold net margin}
+\texttt{(Selling price $-$ Total cost) / Selling price}. It also carries the amendment fields,
+which adjust the total budget.
+
+\textbf{Derived PMS functionality.} The \emph{Project management} module: project creation with
+code, client, funder, engagement type, multi-currency budget, provisions and sold workload; and the
+\emph{Internal quote}, which reproduces this economic baseline.
+
+% ---------------------------------------------------------------
+\subsubsection{Cost rate sheet (TCC)}
+% TODO: capture as img/xl_tcc.png (anonymise the cost values), then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.9\columnwidth]{img/xl_tcc.png}
+%   \caption{Excel workbook --- ``TCC'' sheet (anonymised)}
+%   \label{fig:xl-tcc}
+% \end{figure}
+
+\textbf{What it represents.} The daily loaded cost (\emph{Taux de Coût Chargé}) of each resource,
+recorded per year.
+
+\textbf{Business purpose.} It converts a human resource into a unit cost. Every cost computation in
+the workbook, forecast and actual alike, ultimately multiplies man-days by a value taken from this
+sheet.
+
+\textbf{Key information and calculations.} The daily rate is derived from the annual loaded cost by
+\texttt{TCC$_{jour}$ = (annual loaded cost $\times$ 1.7) / working days per year}, where the
+overhead coefficient covers employer charges and the number of working days differs from one year
+to the next (22 in 2024, 20 in 2025 in the reference file). A validated historical value must
+remain immutable, otherwise past reviews would change retroactively.
+
+\textbf{Derived PMS functionality.} The \emph{Resource and yearly cost rate} module (Sprint~2): one
+rate per resource and per year, with the overhead coefficient and the number of working days
+externalised as configurable business parameters rather than hard-coded constants.
+
+% ---------------------------------------------------------------
+\subsubsection{Planned workload sheet}
+% TODO: capture as img/xl_plan_charge.png, then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/xl_plan_charge.png}
+%   \caption{Excel workbook --- ``Co\^ut Pr\'evisionnel'' sheet (anonymised)}
+%   \label{fig:xl-plan}
+% \end{figure}
+
+\textbf{What it represents.} A resource~$\times$~month matrix giving the man-days planned for each
+resource over the life of the project, together with the resulting forecast cost.
+
+\textbf{Business purpose.} It is the workload plan: it expresses how the sold effort is expected to
+be consumed over time, and therefore what the project should cost.
+
+\textbf{Key information and calculations.} With around four hundred formulas, this sheet computes
+the monthly and cumulative totals of planned man-days, the forecast cost
+\texttt{$\Sigma$ (planned man-days $\times$ TCC)}, and the \emph{Estimate To Complete}
+\texttt{ETC = $\Sigma$ (remaining man-days $\times$ TCC)} as a running remainder.
+
+\textbf{Derived PMS functionality.} The \emph{Workload planning} module (Sprint~4), which stores the
+plan as a monthly time series per resource, and feeds the ETC used by the KPI engine.
+
+% ---------------------------------------------------------------
+\subsubsection{Actual workload sheet}
+% TODO: capture as img/xl_actual.png, then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/xl_actual.png}
+%   \caption{Excel workbook --- ``Co\^ut r\'eel Actualis\'e'' sheet (anonymised)}
+%   \label{fig:xl-actual}
+% \end{figure}
+
+\textbf{What it represents.} The mirror of the previous sheet, filled with the effort actually
+consumed: the man-days really booked by each resource, month by month.
+
+\textbf{Business purpose.} It measures reality against the plan. The gap between the two sheets is
+what reveals a project drifting.
+
+\textbf{Key information and calculations.} It is the densest sheet of the workbook (more than five
+hundred formulas). Effort may be captured in hours and normalised into man-days by
+\texttt{man-days = hours / 8}. The actual cost follows the same rule as the forecast,
+\texttt{$\Sigma$ (consumed man-days $\times$ TCC)}, with monthly and cumulative totals. History
+must be preserved: an entry is never deleted.
+
+\textbf{Derived PMS functionality.} The \emph{Actual workload} module (Sprint~4): submission
+restricted to assigned projects, validation by the project manager, preserved history, and the
+actual cost that feeds the EAC.
+
+% ---------------------------------------------------------------
+\subsubsection{Billing progress sheet}
+% TODO: capture as img/xl_billing.png (anonymise amounts), then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/xl_billing.png}
+%   \caption{Excel workbook --- ``Avancement\_Facturation'' sheet (anonymised)}
+%   \label{fig:xl-billing}
+% \end{figure}
+
+\textbf{What it represents.} The billing milestones of the contract, expressed as a percentage of
+the total, with their amount, their status and the monthly cumulative invoiced total.
+
+\textbf{Business purpose.} It tracks the revenue side of the project: what has been invoiced, what
+has been collected, and what remains to be billed.
+
+\textbf{Key information and calculations.} Each milestone amount is computed as
+\texttt{contract total $\times$ percentage}; the sheet maintains the invoiced cumulative total, the
+remaining amount, and the billing progress
+\texttt{invoiced cumulative / contract total}. A structural rule governs the sheet: the sum of
+milestone percentages may not exceed 100~\%.
+
+\textbf{Derived PMS functionality.} The \emph{Billing} module (Sprint~5): milestones with
+percentage, amount and lifecycle status, payments recorded against a milestone, and the automatic
+billing-progress indicator.
+
+% ---------------------------------------------------------------
+\subsubsection{Missions sheet}
+% TODO: capture as img/xl_missions.png, then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/xl_missions.png}
+%   \caption{Excel workbook --- ``Missions'' sheet (anonymised)}
+%   \label{fig:xl-missions}
+% \end{figure}
+
+\textbf{What it represents.} The business trips carried out for the project, with their cost
+components: per diem, plane ticket, accommodation, transport and administrative stamp.
+
+\textbf{Business purpose.} Travel costs are a real charge on the project margin; they must be
+attached to the project rather than treated as a general overhead.
+
+\textbf{Key information and calculations.} The total cost of a mission is the sum of its
+components, with the per diem obtained by multiplying the number of nights by a daily allowance
+converted at the applicable exchange rate.
+
+\textbf{Derived PMS functionality.} The \emph{Missions} module (Sprint~5): a mission attached to a
+project and an employee, with multi-currency cost components and an automatically computed total.
+
+% ---------------------------------------------------------------
+\subsubsection{Project dashboard sheet}
+% TODO: capture as img/xl_dashboard.png (anonymise amounts), then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/xl_dashboard.png}
+%   \caption{Excel workbook --- ``Dashboard'' sheet (anonymised)}
+%   \label{fig:xl-dashboard}
+% \end{figure}
+
+\textbf{What it represents.} The steering board of a single project: margins, man-days consumed
+against sold, key dates and the overall health of the project.
+
+\textbf{Business purpose.} It is the sheet the project manager and the director actually look at
+during the monthly review. It answers one question: is this project still profitable?
+
+\textbf{Key information and calculations.} The dashboard does not compute the raw data; it reads
+values produced by the other sheets through lookups and presents the margins and progress
+indicators. This separation between computation and presentation is precisely the design later
+adopted in PMS.
+
+\textbf{Derived PMS functionality.} The \emph{KPI dashboards} (Sprint~7): a per-project indicator
+board, and its portfolio-level counterpart for the director.
+
+% ---------------------------------------------------------------
+\subsubsection{Statistics sheet --- KPI evolution}
+% TODO: capture as img/xl_statistics.png (anonymise amounts), then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/xl_statistics.png}
+%   \caption{Excel workbook --- ``Statistiques'' sheet (anonymised)}
+%   \label{fig:xl-statistics}
+% \end{figure}
+
+\textbf{What it represents.} The real computation engine of the workbook: the month-by-month
+evolution of the financial indicators of the project.
+
+\textbf{Business purpose.} It transforms the raw data of the other sheets into the earned-value
+indicators used to steer the project and to detect drift early.
+
+\textbf{Key information and calculations.} This is the most formula-dense sheet of the workbook
+(more than six hundred formulas). It computes, per selected month, the production revenue
+\texttt{contract total $\times$ EV~\%}, the estimate at completion
+\texttt{EAC = actual cost + ETC}, the net margin at EAC \texttt{Budget $-$ EAC}, the accrued income
+(FAE) as the difference between production revenue and the invoiced total, and the drift in
+man-days between what was sold, consumed and remaining.
+
+\textbf{Derived PMS functionality.} The \emph{KPI engine} (Sprint~7). This sheet is the direct
+origin of the hybrid design retained in PMS: indicators recomputed on read from the live data, plus
+a frozen monthly snapshot that preserves the official state of each review. This snapshot is the digital
+equivalent of the monthly column of this sheet.
+
+% ---------------------------------------------------------------
+\subsubsection{Traceability towards the platform}
+Table~\ref{tab:excel-traceability} summarises the correspondence established during this
+preparation phase between the sheets analysed and the modules built.
+
+\begin{longtable}{|m{4.3cm}|m{5.2cm}|m{4.6cm}|}
+\hline
+\textbf{Excel sheet} & \textbf{Business logic captured} & \textbf{PMS module (sprint)} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Fiche identification & Contractual and financial baseline, provisions, sold margin & Project
+management (S3), Internal quote (S7) \\
+\hline
+TCC & Daily loaded cost per resource and per year & Resources and cost rates (S2) \\
+\hline
+Co\^ut Pr\'evisionnel & Workload plan and forecast cost, ETC & Workload planning (S4) \\
+\hline
+Co\^ut r\'eel Actualis\'e & Consumed effort and actual cost & Actual workload (S4) \\
+\hline
+Avancement\_Facturation & Milestones in \% of contract, billing progress & Billing (S5) \\
+\hline
+Missions & Travel cost components & Missions (S5) \\
+\hline
+Dashboard & Per-project indicator board & KPI dashboards (S7) \\
+\hline
+Statistiques & Earned-value engine, EAC, margins, accrued income & KPI engine (S7) \\
+\hline
+\caption{Traceability from the Excel workbook to the PMS modules}
+\label{tab:excel-traceability}
+\end{longtable}
+
+\subsection{Critique of the Existing System}
+While this workbook expresses a proven business logic, its medium, the spreadsheet,
+introduces structural limitations:
 
 \begin{itemize}
-    \item \textbf{Dispersion}~: un classeur par projet, dupliqué et susceptible de diverger d'une
-    version à l'autre, sans source unique de vérité.
-    \item \textbf{Fiabilité des calculs}~: la dépendance à des formules et à des références entre
-    onglets est fragile~; le fichier réel fourni contient d'ailleurs des cellules en erreur
-    (\texttt{\#REF!}, \texttt{\#VALUE!}).
-    \item \textbf{Visibilité financière}~: l'absence de consolidation rend difficile la lecture du
-    coût réel et de la marge à l'échelle du portefeuille de projets.
-    \item \textbf{Contrôle d'accès}~: un tableur ne permet pas de cloisonner finement
-    l'information — par exemple d'interdire au développeur l'accès aux données financières.
-    \item \textbf{Traçabilité}~: l'historique des modifications et des décisions n'est pas conservé
-    de manière fiable.
+    \item \textbf{Dispersion}: one workbook per project, duplicated and liable to diverge from one
+    version to the next, with no single source of truth.
+    \item \textbf{Computation reliability}: the dependency on formulas and cross-tab references is
+    fragile; the actual file provided contains cells in error (\texttt{\#REF!},
+    \texttt{\#VALUE!}).
+    \item \textbf{Financial visibility}: the absence of consolidation makes it difficult to read
+    actual cost and margin at portfolio level.
+    \item \textbf{Access control}: a spreadsheet cannot partition information finely; it cannot, for
+    instance, prevent a developer from accessing financial data.
+    \item \textbf{Traceability}: the history of modifications and decisions is not reliably
+    preserved.
 \end{itemize}
 
-\section{Problématique}
-La question centrale est donc la suivante~: \emph{comment doter l'entreprise d'un outil centralisé,
-fiable et sécurisé qui automatise la logique financière des projets aujourd'hui portée par Excel,
-tout en restant suffisamment configurable pour absorber l'évolution des règles métier sans
-refonte~?} Deux exigences se dégagent~: préserver la richesse du modèle métier existant (TCC, plan
-de charge, EAC, marges, facturation) et garantir une architecture d'autorisation \emph{dynamique},
-découplée des rôles.
+\section{Problem Statement}
+The central question is therefore the following: \emph{how can the company be equipped with a
+centralised, reliable and secure tool that automates the project financial logic currently carried
+by Excel, while remaining configurable enough to absorb the evolution of business rules without a
+rewrite?} Two requirements emerge: preserving the richness of the existing business model (cost
+rates, workload plan, EAC, margins, billing) and guaranteeing a \emph{dynamic} authorization
+architecture, decoupled from roles.
 
-\section{Solution proposée}
-La solution retenue est le développement d'une plateforme web centralisée, \textbf{PMS}
-(\textit{Project Management System}). Elle offre une source unique d'information et automatise le
-pilotage opérationnel et financier des projets. Ses objectifs sont~:
+\section{Proposed Solution}
+The chosen solution is the development of a centralised web platform, \textbf{PMS}
+(\textit{Project Management System}). It provides a single source of information and automates the
+operational and financial steering of projects. Its objectives are to:
 
 \begin{itemize}
-    \item centraliser les données des projets, ressources et équipes~;
-    \item planifier la charge (en jours-homme) et saisir les charges réelles~;
-    \item gérer les jalons de facturation et les missions~;
-    \item calculer automatiquement les indicateurs financiers (EAC, marges, avancement de
-    facturation, reste à faire, dérive)~;
-    \item fournir des tableaux de bord décisionnels adaptés à chaque profil d'utilisateur~;
-    \item reposer sur un contrôle d'accès dynamique
-    \og{}~Rôle~$\rightarrow$~Permission~$\rightarrow$~Module~\fg{}.
+    \item centralise project, resource and team data;
+    \item plan workload (in man-days) and record actual workload;
+    \item manage billing milestones and missions;
+    \item automatically compute financial indicators (EAC, margins, billing progress, remaining
+    work, drift);
+    \item provide decision-support dashboards tailored to each user profile;
+    \item rest on a dynamic ``Role $\rightarrow$ Permission $\rightarrow$ Module'' access control.
 \end{itemize}
 
-\section{Méthodologie de travail}
-Le projet est conduit selon une démarche d'ingénierie \textbf{par phases successives et validées}~:
-analyse métier, conception de l'architecture, conception de la base de données, modélisation UML,
-puis réalisation itérative des modules (authentification et RBAC, gestion des utilisateurs, des
-rôles et permissions, des projets, des équipes, du TCC, du plan de charge, des charges réelles, de
-la facturation, des missions, puis des KPI et du \emph{reporting}). Chaque phase produit des
-livrables techniques, met à jour la documentation et alimente le présent rapport.
+\section{Development Methodology}
 
-La conduite du projet s'appuie également sur une \textbf{priorité des sources de vérité}~: les
-décisions d'architecture validées priment, suivies des instructions métier, puis de la réalité
-extraite du fichier Excel, des spécifications (BRS, cas d'utilisation, SRS) et enfin du plan de
-projet, considéré comme une orientation stratégique à challenger.
+\subsection{An Incremental and Iterative Approach}
+The construction of PMS follows an \textbf{incremental and iterative} approach. Rather than
+delivering the whole platform at once, the work was broken down into successive increments, each
+one delivering a coherent and demonstrable subset of the product: a functional perimeter, its
+persistence, its REST API, its access rules and its user interface.
+
+This choice is dictated by the nature of the domain. The PMS business model is deeply
+interdependent: the KPI engine consumes workload, billing, cost rates and the internal quote.
+It cannot be built in a single pass without the risk of discovering integration errors too late.
+Proceeding by increments allows each functional block to be validated against the reference Excel
+model before the next one is built on top of it.
+
+\subsection{Engineering Phases and Development Sprints}
+Two distinct notions structure this report and must not be confused:
+
+\begin{itemize}
+    \item The \textbf{engineering phases} (business analysis, architecture design, database
+    design and UML modelling) constitute the upstream study work. They are presented in
+    Chapters~2 and~3.
+    \item The \textbf{development sprints} describe the progressive construction of the software.
+    Each sprint delivers a functional increment of the platform. They are presented in
+    Chapters~4 to~7.
+\end{itemize}
+
+\subsection{Organisation into Releases and Sprints}
+The realisation was organised into \textbf{four releases} grouping \textbf{nine sprints}. Each
+release corresponds to a coherent stage of product maturity, and each sprint to an increment that
+can be demonstrated in isolation.
+
+\begin{longtable}{|m{2.6cm}|m{2.0cm}|m{9.8cm}|}
+\hline
+\textbf{Release} & \textbf{Sprint} & \textbf{Functional increment delivered} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+\multirow{2}{*}{R1 --- Foundation} & Sprint 1 & Technical foundation and authentication \\
+\cline{2-3}
+ & Sprint 2 & Dynamic RBAC, users and resources \\
+\hline
+\multirow{2}{*}{R2 --- Operations} & Sprint 3 & Project management and lifecycle \\
+\cline{2-3}
+ & Sprint 4 & Teams and workload management \\
+\hline
+\multirow{3}{*}{R3 --- Finance} & Sprint 5 & Billing and missions \\
+\cline{2-3}
+ & Sprint 6 & Project governance \\
+\cline{2-3}
+ & Sprint 7 & Internal quote and KPI engine \\
+\hline
+R4 --- Delivery & Sprint 8 & Consolidation, testing and deployment \\
+\hline
+\caption{Organisation of the realisation into releases and sprints}
+\label{tab:releases}
+\end{longtable}
+
+Each sprint is presented in this report according to a constant structure: objective, functional
+scope, features implemented, technical realisation, tests and validation, sprint outcome, and
+transition to the next sprint.
+
+\subsection{Sources of Truth}
+Project conduct also relies on a \textbf{priority of sources of truth}: validated architecture
+decisions take precedence, followed by business instructions, then the reality extracted from the
+Excel file, then the specifications (BRS, use cases, SRS), and finally the project plan, considered
+a strategic orientation to be challenged.
 
 \section*{Conclusion}
-L'étude du contexte et de l'existant a mis en évidence la nécessité de remplacer un suivi Excel
-dispersé par une plateforme centralisée, fiable et configurable. Le chapitre suivant approfondit
-cette ambition en analysant et en spécifiant précisément les besoins fonctionnels et non
-fonctionnels du système, ainsi que les règles de gestion et le modèle financier qui en constituent
-le cœur métier.
+The study of the context and of the existing system highlighted the need to replace scattered Excel
+tracking with a centralised, reliable and configurable platform, and set out the incremental
+approach adopted to build it. The next chapter deepens this ambition by analysing and specifying
+precisely the functional and non-functional requirements of the system, together with the product
+backlog that structures the development sprints.

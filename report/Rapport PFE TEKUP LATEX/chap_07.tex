@@ -1,228 +1,317 @@
-\chapter{Implémentation --- Gestion opérationnelle}
+\chapter{Release 4 --- Consolidation, Delivery and Deployment}
 
 \section*{Introduction}
-Ce chapitre couvre les modules qui constituent le c\oe{}ur de la gestion opérationnelle
-quotidienne~: les équipes projet (phase~8), les charges de travail planifiées et réelles
-(phase~9) et le moteur de KPI financiers (phase~10). Ces trois modules interagissent en permanence
-et alimentent les tableaux de bord de pilotage du Directeur et du Chef de Projet.
+The functional scope of the platform was completed at the end of Release~3. This final release makes
+it deliverable: a coherent and accessible user interface, a verified authorization policy, a
+security review, and a reproducible deployment. It gathers two sprints: Sprint~8 consolidates the interface and
+verifies the platform, Sprint~9 makes it reproducibly deployable and continuously verified.
+Neither delivers new business functionality; both deliver deliverability.
 
-\section{Gestion des équipes}
+% =====================================================================
+\section{Sprint 8 --- Interface Consolidation, Testing and Deployment}
 
-\subsection{Modèle d'affectation}
+\subsection{Sprint Objective}
+Bring the platform to a deliverable state: unify the user interface, verify that the security model
+behaves as designed, review the application against the common web vulnerabilities, and package it
+for deployment.
 
-Une affectation d'équipe (\texttt{TeamAssignment}) lie une \texttt{Resource} à un \texttt{Project}
-pour une période donnée (\texttt{startDate} / \texttt{endDate}). Elle suit le même mécanisme de
-suppression douce que les autres entités~: un retrait d'équipe positionne \texttt{deleted = true}
-sans supprimer l'enregistrement, afin de conserver l'historique des affectations.
+\subsection{Functional Scope}
+This sprint covers user story US-26, a consistent and responsive interface, and the
+cross-cutting quality work that no single functional story carries.
 
-Un \textbf{index partiel unique} garantit qu'une ressource ne peut être affectée qu'une seule fois à
-un projet sur une période à la fois~:
-
-\begin{verbatim}
-UNIQUE (project_id, resource_id) WHERE deleted = FALSE
-\end{verbatim}
-
-Cette contrainte accepte les ré-affectations successives (une ressource peut quitter puis rejoindre
-un projet) tout en empêchant les doublons actifs.
-
-\subsection{Endpoints du module Équipes}
-
-\begin{longtable}{|m{2cm}|m{6.5cm}|m{3cm}|m{2.5cm}|}
-\hline
-\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Réponse} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-GET & \texttt{/api/projects/\{id\}/team} & \texttt{VIEW\_TEAM} & 200 liste \\
-\hline
-GET & \texttt{/api/projects/\{id\}/team/history} & \texttt{VIEW\_TEAM} & 200 historique \\
-\hline
-POST & \texttt{/api/projects/\{id\}/team} & \texttt{ASSIGN\_DEVELOPER} & 201 + Location \\
-\hline
-DELETE & \texttt{/api/projects/\{id\}/team/\{aid\}} & \texttt{ASSIGN\_DEVELOPER} & 204 \\
-\hline
-\caption{Endpoints REST du module Équipes}
-\label{tab:team-api}
-\end{longtable}
-
-\section{Charges de travail}
-
-\subsection{Deux types de charges}
-
-Le module de charges de travail distingue deux flux~:
-
+\subsection{Features Implemented}
 \begin{itemize}
-  \item \textbf{Plan de charge} (\texttt{plan\_charges})~: saisie mensuelle prévisionnelle par le
-        Chef de Projet (nombre de jours prévus par ressource et par mois).
-  \item \textbf{Charge réelle} (\texttt{charges\_reelles})~: saisie mensuelle par le Développeur ou
-        importée depuis KIMAI (\texttt{source = MANUAL | KIMAI}), représentant le nombre de jours
-        effectivement travaillés.
+  \item Frontend application structure and session handling.
+  \item Authorization model applied to the interface.
+  \item Design system unifying the screens of the eight modules.
+  \item Automated test suite covering the business rules and the access control.
+  \item Security review against the common web vulnerabilities.
+  \item Deployment packaging.
 \end{itemize}
 
-\subsection{Normalisation de la période}
+\subsection{Technical Realisation}
 
-Toute entrée de charge est rattachée à un mois entier. La date de période est systématiquement
-normalisée en premier jour du mois~:
+\subsubsection{Frontend structure and session handling}
+The client is a single-page application organised by feature, mirroring the backend modules. The
+access token obtained at sign-in is kept in memory and attached to every request by an HTTP
+interceptor; the refresh token remains in its \texttt{HttpOnly} cookie, unreachable from
+JavaScript. When a request returns \texttt{401}, the interceptor attempts a single refresh before
+returning the user to the sign-in screen.
 
-\begin{verbatim}
-LocalDate period = LocalDate.of(year, month, 1);
-\end{verbatim}
+\subsubsection{Authorization applied to the interface}
+The interface consumes the permission list returned by \texttt{GET /api/me/context} and derives
+from it both the navigation menu and the visibility of individual actions. A button that the user
+is not entitled to use is not merely disabled: it is absent.
 
-Cela simplifie les agrégations mensuelles et les jointures entre les deux tables.
+This must be understood correctly, and the report states it explicitly: hiding a control is an
+\textbf{ergonomic} measure, not a security measure. The authorization decision is taken by the
+server on every request, as described in Sprint~2. The client-side rule exists so that the user is
+never offered an action that would be refused; it is never the thing that refuses it.
 
-\subsection{Index partiels uniques}
+\subsubsection{Design system and interface consolidation}
+The eight modules were built successively, each with its own screens. This sprint unified them
+behind a single design system: a token-based visual language (colours, typography, spacing,
+elevation) declared once and consumed by every screen, together with a set of shared components
+(pagination, selection, confirmation dialog, notifications) reused across the modules rather than
+reimplemented in each.
 
-Chaque table possède un index unique partiel sur le triplet métier afin d'éviter les doublons~:
+The consolidation also addressed accessibility and consistency: sortable table headers announcing
+their state, labelled icon-only controls, explicit empty states in place of blank tables, and a
+responsive layout. The interface being the only part of the platform its users ever see, this
+convergence matters as much to adoption as the correctness of the engine behind it.
 
-\begin{verbatim}
--- Plan de charge
-UNIQUE (project_id, resource_id, period) WHERE deleted = FALSE
+\subsubsection{Test strategy}
+Testing concentrates on what a regression would make expensive: the business rules and the
+authorization model. The automated backend suite covers the lifecycle transitions, the billing
+ceiling, workload uniqueness and immutability, the multi-currency conversions, and the indicator
+formulas compared against the reference workbook.
 
--- Charge réelle
-UNIQUE (project_id, resource_id, period, source) WHERE deleted = FALSE
-\end{verbatim}
+The access control receives dedicated attention: for each protected endpoint, the suite verifies
+that a caller holding the permission succeeds and that a caller without it is refused. This is what
+makes the ``configurable authorization'' claim verifiable rather than merely stated.
 
-\subsection{Validation des charges réelles}
+\subsubsection{Security review}
+The application was reviewed against the common categories of web vulnerability:
 
-Une charge réelle passe par un cycle de vie à deux états (\texttt{SOUMISE} → \texttt{VALIDEE}).
-Seul un utilisateur disposant de la permission \texttt{VALIDATE\_WORKLOAD} peut valider. Une
-charge validée (\texttt{validatedAt} non nul) ne peut plus être modifiée ni supprimée~: toute
-tentative déclenche une \texttt{IllegalStateException} traduite en \texttt{409 Conflict}.
-
-\subsection{Immutabilité de la période}
-
-Lors d'une mise à jour d'un plan de charge ou d'une charge réelle, les champs \texttt{period} et
-\texttt{resourceId} sont protégés~: une tentative de modification de ces clés naturelles est rejetée
-avec \texttt{400 Bad Request}. Cette règle garantit la cohérence des séries temporelles.
-
-\subsection{Endpoints du module Charges}
-
-\begin{longtable}{|m{1.8cm}|m{7.5cm}|m{3cm}|m{1.8cm}|}
+\begin{longtable}{|m{4.6cm}|m{10cm}|}
 \hline
-\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Code} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-GET & \texttt{/api/projects/\{id\}/plan-charges} & \texttt{VIEW\_WORKLOAD} & 200 \\
-\hline
-POST & \texttt{/api/projects/\{id\}/plan-charges} & \texttt{SUBMIT\_WORKLOAD} & 201 \\
-\hline
-PUT & \texttt{/api/projects/\{id\}/plan-charges/\{pid\}} & \texttt{SUBMIT\_WORKLOAD} & 200 \\
-\hline
-DELETE & \texttt{/api/projects/\{id\}/plan-charges/\{pid\}} & \texttt{SUBMIT\_WORKLOAD} & 204 \\
-\hline
-GET & \texttt{/api/projects/\{id\}/charges-reelles} & \texttt{VIEW\_WORKLOAD} & 200 \\
-\hline
-POST & \texttt{/api/projects/\{id\}/charges-reelles} & \texttt{SUBMIT\_WORKLOAD} & 201 \\
-\hline
-PUT & \texttt{/api/projects/\{id\}/charges-reelles/\{cid\}} & \texttt{SUBMIT\_WORKLOAD} & 200 \\
-\hline
-DELETE & \texttt{/api/projects/\{id\}/charges-reelles/\{cid\}} & \texttt{SUBMIT\_WORKLOAD} & 204 \\
-\hline
-PATCH & \texttt{/api/projects/\{id\}/charges-reelles/\{cid\}/validate} & \texttt{VALIDATE\_WORKLOAD} & 200 \\
-\hline
-\caption{Endpoints REST du module Charges de travail (9 endpoints)}
-\label{tab:workload-api}
-\end{longtable}
-
-\section{Moteur de KPI}
-
-\subsection{Formules financières}
-
-Le moteur de KPI calcule les indicateurs financiers issus du classeur Excel de référence. Toutes
-les formules sont reproduites à l'identique. Le tableau suivant présente les indicateurs clés~:
-
-\begin{longtable}{|m{3cm}|m{5cm}|m{6.5cm}|}
-\hline
-\textbf{Indicateur} & \textbf{Formule} & \textbf{Signification} \\
+\textbf{Category} & \textbf{Measure taken} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-\texttt{budgetPlanifie} & $\sum$ (jours planifiés × TCC jour) & Coût total prévisionnel des
-ressources affectées \\
+Broken access control & Every endpoint annotated with its required permission; scope checked
+independently of permission; no role name tested in code \\
 \hline
-\texttt{budgetConsome} & $\sum$ (jours réels validés × TCC jour) & Coût des charges validées \\
+Cryptographic failures & Passwords hashed with BCrypt; tokens signed; refresh token confined to an
+\texttt{HttpOnly}, \texttt{Secure}, \texttt{SameSite} cookie \\
 \hline
-\texttt{EAC} & réel + planifié restant & Estimation à achèvement (Estimate At Completion) \\
+Injection & Parameterised queries through the ORM; no string-built SQL \\
 \hline
-\texttt{marge} & budget effectif − EAC & Marge financière prévisionnelle \\
+Identification and session failures & Short-lived access token; instant revocation by token
+version; forced password change on first login \\
 \hline
-\texttt{tauxConsomm.} & budgetConsome / budgetPlanifié & Taux d'avancement financier \\
+Sensitive data exposure & Financial data filtered by permission; internal quote behind a dedicated
+permission; computed amounts never persisted \\
 \hline
-\caption{Indicateurs KPI financiers calculés par le moteur}
-\label{tab:kpi-formulas}
+Security misconfiguration & Schema managed by versioned migrations with the ORM in validation
+mode; secrets externalised as environment variables \\
+\hline
+\caption{Security review by vulnerability category}
+\label{tab:owasp}
 \end{longtable}
 
-\noindent Le \textbf{coût journalier TCC} d'une ressource est~:
-\begin{verbatim}
-coutJournalierTcc = tarifJournalier × (1 + tauxTcc)
-\end{verbatim}
-\noindent Les valeurs de TCC sont chargées en \textbf{un seul accès batch} par projet (les
-identifiants de ressources sont collectés d'abord, puis une unique requête \texttt{IN} charge les
-TCC correspondants) afin d'éviter le problème \texttt{N+1}.
+\subsubsection{Packaging}
+At the close of this sprint the platform is packaged as an executable archive for the backend and a
+static build for the frontend, with the database schema brought up to date by the migration tool at
+startup and all configuration supplied by environment variables.
 
-\subsection{Calcul en direct (live)}
+Startup is idempotent: deploying the same artefact against an up-to-date database changes nothing,
+and against an older one applies exactly the missing migrations.
 
-L'endpoint \texttt{GET /api/projects/\{id\}/kpi} recalcule les indicateurs à la demande, sans
-persistance. Cette vue est utilisée par les tableaux de bord en temps réel. La réponse est
-identique à celle d'un snapshot mais le champ \texttt{snapshotId} est absent.
+This packaging is sufficient to run the application, but not to \emph{deploy} it reproducibly:
+it still assumes a host on which the right Java version, the right Node version and a correctly
+provisioned PostgreSQL instance are already present. Sprint~9 removes that assumption.
 
-\subsection{Snapshots historiques}
+\subsection{Tests and Validation}
 
-L'endpoint \texttt{POST /api/projects/\{id\}/kpi/snapshots} (permission \texttt{VIEW\_KPI})
-matérialise l'état courant des KPI dans la table \texttt{snapshot\_kpis}. Un index partiel unique
-empêche deux snapshots le même jour pour le même projet~:
+\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
+\hline
+\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Business rule suite & Run the automated backend tests & All pass \\
+\hline
+Permission granted & Call each protected endpoint with the permission & Operation performed \\
+\hline
+Permission missing & Call each protected endpoint without it & HTTP 403 \\
+\hline
+Financial confidentiality & Browse the interface as a developer & No financial figure exposed \\
+\hline
+Menu consistency & Sign in with each of the four roles & Each menu matches the permissions held \\
+\hline
+Deployment & Start the artefact against an empty and an existing database & Schema created, then
+migrated without loss \\
+\hline
+\caption{Test cases --- Sprint 8}
+\label{tab:tests-s8}
+\end{longtable}
 
-\begin{verbatim}
-UNIQUE (project_id, snapshot_date) WHERE deleted = FALSE
-\end{verbatim}
+\subsection{Sprint Outcome}
+The platform is functionally complete, verified on its business rules and its authorization model,
+reviewed for the common vulnerabilities, and packaged as a runnable artefact.
 
-Une tentative de double snapshot dans la même journée déclenche une exception métier traduite
-en \texttt{409 Conflict}. L'endpoint retourne \texttt{201 Created} avec un en-tête
-\texttt{Location} pointant sur \texttt{/snapshots/\{snapshotId\}} (convention API).
+\subsection{Transition to the Next Sprint}
+One gap remains between ``it runs on my machine'' and ``it can be deployed'': the artefact still
+depends on a correctly prepared host. Sprint~9 closes that gap with containerization and a
+continuous integration pipeline.
 
-\subsection{Convention API~: en-tête Location}
+% =====================================================================
+\section{Sprint 9 --- Containerization and Continuous Delivery}
 
-Tous les points d'entrée de création (\texttt{POST}) de la plateforme retournent systématiquement~:
+\subsection{Sprint Objective}
+Make the platform reproducibly deployable and continuously verified: package each component as a
+container image, orchestrate the whole stack with a single command, and automate build, test and
+integration checks on every change.
+
+\subsection{Functional Scope}
+This sprint delivers no new business functionality. Its scope is the delivery chain itself, and it
+addresses an item already open in the project's engineering backlog: the absence of deployment
+documentation and of any reproducible deployment procedure.
+
+\subsection{Features Implemented}
 \begin{itemize}
-  \item le code \texttt{201 Created},
-  \item un en-tête \texttt{Location} construit via \texttt{ServletUriComponentsBuilder},
-        pointant sur la ressource nouvellement créée.
+  \item Container image for the backend, built in two stages and running as a non-root user.
+  \item Container image for the frontend, serving the production build and reverse-proxying the API.
+  \item Orchestration of the three services with health checks and startup ordering.
+  \item Continuous integration pipeline: build, tests, image construction, end-to-end smoke test.
+  \item Deployment documentation and an architecture decision record superseding the previous one.
 \end{itemize}
 
-\noindent Cette convention est vérifiée par les tests d'intégration pour l'ensemble des
-dix-huit endpoints POST de l'application.
+\subsection{Technical Realisation}
 
-\subsection{Endpoints du module KPI}
+\subsubsection{A reconsidered architecture decision}
+The project had initially recorded a decision to run natively, without containers, justified by
+iteration speed on an already-provisioned machine. That decision served development well but left
+two gaps: no reproducible deployment, and a production profile that had never actually been
+executed.
 
-\begin{longtable}{|m{2cm}|m{6.5cm}|m{3cm}|m{2.5cm}|}
+The decision was therefore superseded rather than silently contradicted: a new record documents the
+move to containers, states what it changes, and confirms what it does \emph{not} change. In
+particular, three containers are \textbf{not} three microservices: the modular monolith decision
+stands. What is containerized is one application, its database and its static server.
+
+\subsubsection{Image construction}
+Both images are built in two stages, so that the build toolchain never reaches the runtime image:
+the backend image contains a Java runtime and the application archive, with neither Maven nor
+sources; the frontend image contains a web server and the compiled assets, with no Node runtime.
+The backend container runs as a dedicated unprivileged user rather than as root.
+
+Tests are deliberately \textbf{not} executed during image construction. Building an image is a
+packaging step; the quality gate belongs to the pipeline. Running the suite in both places would
+double build time without producing any additional signal.
+
+\subsubsection{Single origin through the reverse proxy}
+The web server serves the application and forwards \texttt{/api} to the backend container. The
+browser therefore contacts a single origin, which has a concrete consequence: the cross-origin
+configuration required by the development setup becomes unnecessary, and the refresh cookie,
+restricted to its own path and marked \texttt{SameSite=Strict}, works without any exception.
+The containerized deployment is, on this point, simpler and safer than the development loop.
+
+\subsubsection{Startup ordering and health probes}
+Composing three services raises an ordering problem: a container being \emph{started} is not the
+same as a container being \emph{ready}. The stack therefore relies on health probes rather than on
+declaration order. The database is probed over TCP, because the temporary server used during
+initialisation accepts only local socket connections and would otherwise be reported ready too
+early. The backend exposes a health endpoint, deliberately left unauthenticated but returning no
+detail, and is given a generous startup window because its first run applies the full set of
+schema migrations, including the demonstration dataset.
+
+\subsubsection{Defects revealed by the exercise}
+Preparing the pipeline exposed three pre-existing defects that native execution had concealed. The
+most consequential concerned the frontend build configuration: the production configuration never
+substituted the production environment file, so the production bundle embedded the development API
+address. On the development machine the application appeared to work, because the bundle was calling the
+local backend, while it would have been broken on any other host. The second was a build wrapper
+documented in the project files but absent from the repository. The third was an ignore rule that
+silently excluded the configuration template from version control, precisely the file the
+deployment procedure requires.
+
+That these defects surfaced only when the delivery chain was automated is itself the argument for
+automating it.
+
+\subsubsection{Pipeline}
+The pipeline separates what must always hold from what is only meaningful on integration branches.
+Compilation, the backend test suite, the production frontend build and the construction of both
+images run on every proposed change: a component that only breaks after merging is not a gate. The
+end-to-end test, which starts the full stack and performs a real authentication through the
+reverse proxy, runs on integration branches, where its cost is justified. Image publication is
+reserved for the main branch.
+
+The frontend job also carries an explicit guard against the defect described above: it fails if the
+development address reappears in the production bundle.
+
+\subsection{Tests and Validation}
+
+\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
 \hline
-\textbf{Méthode} & \textbf{URL} & \textbf{Permission} & \textbf{Réponse} \\
+\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-GET & \texttt{/api/projects/\{id\}/kpi} & \texttt{VIEW\_KPI} & 200 live \\
+Environment substitution & Inspect the production bundle & The development address is absent \\
 \hline
-GET & \texttt{/api/projects/\{id\}/kpi/snapshots} & \texttt{VIEW\_KPI} & 200 liste \\
+Unprivileged execution & Inspect the identity inside the backend container & Non-root user \\
 \hline
-POST & \texttt{/api/projects/\{id\}/kpi/snapshots} & \texttt{VIEW\_KPI} & 201 + Location \\
+Full stack startup & Start the three services & All three reported healthy \\
 \hline
-\caption{Endpoints REST du module KPI}
-\label{tab:kpi-api}
+Schema migration & Count the applied migrations on a pristine volume & All migrations applied \\
+\hline
+End-to-end authentication & Authenticate through the reverse proxy & Token returned and refresh
+cookie set \\
+\hline
+Client-side routing & Reload a deep application route & The application is served, not a 404 \\
+\hline
+Persistence & Stop and restart the stack & Data preserved; a volume reset replays the migrations \\
+\hline
+Development loop & Run the native backend and frontend while the stack is up & Both coexist, no
+port collision \\
+\hline
+\caption{Test cases --- Sprint 9}
+\label{tab:tests-s9}
+\end{longtable}
+
+\subsection{Sprint Outcome}
+The platform is deployable by a single command on any machine running a container engine, and every
+change is now verified automatically. The deployment procedure, the environment variables, the
+backup method and the known pitfalls are documented.
+
+\subsection{Final State of the Product}
+At the end of the nine sprints, PMS covers the whole scope identified during the analysis of the
+Excel workbook: dynamic authorization, project and team management, workload planning and
+recording, billing, missions, governance and the earned-value indicator engine, all behind a
+unified interface. Table~\ref{tab:final} summarises the path from the reference workbook to the
+delivered platform.
+
+\begin{longtable}{|m{2.0cm}|m{5.6cm}|m{6.8cm}|}
+\hline
+\textbf{Sprint} & \textbf{Increment delivered} & \textbf{Excel logic replaced} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Sprint 1 & Technical foundation, authentication & --- (no spreadsheet equivalent) \\
+\hline
+Sprint 2 & Dynamic authorization, users, resources, cost rates & TCC sheet \\
+\hline
+Sprint 3 & Projects and lifecycle & Identification sheet \\
+\hline
+Sprint 4 & Teams, workload plan and actuals & Forecast cost and actual cost sheets \\
+\hline
+Sprint 5 & Billing, payments, amendments, missions & Billing progress and missions sheets \\
+\hline
+Sprint 6 & Governance registers & Risks, deliverables, stakeholders, changes sheets \\
+\hline
+Sprint 7 & Internal quote and indicator engine & Statistics and dashboard sheets \\
+\hline
+Sprint 8 & Interface consolidation, tests, security review & --- (quality) \\
+\hline
+Sprint 9 & Containerization and continuous delivery & --- (delivery chain) \\
+\hline
+\caption{From the reference workbook to the delivered platform}
+\label{tab:final}
 \end{longtable}
 
 \section*{Conclusion}
-Les trois modules de gestion opérationnelle forment un enchaînement cohérent~: les membres de
-l'équipe sont affectés au projet, les charges planifiées et réelles sont saisies mois par mois, et
-le moteur de KPI agrège ces données en indicateurs financiers exploitables par le pilotage. La
-série temporelle mensuelle, les index partiels uniques et le chargement batch des TCC sont les trois
-décisions techniques qui garantissent la fiabilité et la performance de ce pipeline. Le chapitre
-suivant décrit les modules financiers, les missions et la gouvernance de projet.
+Release~4 closed the construction of the platform by addressing what functionality alone does not
+deliver: a coherent interface, a verified security model and a reproducible deployment. The
+incremental path followed since Release~1 (foundation, operations, finance, consolidation)
+produced a platform whose every increment was demonstrable in isolation, and whose final state
+covers the entire business logic previously carried by the Excel workbook.
