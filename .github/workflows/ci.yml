@@ -1,0 +1,219 @@
+name: CI
+
+# Intégration continue de la plateforme PMS (ADR-026).
+#
+# Stratégie de déclenchement :
+#   backend / frontend / images  → PR et push (barrières de qualité)
+#   smoke                        → push uniquement (trop lent pour chaque PR)
+#   publish                      → main uniquement (seul artefact publiable)
+
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+
+  # ── Barrière de correction ──────────────────────────────────────
+  backend:
+    name: Backend — build & tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Les tests s'exécutent sur H2 via @ActiveProfiles("test") : aucun service
+      # PostgreSQL n'est nécessaire dans le job.
+      - name: mvn verify
+        working-directory: backend
+        run: mvn -B -ntp verify
+
+      - name: Rapports de tests
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pms-backend-jar
+          path: backend/target/pms-backend-*.jar
+
+  # ── Barrière de build frontend ──────────────────────────────────
+  frontend:
+    name: Frontend — build production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/pms-frontend/package-lock.json
+
+      - name: npm ci
+        working-directory: frontend/pms-frontend
+        run: npm ci
+
+      # NOTE : pas d'étape `npm test`. angular.json ne déclare aucune cible
+      # `test` et karma/jasmine ne sont pas installés : l'ajouter rendrait la CI
+      # rouge en permanence. Mise en place des tests frontend = tâche distincte
+      # (voir docs/ENHANCEMENTS.md, FE-1 / T-3).
+      - name: Build production
+        working-directory: frontend/pms-frontend
+        run: npm run build -- --configuration production
+
+      # Garde-fou : la configuration production doit avoir substitué
+      # environment.prod.ts. Si l'URL de développement réapparaît dans le bundle,
+      # le frontend conteneurisé appellerait le backend de l'hôte.
+      - name: Vérifier la substitution d'environnement
+        working-directory: frontend/pms-frontend
+        run: |
+          if grep -rq "localhost:8090" dist/pms-frontend/browser/*.js; then
+            echo "::error::L'URL de développement est présente dans le bundle de production (fileReplacements cassé)."
+            exit 1
+          fi
+          echo "OK — aucune URL de développement dans le bundle."
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pms-frontend-dist
+          path: frontend/pms-frontend/dist/pms-frontend/browser
+
+  # ── Barrière de construction des images ─────────────────────────
+  images:
+    name: Images Docker
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Image backend
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: false
+          load: true
+          tags: pms-backend:ci
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Image frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend/pms-frontend
+          push: false
+          load: true
+          tags: pms-frontend:ci
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  # ── Preuve d'intégration de bout en bout ────────────────────────
+  smoke:
+    name: docker compose — test de bout en bout
+    runs-on: ubuntu-latest
+    needs: [images]
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Générer un .env avec des secrets jetables
+        run: |
+          cp .env.example .env
+          sed -i "s|^JWT_SECRET=.*|JWT_SECRET=$(head -c 64 /dev/urandom | base64 -w0)|" .env
+          sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=ci-$(openssl rand -hex 12)|" .env
+
+      - name: docker compose up
+        run: docker compose up -d --build
+
+      - name: Attendre que l'API soit saine
+        run: |
+          for i in $(seq 1 60); do
+            s=$(docker inspect -f '{{.State.Health.Status}}' pms-backend 2>/dev/null || echo starting)
+            echo "tentative $i : $s"
+            [ "$s" = "healthy" ] && exit 0
+            [ "$s" = "unhealthy" ] && break
+            sleep 5
+          done
+          echo "::error::Le backend n'est pas devenu sain."
+          docker compose logs --no-color
+          exit 1
+
+      # Preuve que la chaîne complète fonctionne : navigateur → nginx → API → base.
+      - name: Connexion via le reverse proxy nginx
+        run: |
+          code=$(curl -s -o /tmp/login.json -w '%{http_code}' \
+                 -X POST http://localhost:8081/api/auth/login \
+                 -H 'Content-Type: application/json' \
+                 -d '{"email":"admin@pms.local","password":"Admin1234!"}')
+          echo "HTTP $code"; cat /tmp/login.json
+          test "$code" = "200"
+          grep -q 'accessToken' /tmp/login.json
+
+      - name: Repli du routage client Angular
+        run: |
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/projects)" = "200"
+
+      - name: Catalogues de traduction servis
+        run: |
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8081/i18n/fr.json)" = "200"
+
+      - name: Arrêt
+        if: always()
+        run: docker compose down -v
+
+  # ── Publication ─────────────────────────────────────────────────
+  publish:
+    name: Publier les images sur GHCR
+    runs-on: ubuntu-latest
+    needs: [smoke]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publier le backend
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/pms-backend:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/pms-backend:latest
+
+      - name: Publier le frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend/pms-frontend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/pms-frontend:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/pms-frontend:latest

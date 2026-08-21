@@ -1,0 +1,10 @@
+# Contexte de build : tout ce qui n'est pas nécessaire à `mvn package`.
+target/
+*.log
+*.log.err
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/

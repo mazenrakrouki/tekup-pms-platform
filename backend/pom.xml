@@ -39,6 +39,13 @@
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
 
+    <!-- Actuator : sondes de santé pour les conteneurs (ADR-026).
+         Seuls health et info sont exposés — voir application.yml. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
     <!-- ── Persistance ──────────────────────────────────────── -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -114,6 +121,13 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-aop</artifactId>
+    </dependency>
+
+    <!-- ── API Documentation (ADR-002) ─────────────────────── -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.6.0</version>
     </dependency>
 
     <!-- ── Tests ────────────────────────────────────────────── -->

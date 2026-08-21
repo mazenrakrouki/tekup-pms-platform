@@ -1,0 +1,114 @@
+# Orchestration locale de la plateforme PMS (ADR-026).
+#
+#   navigateur ──► frontend (nginx) ──► backend (Spring Boot) ──► db (PostgreSQL)
+#
+# Point d'entrée unique : http://localhost:8081
+# L'application et /api partagent la même origine : aucun CORS n'intervient et le
+# cookie de rafraîchissement (SameSite=Strict) fonctionne naturellement.
+#
+# Les ports hôte évitent volontairement ceux déjà utilisés sur le poste de
+# développement : 5432 (PostgreSQL natif), 8090 (mvn spring-boot:run),
+# 4200 (ng serve) et 8080 (Apache). Voir docs/DEPLOYMENT.md.
+#
+# La clé `version:` est obsolète avec Compose v2 et volontairement absente.
+
+name: pms
+
+services:
+
+  # ── Base de données ─────────────────────────────────────────────
+  db:
+    image: postgres:17-alpine
+    container_name: pms-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${DB_NAME}
+      POSTGRES_USER:     ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ:                ${TZ:-Africa/Tunis}
+    ports:
+      - "${DB_HOST_PORT:-5433}:5432"
+    volumes:
+      - pms-db-data:/var/lib/postgresql/data
+    healthcheck:
+      # -h 127.0.0.1 force une connexion TCP. Sans cela, le serveur temporaire
+      # lancé par initdb (socket Unix uniquement) ferait passer le healthcheck
+      # au vert avant que la base n'accepte réellement des clients.
+      # $$ échappe l'interpolation Compose : la variable est résolue par le shell
+      # du conteneur, pas par Compose.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks: [pms-net]
+
+  # ── API ─────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: pms-backend:${IMAGE_TAG:-local}
+    container_name: pms-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT:                 "8080"
+      DB_HOST:              db
+      DB_PORT:              "5432"
+      DB_NAME:              ${DB_NAME}
+      DB_USERNAME:          ${DB_USERNAME}
+      DB_PASSWORD:          ${DB_PASSWORD}
+      JWT_SECRET:           ${JWT_SECRET}
+      COOKIE_SECURE:        ${COOKIE_SECURE:-false}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:8081}
+      LOG_ROOT_LEVEL:       ${LOG_ROOT_LEVEL:-INFO}
+      # Comptes de démonstration (mots de passe connus, publiés dans la
+      # documentation). Laissés actifs pour que `docker compose up` soit
+      # immédiatement démontrable ; à passer à false pour tout usage réel.
+      PMS_DEMO_SEED_USERS:  ${PMS_DEMO_SEED_USERS:-true}
+      TZ:                   ${TZ:-Africa/Tunis}
+    ports:
+      - "${BACKEND_HOST_PORT:-8091}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      # Le premier démarrage applique 26 migrations Flyway, dont un jeu de
+      # données de démonstration de ~1100 lignes : compter 60 à 90 secondes.
+      start_period: 90s
+    networks: [pms-net]
+
+  # ── Frontend + reverse proxy ────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend/pms-frontend
+      dockerfile: Dockerfile
+    image: pms-frontend:${IMAGE_TAG:-local}
+    container_name: pms-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        # nginx résout « backend » une seule fois au démarrage : si le conteneur
+        # n'existe pas encore, il s'arrête sur « host not found in upstream ».
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_HOST_PORT:-8081}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    networks: [pms-net]
+
+volumes:
+  pms-db-data:
+
+networks:
+  pms-net:
+    driver: bridge

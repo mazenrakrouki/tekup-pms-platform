@@ -1,0 +1,31 @@
+# Normalisation des fins de ligne — volontairement CIBLÉE.
+#
+# On n'utilise PAS `* text=auto eol=lf` : le dépôt contient un très grand nombre
+# de fichiers non commités, et une normalisation globale réécrirait leurs fins de
+# ligne, rendant le diff illisible. Seuls les fichiers qui *doivent* être en LF
+# (parce qu'ils sont exécutés dans un conteneur Linux) sont épinglés ici.
+
+# Fichiers consommés par Linux / Docker → LF obligatoire
+*.sh          text eol=lf
+mvnw          text eol=lf
+Dockerfile    text eol=lf
+*.dockerfile  text eol=lf
+*.conf        text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+.env.example  text eol=lf
+
+# Scripts Windows → CRLF obligatoire
+*.cmd         text eol=crlf
+*.bat         text eol=crlf
+
+# Binaires — jamais de conversion
+*.png         binary
+*.jpg         binary
+*.jpeg        binary
+*.gif         binary
+*.ico         binary
+*.pdf         binary
+*.xlsx        binary
+*.docx        binary
+*.jar         binary

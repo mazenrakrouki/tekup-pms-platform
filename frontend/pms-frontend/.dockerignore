@@ -1,0 +1,14 @@
+# Contexte de build. Sans ce fichier, node_modules (~500 Mo) est envoyé au
+# démon Docker à chaque build.
+#
+# ATTENTION : ne PAS exclure docker/ — nginx.conf y est lu par le Dockerfile.
+node_modules/
+dist/
+.angular/
+out-tsc/
+coverage/
+.claude/
+.vscode/
+.idea/
+docs/
+*.log

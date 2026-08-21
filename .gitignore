@@ -5,7 +5,8 @@ target/
 *.war
 *.ear
 *.nar
-.mvn/
+# NOTE: .mvn/ is intentionally NOT ignored — the Maven wrapper (mvnw, mvnw.cmd,
+# .mvn/wrapper/) must be committed so a CI runner can build without a preinstalled Maven.
 
 # ── Angular / Node ────────────────────────────────────────────────
 frontend/pms-frontend/node_modules/
@@ -32,6 +33,11 @@ desktop.ini
 .env
 .env.*
 *.env
+# Le gabarit doit être versionné (négation APRÈS les règles ci-dessus).
+!.env.example
+
+# ── Sauvegardes base de données ───────────────────────────────────
+/backups/
 
 # ── Logs ──────────────────────────────────────────────────────────
 *.log
@@ -47,7 +53,8 @@ logs/
 *.lof
 *.lot
 *.mtc
-*.mtc0
+*.mtc[0-9]*
+*.maf
 *.toc
 *.run.xml
 *.blg
@@ -57,3 +64,7 @@ logs/
 *.synctex.gz
 *.out
 _build_*
+
+# Sauvegardes locales (ne jamais versionner)
+*.bak
+*.bak-*

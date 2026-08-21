@@ -6,7 +6,10 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pms_db}
     username: ${DB_USERNAME:pms_user}
-    password: ${DB_PASSWORD:pms_password}
+    # Aucune valeur par défaut : un démarrage mal configuré doit échouer immédiatement
+    # plutôt que de démarrer avec un mot de passe connu. Les profils dev/test/prod
+    # fournissent chacun leur propre valeur.
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -34,6 +37,10 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: false
     out-of-order: false
+    # Désactivé en dev : la base locale a pu diverger au fil des itérations.
+    # Le profil prod (conteneurs, volume vierge) réactive la validation — toute
+    # dérive de checksum doit y échouer bruyamment.
+    validate-on-migrate: false
 
   # ── Cache (contexte de sécurité — ADR-017) ────────────────────
   cache:
@@ -66,15 +73,51 @@ server:
 # ── Configuration PMS ─────────────────────────────────────────────
 pms:
   jwt:
-    # Clé secrète HS512 (64 octets en base64) — remplacer en production
-    secret: ${JWT_SECRET:cG1zX3NlY3JldF9rZXlfZGV2ZWxvcG1lbnRfb25seV9ub3RfZm9yX3Byb2R1Y3Rpb25fdXNlX211c3RfYmVfcmVwbGFjZWQ=}
+    # Aucune valeur par défaut : voir la remarque sur DB_PASSWORD ci-dessus.
+    # La valeur est utilisée telle quelle (octets UTF-8 bruts) pour HMAC-SHA512 :
+    # elle doit faire au moins 64 caractères. Ce n'est PAS du base64 décodé.
+    secret: ${JWT_SECRET}
     access-token-expiration: 900        # 15 minutes (en secondes)
     refresh-token-expiration: 604800    # 7 jours (en secondes)
   security:
     bcrypt-strength: 12
+    cookie-secure: ${COOKIE_SECURE:false}   # true derrière HTTPS uniquement
+  cors:
+    allowed-origins:
+      - "http://localhost:4200"
+      - "http://127.0.0.1:4200"
+
+# ── API Documentation (springdoc) ────────────────────────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    disable-swagger-default-url: true
+
+# ── Actuator (sondes de conteneur — ADR-026) ─────────────────────
+# Seuls health et info sont exposés. show-details: never garantit qu'un appel
+# non authentifié ne divulgue aucun détail d'infrastructure (état de la base, disque…).
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: false
 
 # ── Logging ───────────────────────────────────────────────────────
 logging:
   level:
     root: INFO
     com.pms: INFO
+    # Suppress PageImpl serialization stability warning (N-4: VIA_DTO changes JSON shape, deferred)
+    org.springframework.data.web.config: ERROR

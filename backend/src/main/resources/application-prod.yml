@@ -1,7 +1,11 @@
 # ── Profil Production ─────────────────────────────────────────────
-# Variables d'environnement OBLIGATOIRES en production :
+# Profil utilisé par les conteneurs (ADR-026).
+#
+# Variables d'environnement OBLIGATOIRES :
 #   DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD
-#   JWT_SECRET  (clé HS512 en base64, 64 octets minimum)
+#   JWT_SECRET  — utilisée telle quelle (octets UTF-8 bruts) pour HMAC-SHA512,
+#                 donc AU MOINS 64 CARACTÈRES. Ce n'est pas du base64 décodé.
+# Variables optionnelles : PORT, COOKIE_SECURE, CORS_ALLOWED_ORIGINS, LOG_ROOT_LEVEL
 
 spring:
   datasource:
@@ -18,7 +22,11 @@ spring:
         format_sql: false
 
   flyway:
-    locations: classpath:db/migration   # Pas de seeds en prod
+    # NB : classpath:db/migration inclut V26__seed_demo_data.sql. Les comptes de
+    # démonstration sont donc créés aussi sous ce profil — voir docs/DEPLOYMENT.md.
+    locations: classpath:db/migration
+    # Volume vierge au premier démarrage : toute dérive de checksum doit échouer.
+    validate-on-migrate: true
 
 pms:
   jwt:
@@ -27,11 +35,18 @@ pms:
     refresh-token-expiration: 604800    # 7 jours
   security:
     bcrypt-strength: 12
+    cookie-secure: ${COOKIE_SECURE:false}   # true dès que le stack est derrière HTTPS
+  cors:
+    # Liste séparée par des virgules (liée via @Value dans SecurityConfig).
+    # Le frontend conteneurisé sert l'app et /api sur la même origine.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8081}
 
 server:
   port: ${PORT:8080}
 
 logging:
   level:
-    root: WARN
+    root: ${LOG_ROOT_LEVEL:WARN}
     com.pms: INFO
+    # Sans cela, les 26 migrations du premier démarrage (60-90 s) sont totalement muettes.
+    org.flywaydb: INFO

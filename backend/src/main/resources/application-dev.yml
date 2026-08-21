@@ -24,6 +24,11 @@ spring:
 
 pms:
   jwt:
+    # Secret de DÉVELOPPEMENT uniquement — jamais utilisé hors du profil dev.
+    # Le profil de base n'a plus de valeur par défaut (échec rapide si non configuré),
+    # ce profil fournit donc explicitement la sienne.
+    # Octets UTF-8 bruts pour HMAC-SHA512 → au moins 64 caractères.
+    secret: dev-only-secret-not-for-production-dev-only-secret-not-for-production-0123456789
     access-token-expiration: 3600   # 1 heure en dev (plus pratique pour tester)
     refresh-token-expiration: 86400 # 1 jour en dev
 
