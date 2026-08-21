@@ -23,6 +23,7 @@ public class AvenantService {
     private final AvenantRepository  avenantRepository;
     private final ProjectRepository  projectRepository;
     private final AvenantMapper      avenantMapper;
+    private final JalonService       jalonService;
 
     @PreAuthorize("hasAuthority('VIEW_BILLING')")
     @Transactional(readOnly = true)
@@ -42,6 +43,7 @@ public class AvenantService {
                 .add(request.montant());
         project.setRevisedBudget(newRevisedBudget);
         projectRepository.save(project);
+        jalonService.recomputePrevuMontants(project); // H-4
 
         Avenant avenant = Avenant.builder()
                 .project(project)
@@ -65,10 +67,12 @@ public class AvenantService {
         }
 
         // Inversion de l'impact sur le budget révisé
+        // getEffectiveBudget() est utilisé comme fallback sûr (jamais négatif si on ne revient pas en dessous du budget initial)
         Project project = avenant.getProject();
-        BigDecimal current = project.getRevisedBudget() != null ? project.getRevisedBudget() : BigDecimal.ZERO;
+        BigDecimal current = project.getEffectiveBudget() != null ? project.getEffectiveBudget() : BigDecimal.ZERO;
         project.setRevisedBudget(current.subtract(avenant.getMontant()));
         projectRepository.save(project);
+        jalonService.recomputePrevuMontants(project); // H-4
 
         avenant.setDeleted(true);
         avenantRepository.save(avenant);

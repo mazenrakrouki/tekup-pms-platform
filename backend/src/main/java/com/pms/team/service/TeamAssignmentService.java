@@ -2,6 +2,7 @@ package com.pms.team.service;
 
 import com.pms.project.entity.Project;
 import com.pms.project.repository.ProjectRepository;
+import com.pms.shared.exception.BusinessRuleException;
 import com.pms.shared.exception.NotFoundException;
 import com.pms.team.dto.TeamAssignmentRequest;
 import com.pms.team.dto.TeamAssignmentResponse;
@@ -51,7 +52,7 @@ public class TeamAssignmentService {
         }
 
         if (request.endDate() != null && request.endDate().isBefore(request.startDate())) {
-            throw new IllegalArgumentException("La date de fin ne peut pas être antérieure à la date de début");
+            throw new BusinessRuleException("La date de fin ne peut pas être antérieure à la date de début");
         }
 
         TeamAssignment ta = TeamAssignment.builder()
@@ -75,7 +76,7 @@ public class TeamAssignmentService {
         }
 
         if (request.endDate() != null && request.endDate().isBefore(request.startDate())) {
-            throw new IllegalArgumentException("La date de fin ne peut pas être antérieure à la date de début");
+            throw new BusinessRuleException("La date de fin ne peut pas être antérieure à la date de début");
         }
 
         ta.setRoleInTeam(request.roleInTeam());

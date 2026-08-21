@@ -10,6 +10,7 @@ import com.pms.billing.repository.JalonFacturationRepository;
 import com.pms.billing.repository.PaiementRepository;
 import com.pms.project.entity.Project;
 import com.pms.project.repository.ProjectRepository;
+import com.pms.shared.exception.BusinessRuleException;
 import com.pms.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -62,7 +63,7 @@ public class JalonService {
         checkBelongsToProject(jalon, projectId);
 
         if (jalon.getStatut() != JalonStatut.PREVU) {
-            throw new IllegalArgumentException("Impossible de modifier un jalon déjà facturé ou payé");
+            throw new BusinessRuleException("Impossible de modifier un jalon déjà facturé ou payé");
         }
 
         validatePourcentageSum(projectId, jalon.getPourcentage(), request.pourcentage());
@@ -83,7 +84,7 @@ public class JalonService {
         checkBelongsToProject(jalon, projectId);
 
         if (jalon.getStatut() != JalonStatut.PREVU) {
-            throw new IllegalArgumentException("Seul un jalon en statut PREVU peut être facturé");
+            throw new BusinessRuleException("Seul un jalon en statut PREVU peut être facturé");
         }
 
         jalon.setStatut(JalonStatut.FACTURE);
@@ -98,11 +99,25 @@ public class JalonService {
         checkBelongsToProject(jalon, projectId);
 
         if (jalon.getStatut() != JalonStatut.PREVU) {
-            throw new IllegalArgumentException("Impossible de supprimer un jalon déjà facturé ou payé");
+            throw new BusinessRuleException("Impossible de supprimer un jalon déjà facturé ou payé");
         }
 
         jalon.setDeleted(true);
         jalonRepository.save(jalon);
+    }
+
+    // ── Appelé par AvenantService / ProjectService (H-4) ─────────
+
+    /**
+     * H-4 : recalcule le montant des jalons PREVU lorsque le budget effectif change.
+     * Les jalons FACTURE et PAYE sont gelés (comptabilité arrêtée).
+     */
+    public void recomputePrevuMontants(Project project) {
+        List<JalonFacturation> prevus = jalonRepository.findByProjectIdAndStatutAndDeletedFalse(
+                project.getId(), JalonStatut.PREVU);
+        if (prevus.isEmpty() || project.getEffectiveBudget() == null) return;
+        prevus.forEach(j -> j.setMontant(computeMontant(project, j.getPourcentage())));
+        jalonRepository.saveAll(prevus);
     }
 
     // ── Appelé par PaiementService après chaque paiement ─────────
@@ -124,7 +139,7 @@ public class JalonService {
         BigDecimal current = jalonRepository.sumPourcentageByProjectId(projectId);
         BigDecimal effective = current.subtract(oldPct != null ? oldPct : BigDecimal.ZERO).add(newPct);
         if (effective.compareTo(BigDecimal.valueOf(100)) > 0) {
-            throw new IllegalArgumentException(
+            throw new BusinessRuleException(
                     "La somme des pourcentages dépasserait 100% (actuel : " + current.toPlainString() + "%)");
         }
     }

@@ -32,8 +32,7 @@ public final class TestFixtures {
 
         // Administration
         permissions.add(perm(permRepo, "MANAGE_USERS",    "ADMIN"));
-        permissions.add(perm(permRepo, "MANAGE_ROLES",    "ADMIN"));
-        permissions.add(perm(permRepo, "VIEW_AUDIT_LOG",  "ADMIN"));
+        // MANAGE_ROLES and VIEW_AUDIT_LOG descoped (N-2) — removed from V20 migration
         // Projets
         permissions.add(perm(permRepo, "VIEW_PROJECT",       "PROJET"));
         permissions.add(perm(permRepo, "VIEW_ALL_PROJECTS",  "PROJET")); // accès portefeuille (scope ADR-021)

@@ -8,13 +8,19 @@ import com.pms.workload.service.ChargeReelleService;
 import com.pms.workload.service.PlanChargeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
+@Tag(name = "Charges de travail", description = "Plan de charge mensuel + charges réelles (soumettre / valider)")
 @RestController
 @RequiredArgsConstructor
 public class WorkloadController {
@@ -25,8 +31,10 @@ public class WorkloadController {
     // ── Charges planifiées ────────────────────────────────────────
 
     @GetMapping("/api/projects/{projectId}/plan-charges")
-    public ResponseEntity<List<PlanChargeResponse>> listPlanCharges(@PathVariable Long projectId) {
-        return ResponseEntity.ok(planChargeService.findByProject(projectId));
+    public ResponseEntity<Page<PlanChargeResponse>> listPlanCharges(
+            @PathVariable Long projectId,
+            @PageableDefault(size = 20, sort = "period", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(planChargeService.findByProject(projectId, pageable));
     }
 
     @PostMapping("/api/projects/{projectId}/plan-charges")
@@ -54,8 +62,10 @@ public class WorkloadController {
     // ── Charges réelles ───────────────────────────────────────────
 
     @GetMapping("/api/projects/{projectId}/charges-reelles")
-    public ResponseEntity<List<ChargeReelleResponse>> listChargesReelles(@PathVariable Long projectId) {
-        return ResponseEntity.ok(chargeReelleService.findByProject(projectId));
+    public ResponseEntity<Page<ChargeReelleResponse>> listChargesReelles(
+            @PathVariable Long projectId,
+            @PageableDefault(size = 20, sort = "period", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(chargeReelleService.findByProject(projectId, pageable));
     }
 
     @PostMapping("/api/projects/{projectId}/charges-reelles")

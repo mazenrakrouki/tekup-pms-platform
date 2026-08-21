@@ -62,12 +62,13 @@ class ProjectControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/projects avec token valide → 200")
+    @DisplayName("GET /api/projects avec token valide → 200 (page)")
     void listProjects_authenticated_returns200() throws Exception {
         mockMvc.perform(get("/api/projects")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").isNumber());
     }
 
     @Test
@@ -123,6 +124,29 @@ class ProjectControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("PATCH status : transition légale ACTIVE → ON_HOLD → 200")
+    void changeStatus_legalTransition_returns200() throws Exception {
+        var project = TestFixtures.createProject(projectRepository); // ACTIVE
+
+        mockMvc.perform(patch("/api/projects/" + project.getId() + "/status")
+                        .param("status", "ON_HOLD")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ON_HOLD"));
+    }
+
+    @Test
+    @DisplayName("PATCH status : transition interdite ACTIVE → DRAFT → 422")
+    void changeStatus_illegalTransition_returns422() throws Exception {
+        var project = TestFixtures.createProject(projectRepository); // ACTIVE
+
+        mockMvc.perform(patch("/api/projects/" + project.getId() + "/status")
+                        .param("status", "DRAFT")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test

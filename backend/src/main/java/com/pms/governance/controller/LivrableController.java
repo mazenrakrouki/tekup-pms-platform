@@ -6,12 +6,14 @@ import com.pms.governance.service.LivrableService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
 
+@Tag(name = "Gouvernance — Livrables", description = "Suivi des livrables + machine à états (EN_ATTENTE → LIVRE → VALIDE)")
 @RestController
 @RequestMapping("/api/projects/{projectId}/livrables")
 @RequiredArgsConstructor

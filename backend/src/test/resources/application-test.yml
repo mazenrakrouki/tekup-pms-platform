@@ -26,6 +26,11 @@ pms:
     secret: dGVzdFNlY3JldEtleUZvclRlc3RpbmdPbmx5TXVzdEJlQXRMZWFzdDY0Qnl0ZXNMb25n
     access-token-expiration: 3600
     refresh-token-expiration: 86400
+  cors:
+    allowed-origins:
+      - http://localhost:4200
+  security:
+    cookie-secure: false
 
 logging:
   level:

@@ -6,12 +6,14 @@ import com.pms.governance.service.PartiePrenanteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
 
+@Tag(name = "Gouvernance — Parties Prenantes", description = "Registre des parties prenantes : influence, intérêt, stratégie")
 @RestController
 @RequestMapping("/api/projects/{projectId}/parties-prenantes")
 @RequiredArgsConstructor

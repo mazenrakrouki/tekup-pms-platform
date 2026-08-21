@@ -46,6 +46,7 @@ public class JwtService {
                 .claim("permissions", permissions)
                 .claim("tokenVersion", user.getTokenVersion())
                 .claim("type", "access")
+                .claim("firstLogin", user.isFirstLogin())
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now().plusSeconds(accessTokenExpirySeconds)))
                 .signWith(signingKey)
@@ -81,6 +82,12 @@ public class JwtService {
 
     public String extractType(String token) {
         return validateAndParse(token).get("type", String.class);
+    }
+
+    /** Returns true if the token carries firstLogin=true (user must change password). */
+    public boolean extractFirstLogin(String token) {
+        Boolean val = validateAndParse(token).get("firstLogin", Boolean.class);
+        return Boolean.TRUE.equals(val);
     }
 
     public boolean isTokenValid(String token) {

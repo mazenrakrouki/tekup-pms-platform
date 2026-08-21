@@ -19,4 +19,7 @@ public class Permission extends BaseEntity {
 
     @Column(nullable = false, length = 50)
     private String module;  // ex. "PROJET"
+
+    @Column(length = 255)
+    private String description;
 }

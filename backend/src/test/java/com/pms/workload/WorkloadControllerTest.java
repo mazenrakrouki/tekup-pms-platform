@@ -3,7 +3,10 @@ package com.pms.workload;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pms.TestFixtures;
 import com.pms.auth.dto.LoginRequest;
+import com.pms.project.entity.Project;
 import com.pms.project.repository.ProjectRepository;
+import com.pms.team.entity.TeamAssignment;
+import com.pms.team.repository.TeamAssignmentRepository;
 import com.pms.user.entity.User;
 import com.pms.user.repository.PermissionRepository;
 import com.pms.user.repository.RoleRepository;
@@ -21,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -38,6 +42,7 @@ class WorkloadControllerTest {
     @Autowired RoleRepository roleRepository;
     @Autowired PermissionRepository permissionRepository;
     @Autowired ProjectRepository projectRepository;
+    @Autowired TeamAssignmentRepository teamAssignmentRepository;
     @Autowired PasswordEncoder passwordEncoder;
 
     private String token;
@@ -47,9 +52,18 @@ class WorkloadControllerTest {
     @BeforeEach
     void setUp() throws Exception {
         User admin = TestFixtures.createAdminUser(permissionRepository, roleRepository, userRepository, passwordEncoder);
-        projectId = TestFixtures.createProject(projectRepository).getId();
+        Project project = TestFixtures.createProject(projectRepository);
+        projectId = project.getId();
         // L'admin lui-même servira de cible pour les charges (userId)
         targetUserId = admin.getId();
+
+        // H-8: the target user must be a team member — add the admin to the project team
+        teamAssignmentRepository.save(TeamAssignment.builder()
+                .project(project)
+                .user(admin)
+                .roleInTeam("Développeur")
+                .startDate(LocalDate.now())
+                .build());
 
         MvcResult login = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -161,7 +175,7 @@ class WorkloadControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /validate sur charge déjà validée → 409")
+    @DisplayName("PATCH /validate sur charge déjà validée → 422")
     void validateChargeReelle_alreadyValidated_returns409() throws Exception {
         var body = Map.of("userId", targetUserId, "year", 2026, "month", 11, "actualDays", "6");
         MvcResult create = mockMvc.perform(post("/api/projects/" + projectId + "/charges-reelles")
@@ -177,6 +191,6 @@ class WorkloadControllerTest {
                 .andExpect(status().isOk());
 
         mockMvc.perform(patch(base + "/validate").header("Authorization", "Bearer " + token))
-                .andExpect(status().isConflict());
+                .andExpect(status().isUnprocessableEntity());
     }
 }

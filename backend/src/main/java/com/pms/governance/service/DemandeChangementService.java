@@ -8,6 +8,7 @@ import com.pms.governance.mapper.DemandeChangementMapper;
 import com.pms.governance.repository.DemandeChangementRepository;
 import com.pms.project.entity.Project;
 import com.pms.project.repository.ProjectRepository;
+import com.pms.shared.exception.BusinessRuleException;
 import com.pms.shared.exception.NotFoundException;
 import com.pms.user.entity.User;
 import com.pms.user.repository.UserRepository;
@@ -56,7 +57,7 @@ public class DemandeChangementService {
     public DemandeChangementResponse update(Long projectId, Long id, DemandeChangementRequest request) {
         DemandeChangement dc = loadDC(id, projectId);
         if (dc.getStatut() != StatutChangement.EN_ATTENTE) {
-            throw new IllegalArgumentException("Impossible de modifier une demande déjà traitée");
+            throw new BusinessRuleException("Impossible de modifier une demande déjà traitée");
         }
         User demandeur = loadUser(request.demandeurId());
         dc.setDemandeur(demandeur);
@@ -72,7 +73,7 @@ public class DemandeChangementService {
     public DemandeChangementResponse approuver(Long projectId, Long id) {
         DemandeChangement dc = loadDC(id, projectId);
         if (dc.getStatut() != StatutChangement.EN_ATTENTE) {
-            throw new IllegalArgumentException("La demande a déjà été traitée");
+            throw new BusinessRuleException("La demande a déjà été traitée");
         }
         dc.setStatut(StatutChangement.APPROUVE);
         dc.setDateDecision(LocalDate.now());
@@ -84,7 +85,7 @@ public class DemandeChangementService {
     public DemandeChangementResponse rejeter(Long projectId, Long id) {
         DemandeChangement dc = loadDC(id, projectId);
         if (dc.getStatut() != StatutChangement.EN_ATTENTE) {
-            throw new IllegalArgumentException("La demande a déjà été traitée");
+            throw new BusinessRuleException("La demande a déjà été traitée");
         }
         dc.setStatut(StatutChangement.REJETE);
         dc.setDateDecision(LocalDate.now());
@@ -96,7 +97,7 @@ public class DemandeChangementService {
     public void delete(Long projectId, Long id) {
         DemandeChangement dc = loadDC(id, projectId);
         if (dc.getStatut() != StatutChangement.EN_ATTENTE) {
-            throw new IllegalArgumentException("Impossible de supprimer une demande déjà traitée");
+            throw new BusinessRuleException("Impossible de supprimer une demande déjà traitée");
         }
         dc.setDeleted(true);
         dcRepository.save(dc);

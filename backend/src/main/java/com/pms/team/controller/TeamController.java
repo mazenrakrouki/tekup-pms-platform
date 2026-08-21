@@ -6,11 +6,13 @@ import com.pms.team.service.TeamAssignmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
+@Tag(name = "Équipe", description = "Affectation / retrait des membres d'équipe + historique par projet")
 @RestController
 @RequiredArgsConstructor
 public class TeamController {

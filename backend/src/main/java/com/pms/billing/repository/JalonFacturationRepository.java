@@ -1,6 +1,7 @@
 package com.pms.billing.repository;
 
 import com.pms.billing.entity.JalonFacturation;
+import com.pms.billing.entity.JalonStatut;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -18,4 +19,7 @@ public interface JalonFacturationRepository extends JpaRepository<JalonFacturati
 
     @Query("SELECT COALESCE(SUM(j.pourcentage), 0) FROM JalonFacturation j WHERE j.project.id = :projectId AND j.deleted = false")
     BigDecimal sumPourcentageByProjectId(Long projectId);
+
+    /** H-4 : jalons PREVU dont le montant doit être recalculé si le budget effectif change. */
+    List<JalonFacturation> findByProjectIdAndStatutAndDeletedFalse(Long projectId, JalonStatut statut);
 }

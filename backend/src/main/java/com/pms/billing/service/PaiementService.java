@@ -7,6 +7,7 @@ import com.pms.billing.entity.JalonStatut;
 import com.pms.billing.entity.Paiement;
 import com.pms.billing.mapper.PaiementMapper;
 import com.pms.billing.repository.PaiementRepository;
+import com.pms.shared.exception.BusinessRuleException;
 import com.pms.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,7 +42,7 @@ public class PaiementService {
             throw new NotFoundException("Jalon introuvable : " + jalonId);
         }
         if (jalon.getStatut() == JalonStatut.PREVU) {
-            throw new IllegalArgumentException("Le jalon doit être facturé avant d'enregistrer un paiement");
+            throw new BusinessRuleException("Le jalon doit être facturé avant d'enregistrer un paiement");
         }
 
         Paiement paiement = Paiement.builder()

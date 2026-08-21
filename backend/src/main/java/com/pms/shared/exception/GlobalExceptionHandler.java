@@ -57,6 +57,13 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    @ExceptionHandler(BusinessRuleException.class)
+    public ProblemDetail handleBusinessRule(BusinessRuleException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
+        pd.setType(URI.create("/errors/business-rule"));
+        return pd;
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
@@ -83,6 +90,22 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleNotFound(NoHandlerFoundException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Route introuvable : " + ex.getRequestURL());
         pd.setType(URI.create("/errors/not-found"));
+        return pd;
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrity(org.springframework.dao.DataIntegrityViolationException ex) {
+        log.warn("Contrainte de données violée", ex.getMostSpecificCause());
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Opération impossible : contrainte de données (doublon ou valeur invalide)");
+        pd.setType(URI.create("/errors/conflict"));
+        return pd;
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ProblemDetail handleTooManyRequests(TooManyRequestsException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage());
+        pd.setType(URI.create("/errors/too-many-requests"));
         return pd;
     }
 

@@ -7,12 +7,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
 
+@Tag(name = "Missions", description = "Missions + composantes (per diem, billet, transport, séjour, timbre)")
 @RestController
 @RequestMapping("/api/projects/{projectId}/missions")
 @RequiredArgsConstructor

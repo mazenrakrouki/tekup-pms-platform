@@ -6,6 +6,7 @@ import com.pms.project.entity.ProjectStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record ProjectResponse(
         Long id,
@@ -35,11 +36,36 @@ public record ProjectResponse(
         BigDecimal soldWorkloadDays,
         BigDecimal warrantyWorkloadDays,
         BigDecimal penaltyProvision,
+        BigDecimal margeNetteVendue,
 
         boolean archived,
+
+        // ── Audit ───────────────────────────────────────────────
+        LocalDateTime createdAt,
 
         // ── Champs calculés (non stockés) ───────────────────────
         Long durationDays,
         BigDecimal budgetTnd,
         BigDecimal pprTnd
-) {}
+) {
+
+    /**
+     * Copie expurgée de toute donnée financière (montants et marge).
+     * BR-050 : les rôles sans VIEW_KPI (ex. DEVELOPPEUR) sont cloisonnés du financier.
+     * Les charges en JH (soldWorkloadDays / warrantyWorkloadDays) ne sont pas financières et restent visibles.
+     */
+    public ProjectResponse withoutFinancials() {
+        return new ProjectResponse(
+                id, code, name, description, status, startDate, endDate,
+                null, null, null,                       // initialBudget, revisedBudget, effectiveBudget
+                directorId, directorName, chefProjetId, chefProjetName,
+                contractId, client, funder, businessModel, engagementType, currency, exchangeRateToTnd,
+                null,                                   // licenseSubcontractBudget
+                soldWorkloadDays, warrantyWorkloadDays,
+                null,                                   // penaltyProvision
+                null,                                   // margeNetteVendue
+                archived, createdAt, durationDays,
+                null, null                              // budgetTnd, pprTnd
+        );
+    }
+}

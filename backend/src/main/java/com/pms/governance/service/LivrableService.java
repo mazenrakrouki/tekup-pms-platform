@@ -8,6 +8,7 @@ import com.pms.governance.mapper.LivrableMapper;
 import com.pms.governance.repository.LivrableRepository;
 import com.pms.project.entity.Project;
 import com.pms.project.repository.ProjectRepository;
+import com.pms.shared.exception.BusinessRuleException;
 import com.pms.shared.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -49,7 +50,7 @@ public class LivrableService {
     public LivrableResponse update(Long projectId, Long id, LivrableRequest request) {
         Livrable livrable = loadLivrable(id, projectId);
         if (livrable.getStatut() == StatutLivrable.VALIDE) {
-            throw new IllegalArgumentException("Impossible de modifier un livrable validé");
+            throw new BusinessRuleException("Impossible de modifier un livrable validé");
         }
         livrable.setTitre(request.titre());
         livrable.setDescription(request.description());
@@ -62,7 +63,7 @@ public class LivrableService {
     public LivrableResponse demarrer(Long projectId, Long id) {
         Livrable livrable = loadLivrable(id, projectId);
         if (livrable.getStatut() != StatutLivrable.EN_ATTENTE) {
-            throw new IllegalArgumentException("Seul un livrable en attente peut être démarré");
+            throw new BusinessRuleException("Seul un livrable en attente peut être démarré");
         }
         livrable.setStatut(StatutLivrable.EN_COURS);
         return livrableMapper.toResponse(livrableRepository.save(livrable));
@@ -73,7 +74,7 @@ public class LivrableService {
     public LivrableResponse livrer(Long projectId, Long id) {
         Livrable livrable = loadLivrable(id, projectId);
         if (livrable.getStatut() == StatutLivrable.VALIDE) {
-            throw new IllegalArgumentException("Un livrable déjà validé ne peut pas être modifié");
+            throw new BusinessRuleException("Un livrable déjà validé ne peut pas être modifié");
         }
         livrable.setStatut(StatutLivrable.LIVRE);
         return livrableMapper.toResponse(livrableRepository.save(livrable));
@@ -84,7 +85,7 @@ public class LivrableService {
     public LivrableResponse valider(Long projectId, Long id) {
         Livrable livrable = loadLivrable(id, projectId);
         if (livrable.getStatut() != StatutLivrable.LIVRE) {
-            throw new IllegalArgumentException("Seul un livrable livré peut être validé");
+            throw new BusinessRuleException("Seul un livrable livré peut être validé");
         }
         livrable.setStatut(StatutLivrable.VALIDE);
         return livrableMapper.toResponse(livrableRepository.save(livrable));
@@ -95,7 +96,7 @@ public class LivrableService {
     public void delete(Long projectId, Long id) {
         Livrable livrable = loadLivrable(id, projectId);
         if (livrable.getStatut() == StatutLivrable.VALIDE) {
-            throw new IllegalArgumentException("Impossible de supprimer un livrable validé");
+            throw new BusinessRuleException("Impossible de supprimer un livrable validé");
         }
         livrable.setDeleted(true);
         livrableRepository.save(livrable);

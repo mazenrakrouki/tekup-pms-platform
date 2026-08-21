@@ -18,7 +18,7 @@ import java.time.temporal.ChronoUnit;
 @Builder
 public class Project extends BaseEntity {
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, length = 20)
     private String code;
 
     @Column(nullable = false, length = 255)
@@ -81,6 +81,9 @@ public class Project extends BaseEntity {
 
     @Column(name = "penalty_provision", precision = 15, scale = 2)
     private BigDecimal penaltyProvision;   // PPP
+
+    @Column(name = "marge_nette_vendue", precision = 7, scale = 4)
+    private BigDecimal margeNetteVendue;   // Baseline commerciale (ex. 0.4412 = 44,12 %) ; le DI calculé prime s'il existe
 
     @Column(nullable = false)
     @Builder.Default

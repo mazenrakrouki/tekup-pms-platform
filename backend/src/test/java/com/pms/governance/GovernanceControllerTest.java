@@ -138,7 +138,7 @@ class GovernanceControllerTest {
     }
 
     @Test
-    @DisplayName("Valider un livrable EN_ATTENTE (pas LIVRE) → 409")
+    @DisplayName("Valider un livrable EN_ATTENTE (pas LIVRE) → 422")
     void validerLivrable_notLivre_returns409() throws Exception {
         var body = Map.of("titre", "Livrable non livré");
         MvcResult create = mockMvc.perform(post("/api/projects/" + projectId + "/livrables")
@@ -153,7 +153,7 @@ class GovernanceControllerTest {
 
         mockMvc.perform(patch("/api/projects/" + projectId + "/livrables/" + livrableId + "/valider")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(status().isConflict());
+                .andExpect(status().isUnprocessableEntity());
     }
 
     // ── Demandes de Changement ─────────────────────────────────────────────
@@ -220,8 +220,8 @@ class GovernanceControllerTest {
         mockMvc.perform(patch(base + "/approuver").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
 
-        // Deuxième approbation → 409
+        // Deuxième approbation → 422 (BusinessRuleException)
         mockMvc.perform(patch(base + "/approuver").header("Authorization", "Bearer " + token))
-                .andExpect(status().isConflict());
+                .andExpect(status().isUnprocessableEntity());
     }
 }

@@ -6,12 +6,18 @@ import com.pms.project.entity.ProjectStatus;
 import com.pms.project.service.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
+@Tag(name = "Projets", description = "CRUD projets, cycle de vie, fiche d'identification, archivage")
 @RestController
 @RequestMapping("/api/projects")
 @RequiredArgsConstructor
@@ -20,8 +26,9 @@ public class ProjectController {
     private final ProjectService projectService;
 
     @GetMapping
-    public ResponseEntity<List<ProjectResponse>> list() {
-        return ResponseEntity.ok(projectService.findAll());
+    public ResponseEntity<Page<ProjectResponse>> list(
+            @PageableDefault(size = 20, sort = "code", direction = Sort.Direction.ASC) Pageable pageable) {
+        return ResponseEntity.ok(projectService.findAll(pageable));
     }
 
     @GetMapping("/archived")

@@ -14,4 +14,8 @@ public interface MissionRepository extends JpaRepository<Mission, Long> {
 
     @Query("SELECT m FROM Mission m JOIN FETCH m.project JOIN FETCH m.user WHERE m.id = :id AND m.deleted = false")
     Optional<Mission> findActiveById(Long id);
+
+    /** Périmètre « own only » (UC-21 : le développeur ne voit que ses propres missions). */
+    @Query("SELECT m FROM Mission m JOIN FETCH m.project JOIN FETCH m.user WHERE m.project.id = :projectId AND m.user.id = :userId AND m.deleted = false ORDER BY m.dateDebut")
+    List<Mission> findActiveByProjectIdAndUserId(Long projectId, Long userId);
 }

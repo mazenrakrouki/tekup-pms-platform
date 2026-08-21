@@ -1,11 +1,13 @@
 package com.pms.project.service;
 
+import com.pms.billing.service.JalonService;
 import com.pms.project.dto.ProjectRequest;
 import com.pms.project.dto.ProjectResponse;
 import com.pms.project.entity.Project;
 import com.pms.project.entity.ProjectStatus;
 import com.pms.project.mapper.ProjectMapper;
 import com.pms.project.repository.ProjectRepository;
+import com.pms.shared.exception.BusinessRuleException;
 import com.pms.shared.exception.NotFoundException;
 import com.pms.user.entity.User;
 import com.pms.user.repository.UserRepository;
@@ -15,6 +17,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -26,6 +32,7 @@ public class ProjectService {
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
     private final ProjectScopeService scopeService;
+    private final JalonService jalonService;
 
     @PreAuthorize("hasAuthority('VIEW_PROJECT')")
     @Transactional(readOnly = true)
@@ -36,7 +43,18 @@ public class ProjectService {
             Set<Long> accessible = scopeService.accessibleProjectIds(currentEmail());
             projects = projects.stream().filter(p -> accessible.contains(p.getId())).toList();
         }
-        return projectMapper.toResponseList(projects);
+        return toResponseList(projects);
+    }
+
+    @PreAuthorize("hasAuthority('VIEW_PROJECT')")
+    @Transactional(readOnly = true)
+    public Page<ProjectResponse> findAll(Pageable pageable) {
+        if (scopeService.hasAllAccess()) {
+            return projectRepository.findAllActivePaged(pageable).map(this::toResponse);
+        }
+        Set<Long> accessible = scopeService.accessibleProjectIds(currentEmail());
+        if (accessible.isEmpty()) return Page.empty(pageable);
+        return projectRepository.findAllActiveByIdIn(accessible, pageable).map(this::toResponse);
     }
 
     @PreAuthorize("hasAuthority('VIEW_PROJECT')")
@@ -47,7 +65,7 @@ public class ProjectService {
             Set<Long> accessible = scopeService.accessibleProjectIds(currentEmail());
             projects = projects.stream().filter(p -> accessible.contains(p.getId())).toList();
         }
-        return projectMapper.toResponseList(projects);
+        return toResponseList(projects);
     }
 
     @PreAuthorize("hasAuthority('VIEW_PROJECT')")
@@ -55,7 +73,7 @@ public class ProjectService {
     public ProjectResponse findById(Long id) {
         Project project = loadProject(id);
         scopeService.assertCanAccess(id, currentEmail()); // scope ADR-021
-        return projectMapper.toResponse(project);
+        return toResponse(project);
     }
 
     @PreAuthorize("hasAuthority('EDIT_PROJECT')")
@@ -64,10 +82,10 @@ public class ProjectService {
         scopeService.assertCanAccess(id, currentEmail());
         Project project = loadProject(id);
         if (project.getStatus() != ProjectStatus.COMPLETED) {
-            throw new IllegalArgumentException("Seul un projet terminé peut être archivé");
+            throw new BusinessRuleException("Seul un projet terminé peut être archivé");
         }
         project.setArchived(true);
-        return projectMapper.toResponse(projectRepository.save(project));
+        return toResponse(projectRepository.save(project));
     }
 
     @PreAuthorize("hasAuthority('EDIT_PROJECT')")
@@ -76,14 +94,14 @@ public class ProjectService {
         scopeService.assertCanAccess(id, currentEmail());
         Project project = loadProject(id);
         project.setArchived(false);
-        return projectMapper.toResponse(projectRepository.save(project));
+        return toResponse(projectRepository.save(project));
     }
 
     @PreAuthorize("hasAuthority('CREATE_PROJECT')")
     @Transactional
     public ProjectResponse create(ProjectRequest request) {
         String normalizedCode = request.code().toUpperCase();
-        if (projectRepository.existsByCode(normalizedCode)) {
+        if (projectRepository.existsByCodeAndDeletedFalse(normalizedCode)) {
             throw new IllegalArgumentException("Code projet déjà utilisé : " + normalizedCode);
         }
 
@@ -103,7 +121,7 @@ public class ProjectService {
             project.setChefProjet(resolveUser(request.chefProjetId()));
         }
         applyFicheIdentification(project, request);
-        return projectMapper.toResponse(projectRepository.save(project));
+        return toResponse(projectRepository.save(project));
     }
 
     @PreAuthorize("hasAuthority('EDIT_PROJECT')")
@@ -112,9 +130,15 @@ public class ProjectService {
         Project project = loadProject(id);
         String normalizedCode = request.code().toUpperCase();
 
-        if (!project.getCode().equals(normalizedCode) && projectRepository.existsByCode(normalizedCode)) {
+        if (!project.getCode().equals(normalizedCode) && projectRepository.existsByCodeAndDeletedFalse(normalizedCode)) {
             throw new IllegalArgumentException("Code projet déjà utilisé : " + normalizedCode);
         }
+
+        // H-4 : si le budget initial change et qu'aucun avenant n'existe (revisedBudget null),
+        // le budget effectif change → les jalons PREVU devront être recalculés.
+        // compareTo() used instead of equals() — BigDecimal.equals() considers scale (100 ≠ 100.00).
+        boolean budgetWillChange = project.getRevisedBudget() == null
+                && !budgetEqual(request.initialBudget(), project.getInitialBudget());
 
         project.setCode(normalizedCode);
         project.setName(request.name());
@@ -134,7 +158,11 @@ public class ProjectService {
         }
         applyFicheIdentification(project, request);
 
-        return projectMapper.toResponse(projectRepository.save(project));
+        Project saved = projectRepository.save(project);
+        if (budgetWillChange) {
+            jalonService.recomputePrevuMontants(saved); // H-4
+        }
+        return toResponse(saved);
     }
 
     /** Renseigne les champs de la Fiche d'identification (modèle Excel) sur le projet. */
@@ -154,6 +182,7 @@ public class ProjectService {
         project.setSoldWorkloadDays(request.soldWorkloadDays());
         project.setWarrantyWorkloadDays(request.warrantyWorkloadDays());
         project.setPenaltyProvision(request.penaltyProvision());
+        project.setMargeNetteVendue(request.margeNetteVendue());
     }
 
     @PreAuthorize("hasAuthority('ASSIGN_CHEF_PROJET')")
@@ -165,15 +194,19 @@ public class ProjectService {
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable : " + userId));
 
         project.setChefProjet(chef);
-        return projectMapper.toResponse(projectRepository.save(project));
+        return toResponse(projectRepository.save(project));
     }
 
     @PreAuthorize("hasAuthority('EDIT_PROJECT')")
     @Transactional
     public ProjectResponse changeStatus(Long id, ProjectStatus newStatus) {
         Project project = loadProject(id);
+        if (!project.getStatus().canTransitionTo(newStatus)) {
+            throw new BusinessRuleException("Transition de statut interdite : "
+                    + project.getStatus() + " → " + newStatus);
+        }
         project.setStatus(newStatus);
-        return projectMapper.toResponse(projectRepository.save(project));
+        return toResponse(projectRepository.save(project));
     }
 
     @PreAuthorize("hasAuthority('DELETE_PROJECT')")
@@ -182,6 +215,19 @@ public class ProjectService {
         Project project = loadProject(id);
         project.setDeleted(true);
         projectRepository.save(project);
+    }
+
+    /**
+     * Mappe le projet en appliquant le cloisonnement financier BR-050 :
+     * sans VIEW_KPI, aucun montant ni marge n'est exposé (ADR-001 : check par capacité, pas par rôle).
+     */
+    private ProjectResponse toResponse(Project project) {
+        ProjectResponse response = projectMapper.toResponse(project);
+        return hasAuthority("VIEW_KPI") ? response : response.withoutFinancials();
+    }
+
+    private List<ProjectResponse> toResponseList(List<Project> projects) {
+        return projects.stream().map(this::toResponse).toList();
     }
 
     private Project loadProject(Long id) {
@@ -206,5 +252,12 @@ public class ProjectService {
         return userRepository.findById(userId)
                 .filter(u -> !u.isDeleted())
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable : " + userId));
+    }
+
+    /** BigDecimal comparison ignoring scale (100 == 100.00). Null-safe. */
+    private static boolean budgetEqual(BigDecimal a, BigDecimal b) {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return a.compareTo(b) == 0;
     }
 }

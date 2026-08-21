@@ -20,6 +20,14 @@ public class Role extends BaseEntity {
     @Column(nullable = false, unique = true, length = 50)
     private String name;  // ADMIN | DIRECTEUR | CHEF_PROJET | DEVELOPPEUR
 
+    @Column(length = 255)
+    private String description;
+
+    /** Built-in business role — cannot be renamed or deleted via the admin UI. */
+    @Column(name = "is_system", nullable = false)
+    @Builder.Default
+    private boolean system = false;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "role_permissions",

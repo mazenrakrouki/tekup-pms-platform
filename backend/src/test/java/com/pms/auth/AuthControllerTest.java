@@ -2,7 +2,6 @@ package com.pms.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pms.auth.dto.LoginRequest;
-import com.pms.auth.dto.RefreshRequest;
 import com.pms.user.entity.Permission;
 import com.pms.user.entity.Role;
 import com.pms.user.entity.User;
@@ -16,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
+import static com.pms.auth.controller.AuthController.REFRESH_COOKIE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -67,16 +69,21 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Login avec identifiants valides retourne 200 + tokens JWT")
+    @DisplayName("Login avec identifiants valides retourne 200 + accessToken dans le corps + cookie HttpOnly")
     void login_validCredentials_returns200WithTokens() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+        MvcResult result = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
                                 new LoginRequest("test@pms.local", "Test1234!"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.refreshToken").isNotEmpty())
-                .andExpect(jsonPath("$.firstLogin").value(false));
+                .andExpect(jsonPath("$.firstLogin").value(false))
+                .andReturn();
+
+        // Refresh token doit être dans le cookie HttpOnly, pas dans le corps
+        String setCookie = result.getResponse().getHeader("Set-Cookie");
+        assertThat(setCookie).contains(REFRESH_COOKIE + "=");
+        assertThat(setCookie).containsIgnoringCase("HttpOnly");
     }
 
     @Test
@@ -100,9 +107,9 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Refresh avec token valide retourne nouveau accessToken")
-    void refresh_validToken_returnsNewAccessToken() throws Exception {
-        // 1. Login pour obtenir les tokens
+    @DisplayName("Refresh avec cookie valide retourne nouveau accessToken et pivote le cookie")
+    void refresh_validCookie_returnsNewAccessToken() throws Exception {
+        // 1. Login — obtain cookie
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
@@ -110,19 +117,24 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        var body = objectMapper.readTree(loginResult.getResponse().getContentAsString());
-        String refreshToken = body.get("refreshToken").asText();
+        String refreshCookieValue = extractRefreshCookieValue(loginResult);
 
-        // 2. Rafraîchir le token
+        // 2. Refresh using cookie
         mockMvc.perform(post("/api/auth/refresh")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new RefreshRequest(refreshToken))))
+                        .cookie(new MockCookie(REFRESH_COOKIE, refreshCookieValue)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty());
     }
 
     @Test
-    @DisplayName("Logout révoque le token : refresh suivant retourne 401")
+    @DisplayName("Refresh sans cookie retourne 401")
+    void refresh_noCookie_returns401() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Logout révoque le token : refresh suivant retourne 401 (rotation)")
     void logout_thenRefresh_returns401() throws Exception {
         // 1. Login
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
@@ -133,24 +145,45 @@ class AuthControllerTest {
 
         var body = objectMapper.readTree(loginResult.getResponse().getContentAsString());
         String accessToken  = body.get("accessToken").asText();
-        String refreshToken = body.get("refreshToken").asText();
+        String refreshCookieValue = extractRefreshCookieValue(loginResult);
 
         // 2. Logout
         mockMvc.perform(post("/api/auth/logout")
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isNoContent());
 
-        // 3. Refresh avec l'ancien token → doit être rejeté (tokenVersion incrémenté)
+        // 3. Refresh avec l'ancien cookie → doit être rejeté (tokenVersion incrémenté)
         mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(new MockCookie(REFRESH_COOKIE, refreshCookieValue)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Rotation : le refresh token original est invalidé après un premier refresh")
+    void refresh_rotatesToken_oldCookieRejected() throws Exception {
+        // 1. Login
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new RefreshRequest(refreshToken))))
+                        .content(objectMapper.writeValueAsString(
+                                new LoginRequest("test@pms.local", "Test1234!"))))
+                .andReturn();
+
+        String originalCookie = extractRefreshCookieValue(loginResult);
+
+        // 2. Premier refresh — consomme le cookie original
+        mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(new MockCookie(REFRESH_COOKIE, originalCookie)))
+                .andExpect(status().isOk());
+
+        // 3. Deuxième refresh avec le MÊME cookie original → doit échouer (rotation)
+        mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(new MockCookie(REFRESH_COOKIE, originalCookie)))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     @DisplayName("GET /api/me/context avec token valide retourne le profil + permissions")
     void meContext_validToken_returnsUserContext() throws Exception {
-        // 1. Login
         MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(
@@ -160,7 +193,6 @@ class AuthControllerTest {
         var body = objectMapper.readTree(loginResult.getResponse().getContentAsString());
         String accessToken = body.get("accessToken").asText();
 
-        // 2. Appel du contexte
         mockMvc.perform(get("/api/me/context")
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
@@ -175,5 +207,15 @@ class AuthControllerTest {
     void meContext_noToken_returns401() throws Exception {
         mockMvc.perform(get("/api/me/context"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    /** Extracts the pms_refresh cookie value from a login or refresh response's Set-Cookie header. */
+    private String extractRefreshCookieValue(MvcResult result) {
+        String header = result.getResponse().getHeader("Set-Cookie");
+        assertThat(header).isNotNull().contains(REFRESH_COOKIE + "=");
+        // Header format: "pms_refresh=<value>; Path=...; Max-Age=...; HttpOnly; SameSite=Strict"
+        String afterName = header.substring(header.indexOf(REFRESH_COOKIE + "=") + REFRESH_COOKIE.length() + 1);
+        int end = afterName.indexOf(';');
+        return end == -1 ? afterName : afterName.substring(0, end);
     }
 }

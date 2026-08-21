@@ -30,5 +30,6 @@ public record ProjectRequest(
         @PositiveOrZero BigDecimal licenseSubcontractBudget,
         @PositiveOrZero BigDecimal soldWorkloadDays,
         @PositiveOrZero BigDecimal warrantyWorkloadDays,
-        @PositiveOrZero BigDecimal penaltyProvision
+        @PositiveOrZero BigDecimal penaltyProvision,
+        @DecimalMin("-1.0") @DecimalMax("1.0") BigDecimal margeNetteVendue // ex. 0.4412 = 44,12 %
 ) {}
