@@ -1,0 +1,80 @@
+{
+  "breadcrumb": "Agile planning",
+  "title": "Sprints & Backlog",
+  "subtitle": "Plan iterations and track the product backlog",
+  "selectProject": "Select a project to plan its sprints.",
+  "tabs": {
+    "board": "Board",
+    "backlog": "Backlog",
+    "sprints": "Sprints"
+  },
+  "sprint": {
+    "new": "New sprint",
+    "edit": "Edit sprint",
+    "name": "Name",
+    "goal": "Goal",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "status": "Status",
+    "current": "Current sprint",
+    "none": "Product backlog only",
+    "committed": "{{count}} items · {{days}} man-days",
+    "delete": "Delete sprint",
+    "deleteConfirm": "Delete this sprint? Its items return to the product backlog and are not lost."
+  },
+  "status": {
+    "PLANNED": "Planned",
+    "ACTIVE": "Active",
+    "CLOSED": "Closed"
+  },
+  "item": {
+    "new": "New item",
+    "edit": "Edit item",
+    "title": "Title",
+    "description": "Description",
+    "priority": "Priority",
+    "estimate": "Estimate (man-days)",
+    "status": "Status",
+    "sprint": "Sprint",
+    "unassigned": "Product backlog",
+    "delete": "Delete item",
+    "deleteConfirm": "Delete this backlog item?"
+  },
+  "priority": {
+    "LOW": "Low",
+    "MEDIUM": "Medium",
+    "HIGH": "High",
+    "CRITICAL": "Critical"
+  },
+  "column": {
+    "TODO": "To do",
+    "IN_PROGRESS": "In progress",
+    "DONE": "Done"
+  },
+  "actions": {
+    "moveTo": "Move to {{column}}",
+    "assignTo": "Assign to sprint",
+    "sendToBacklog": "Send back to backlog",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "empty": {
+    "noSprintTitle": "No sprint yet",
+    "noSprintDesc": "Create a sprint to start planning an iteration.",
+    "noItemTitle": "Backlog is empty",
+    "noItemDesc": "Add an item to describe work to be done.",
+    "emptyColumn": "Nothing here"
+  },
+  "msg": {
+    "loadFailed": "Could not load the agile data.",
+    "sprintSaved": "Sprint saved.",
+    "sprintDeleted": "Sprint deleted. Its items are back in the product backlog.",
+    "itemSaved": "Item saved.",
+    "itemDeleted": "Item deleted.",
+    "itemMoved": "Item moved.",
+    "saveFailed": "Could not save. Check the dates and try again.",
+    "nameRequired": "A sprint name is required.",
+    "titleRequired": "An item title is required."
+  }
+}

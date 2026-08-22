@@ -154,6 +154,7 @@ export class SidebarComponent {
       items: [
         { labelKey: 'nav.resources',       icon: 'bi-people',        route: '/resources',        permission: 'VIEW_RESOURCES' },
         { labelKey: 'nav.workload',         icon: 'bi-calendar3',     route: '/workload',         permission: 'VIEW_WORKLOAD'  },
+        { labelKey: 'nav.agile',            icon: 'bi-kanban',        route: '/agile',            permission: 'VIEW_AGILE'     },
       ]
     },
     {

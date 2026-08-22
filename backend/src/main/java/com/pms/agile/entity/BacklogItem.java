@@ -1,0 +1,56 @@
+package com.pms.agile.entity;
+
+import com.pms.project.entity.Project;
+import com.pms.shared.entity.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+
+/**
+ * Élément du backlog produit.
+ *
+ * {@code sprint} est volontairement nullable : un élément sans sprint est dans le backlog
+ * produit, pas encore engagé dans une itération. C'est cette nullabilité qui distingue les
+ * deux colonnes du tableau côté interface.
+ *
+ * L'estimation est en jours-homme (JH), unité utilisée partout ailleurs dans la plateforme
+ * (plan de charge, TCC, indicateurs) — et non en points de story, qui introduiraient une
+ * seconde unité sans conversion possible.
+ */
+@Entity
+@Table(name = "backlog_items")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class BacklogItem extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sprint_id")
+    private Sprint sprint;
+
+    @Column(nullable = false, length = 255)
+    private String title;
+
+    @Column(length = 2000)
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    @Builder.Default
+    private BacklogPriority priority = BacklogPriority.MEDIUM;
+
+    @Column(name = "estimate_days", precision = 6, scale = 2)
+    private BigDecimal estimateDays;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 15)
+    @Builder.Default
+    private BacklogItemStatus status = BacklogItemStatus.TODO;
+}

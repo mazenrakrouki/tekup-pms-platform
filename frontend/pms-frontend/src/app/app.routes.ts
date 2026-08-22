@@ -108,6 +108,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/governance/governance.component').then(m => m.GovernanceComponent)
       },
       {
+        path: 'agile',
+        title: 'Planification agile',
+        canActivate: [permissionGuard],
+        data: { permission: 'VIEW_AGILE' },
+        loadComponent: () => import('./features/agile/agile.component').then(m => m.AgileComponent)
+      },
+      {
         path: 'admin/users',
         title: 'Gestion des utilisateurs',
         canActivate: [permissionGuard],

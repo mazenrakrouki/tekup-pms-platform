@@ -58,6 +58,9 @@ public final class TestFixtures {
         // Gouvernance
         permissions.add(perm(permRepo, "MANAGE_GOVERNANCE","GOV"));
         permissions.add(perm(permRepo, "VIEW_GOVERNANCE",  "GOV"));
+        // Agile (V27)
+        permissions.add(perm(permRepo, "MANAGE_AGILE",     "AGILE"));
+        permissions.add(perm(permRepo, "VIEW_AGILE",       "AGILE"));
 
         Role admin = roleRepo.save(Role.builder()
                 .name("ADMIN_TEST")
@@ -88,6 +91,7 @@ public final class TestFixtures {
         permissions.add(perm(permRepo, "VIEW_TEAM",       "EQUIPE"));
         permissions.add(perm(permRepo, "VIEW_WORKLOAD",   "CHARGE"));
         permissions.add(perm(permRepo, "VIEW_KPI",        "KPI"));
+        permissions.add(perm(permRepo, "VIEW_AGILE",      "AGILE"));
 
         Role viewer = roleRepo.save(Role.builder()
                 .name("VIEWER_TEST")

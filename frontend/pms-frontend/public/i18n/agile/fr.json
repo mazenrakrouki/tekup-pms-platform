@@ -1,0 +1,80 @@
+{
+  "breadcrumb": "Planification agile",
+  "title": "Sprints & Backlog",
+  "subtitle": "Planifier les itérations et suivre le backlog produit",
+  "selectProject": "Sélectionnez un projet pour planifier ses sprints.",
+  "tabs": {
+    "board": "Tableau",
+    "backlog": "Backlog",
+    "sprints": "Sprints"
+  },
+  "sprint": {
+    "new": "Nouveau sprint",
+    "edit": "Modifier le sprint",
+    "name": "Nom",
+    "goal": "Objectif",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "status": "Statut",
+    "current": "Sprint courant",
+    "none": "Backlog produit uniquement",
+    "committed": "{{count}} éléments · {{days}} JH",
+    "delete": "Supprimer le sprint",
+    "deleteConfirm": "Supprimer ce sprint ? Ses éléments retournent au backlog produit et ne sont pas perdus."
+  },
+  "status": {
+    "PLANNED": "Planifié",
+    "ACTIVE": "En cours",
+    "CLOSED": "Clôturé"
+  },
+  "item": {
+    "new": "Nouvel élément",
+    "edit": "Modifier l'élément",
+    "title": "Titre",
+    "description": "Description",
+    "priority": "Priorité",
+    "estimate": "Estimation (JH)",
+    "status": "Statut",
+    "sprint": "Sprint",
+    "unassigned": "Backlog produit",
+    "delete": "Supprimer l'élément",
+    "deleteConfirm": "Supprimer cet élément du backlog ?"
+  },
+  "priority": {
+    "LOW": "Basse",
+    "MEDIUM": "Moyenne",
+    "HIGH": "Haute",
+    "CRITICAL": "Critique"
+  },
+  "column": {
+    "TODO": "À faire",
+    "IN_PROGRESS": "En cours",
+    "DONE": "Terminé"
+  },
+  "actions": {
+    "moveTo": "Déplacer vers {{column}}",
+    "assignTo": "Affecter au sprint",
+    "sendToBacklog": "Renvoyer au backlog",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "close": "Fermer"
+  },
+  "empty": {
+    "noSprintTitle": "Aucun sprint",
+    "noSprintDesc": "Créez un sprint pour commencer à planifier une itération.",
+    "noItemTitle": "Backlog vide",
+    "noItemDesc": "Ajoutez un élément pour décrire le travail à réaliser.",
+    "emptyColumn": "Rien ici"
+  },
+  "msg": {
+    "loadFailed": "Impossible de charger les données agiles.",
+    "sprintSaved": "Sprint enregistré.",
+    "sprintDeleted": "Sprint supprimé. Ses éléments sont de retour dans le backlog produit.",
+    "itemSaved": "Élément enregistré.",
+    "itemDeleted": "Élément supprimé.",
+    "itemMoved": "Élément déplacé.",
+    "saveFailed": "Enregistrement impossible. Vérifiez les dates et réessayez.",
+    "nameRequired": "Le nom du sprint est requis.",
+    "titleRequired": "Le titre de l'élément est requis."
+  }
+}
