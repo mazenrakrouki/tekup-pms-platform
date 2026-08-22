@@ -7,17 +7,6 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
-/**
- * Élément du backlog produit.
- *
- * {@code sprint} est volontairement nullable : un élément sans sprint est dans le backlog
- * produit, pas encore engagé dans une itération. C'est cette nullabilité qui distingue les
- * deux colonnes du tableau côté interface.
- *
- * L'estimation est en jours-homme (JH), unité utilisée partout ailleurs dans la plateforme
- * (plan de charge, TCC, indicateurs) — et non en points de story, qui introduiraient une
- * seconde unité sans conversion possible.
- */
 @Entity
 @Table(name = "backlog_items")
 @Getter
@@ -31,6 +20,7 @@ public class BacklogItem extends BaseEntity {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
+    /** Null means the item is still in the product backlog, not committed to a sprint. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sprint_id")
     private Sprint sprint;
@@ -46,6 +36,7 @@ public class BacklogItem extends BaseEntity {
     @Builder.Default
     private BacklogPriority priority = BacklogPriority.MEDIUM;
 
+    /** Effort in man-days, consistent with the workload module. */
     @Column(name = "estimate_days", precision = 6, scale = 2)
     private BigDecimal estimateDays;
 

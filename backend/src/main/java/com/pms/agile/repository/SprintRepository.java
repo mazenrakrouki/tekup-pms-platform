@@ -9,14 +9,8 @@ import java.util.Optional;
 
 public interface SprintRepository extends JpaRepository<Sprint, Long> {
 
-    // Tri chronologique : la date de début porte l'ordre réel des itérations. Un tri sur
-    // `status` classerait ACTIVE avant PLANNED alphabétiquement, ce qui n'a aucun sens ici.
-    // NULLS LAST pour qu'un sprint non daté n'ouvre pas la liste.
-    @Query("""
-           SELECT s FROM Sprint s JOIN FETCH s.project
-           WHERE s.project.id = :projectId AND s.deleted = false
-           ORDER BY s.startDate ASC NULLS LAST, s.id ASC
-           """)
+    // Chronological order: a board is read left to right in time, not by creation date.
+    @Query("SELECT s FROM Sprint s JOIN FETCH s.project WHERE s.project.id = :projectId AND s.deleted = false ORDER BY s.startDate ASC")
     List<Sprint> findActiveByProjectId(Long projectId);
 
     @Query("SELECT s FROM Sprint s JOIN FETCH s.project WHERE s.id = :id AND s.deleted = false")

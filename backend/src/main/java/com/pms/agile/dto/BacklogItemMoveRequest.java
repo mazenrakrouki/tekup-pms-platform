@@ -4,12 +4,10 @@ import com.pms.agile.entity.BacklogItemStatus;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Déplacement d'une carte sur le tableau : changement de colonne, et éventuellement
- * d'itération. Requête dédiée plutôt qu'un PUT complet, pour qu'un glisser-déposer
- * n'ait pas à renvoyer le titre, la description et l'estimation.
+ * Board move: reassign an item to a sprint and/or change its column.
+ * A null sprintId returns the item to the product backlog.
  */
 public record BacklogItemMoveRequest(
-        @NotNull BacklogItemStatus status,
-        /** {@code null} renvoie l'élément au backlog produit. */
-        Long sprintId
+        Long sprintId,
+        @NotNull BacklogItemStatus status
 ) {}

@@ -2,6 +2,7 @@ package com.pms.agile.service;
 
 import com.pms.agile.dto.SprintRequest;
 import com.pms.agile.dto.SprintResponse;
+import com.pms.agile.entity.BacklogItem;
 import com.pms.agile.entity.Sprint;
 import com.pms.agile.mapper.SprintMapper;
 import com.pms.agile.repository.BacklogItemRepository;
@@ -21,10 +22,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SprintService {
 
-    private final SprintRepository      sprintRepository;
-    private final BacklogItemRepository backlogItemRepository;
-    private final ProjectRepository     projectRepository;
-    private final SprintMapper          sprintMapper;
+    private final SprintRepository       sprintRepository;
+    private final BacklogItemRepository  backlogItemRepository;
+    private final ProjectRepository      projectRepository;
+    private final SprintMapper           sprintMapper;
 
     @PreAuthorize("hasAuthority('VIEW_AGILE')")
     @Transactional(readOnly = true)
@@ -62,32 +63,30 @@ public class SprintService {
         return sprintMapper.toResponse(sprintRepository.save(sprint));
     }
 
-    /**
-     * Suppression logique du sprint. Les éléments qui lui étaient rattachés retournent au
-     * backlog produit au lieu de disparaître avec l'itération : du travail encore à faire ne
-     * doit pas être perdu parce qu'un sprint a été supprimé.
-     */
     @PreAuthorize("hasAuthority('MANAGE_AGILE')")
     @Transactional
     public void delete(Long projectId, Long id) {
         Sprint sprint = loadSprint(id, projectId);
-        backlogItemRepository.detachFromSprint(id);
+
+        // Supprimer un sprint rend ses éléments au backlog produit plutôt que de
+        // les supprimer avec lui : le travail engagé mais non terminé n'est pas
+        // perdu, il redevient simplement non planifié. C'est aussi ce qui évite
+        // de laisser des éléments pointer, par clé étrangère, vers un sprint
+        // logiquement supprimé.
+        List<BacklogItem> committed = backlogItemRepository.findActiveBySprintId(id);
+        committed.forEach(item -> item.setSprint(null));
+        backlogItemRepository.saveAll(committed);
+
         sprint.setDeleted(true);
         sprintRepository.save(sprint);
     }
 
     private void validateDates(SprintRequest request) {
-        if (request.startDate() != null && request.endDate() != null
-                && request.endDate().isBefore(request.startDate())) {
-            throw new BusinessRuleException("La date de fin du sprint précède sa date de début.");
+        if (request.endDate().isBefore(request.startDate())) {
+            throw new BusinessRuleException("La date de fin doit etre posterieure ou egale a la date de debut.");
         }
     }
 
-    /**
-     * Charge un sprint en vérifiant qu'il appartient bien au projet de l'URL. Sans ce
-     * contrôle, connaître un identifiant suffirait à lire ou modifier le sprint d'un autre
-     * projet. On renvoie 404 et non 403 : l'existence même de la ressource ne doit pas fuir.
-     */
     private Sprint loadSprint(Long id, Long projectId) {
         Sprint sprint = sprintRepository.findActiveById(id)
                 .orElseThrow(() -> new NotFoundException("Sprint introuvable : " + id));

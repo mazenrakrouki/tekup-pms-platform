@@ -1,6 +1,6 @@
 package com.pms.agile.entity;
 
-/** Colonnes du tableau de sprint. */
+/** Column of the board an item currently sits in. */
 public enum BacklogItemStatus {
     TODO,
     IN_PROGRESS,

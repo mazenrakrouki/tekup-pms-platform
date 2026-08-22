@@ -1,6 +1,6 @@
 package com.pms.agile.entity;
 
-/** Priorité d'un élément de backlog produit. */
+/** Relative ordering of a backlog item. */
 public enum BacklogPriority {
     LOW,
     MEDIUM,

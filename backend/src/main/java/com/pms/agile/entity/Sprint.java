@@ -7,12 +7,6 @@ import lombok.*;
 
 import java.time.LocalDate;
 
-/**
- * Itération de travail rattachée à un projet.
- *
- * Le sprint ne porte aucune donnée financière : il référence {@code project_id} et rien
- * d'autre. Le moteur KPI, la facturation et le devis interne ne le consultent pas.
- */
 @Entity
 @Table(name = "sprints")
 @Getter
@@ -26,16 +20,16 @@ public class Sprint extends BaseEntity {
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 255)
     private String name;
 
     @Column(length = 1000)
     private String goal;
 
-    @Column(name = "start_date")
+    @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
 
-    @Column(name = "end_date")
+    @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
     @Enumerated(EnumType.STRING)
