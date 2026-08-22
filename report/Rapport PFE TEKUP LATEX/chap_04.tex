@@ -13,81 +13,165 @@ operational modules of Release~2 will consume.
 % =====================================================================
 \section{Sprint 1 --- Technical Foundation and Authentication}
 
-\subsection{Sprint Objective}
-Establish the technical skeleton of the backend application and deliver a complete, secure
-authentication chain. No business functionality is addressed in this sprint: the goal is to obtain
-a running, testable and secured application shell.
+\subsection{Sprint 1 Backlog}
+\textbf{Sprint goal.} Establish the technical skeleton of the application and deliver a complete,
+secure authentication chain. No business functionality is addressed: the objective is a running,
+testable and secured application shell on which every later sprint can build.
 
-\subsection{Functional Scope}
-This sprint covers user stories US-01 to US-03 of the backlog
-(Table~\ref{tab:backlog}): signing in, the forced password change on first login, and the immediate
-revocation of active sessions.
+\textbf{Duration.} Three weeks, 16 February to 6 March.
 
-\subsection{Features Implemented}
-\begin{itemize}
-  \item Modular Spring Boot application skeleton.
-  \item Automatic auditing and logical deletion shared by all business entities.
-  \item Versioned database schema management through Flyway migrations.
-  \item Login by e-mail and password with JWT access token and refresh token.
-  \item Immediate session revocation by token version.
-  \item Mandatory password change on first login.
-\end{itemize}
+\textbf{Backlog items.} This sprint realises user stories US-01 to US-03
+(Table~\ref{tab:backlog}). Because the author is the sole developer, the sprint backlog is expressed
+as technical tasks rather than as a restatement of the user stories.
 
-\subsection{Technical Realisation}
+\begin{longtable}{|m{1.3cm}|m{8.4cm}|m{2.0cm}|m{2.1cm}|}
+\hline
+\textbf{ID} & \textbf{Technical task} & \textbf{Story} & \textbf{Layer} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+T1.1 & Initialise the Spring Boot 3.3 project and the modular package layout & --- & Backend \\
+\hline
+T1.2 & Implement \texttt{BaseEntity}: identity, audit timestamps, logical deletion & --- & Backend \\
+\hline
+T1.3 & Configure Flyway and set \texttt{ddl-auto} to \texttt{validate} & --- & Database \\
+\hline
+T1.4 & Write \texttt{V1\_\_schema\_auth.sql}: \texttt{users}, \texttt{roles}, \texttt{permissions},
+\texttt{role\_permissions} & --- & Database \\
+\hline
+T1.5 & Write \texttt{V2\_\_seed\_rbac.sql}: initial roles and permission catalogue & --- & Database \\
+\hline
+T1.6 & Implement \texttt{JwtService}: HMAC-SHA512 issuance and validation & US-01 & Backend \\
+\hline
+T1.7 & Implement \texttt{AuthService} and \texttt{POST /api/auth/login}, password verified against a
+BCrypt hash of strength 12 & US-01 & Backend \\
+\hline
+T1.8 & Issue the refresh token in an \texttt{HttpOnly} / \texttt{Secure} /
+\texttt{SameSite=Strict} cookie scoped to its own path & US-01 & Backend \\
+\hline
+T1.9 & Implement \texttt{POST /api/auth/refresh} with refresh-token rotation & US-01 & Backend \\
+\hline
+T1.10 & Implement \texttt{POST /api/auth/logout} & US-03 & Backend \\
+\hline
+T1.11 & Implement \texttt{JwtAuthenticationFilter} and the token-version cache & US-03 & Backend \\
+\hline
+T1.12 & Implement \texttt{LoginAttemptTracker}: throttling of repeated failures & --- & Backend \\
+\hline
+T1.13 & Implement \texttt{FirstLoginFilter} and \texttt{POST /api/auth/change-password} & US-02 &
+Backend \\
+\hline
+T1.14 & Build the login screen, the authentication service, the HTTP interceptor and the route guard
+& US-01, US-02 & Frontend \\
+\hline
+T1.15 & Write the authentication integration test suite & --- & Test \\
+\hline
+\caption{Sprint 1 backlog}
+\label{tab:backlog-s1}
+\end{longtable}
+
+\subsection{Sprint 1 Analysis and Design}
+
+\subsubsection{Use cases of the sprint}
+The sprint covers the three use cases that any user must traverse before reaching a business screen:
+authenticating, changing an imposed password, and terminating a session. Every other use case of the
+platform includes authentication, which is why this sprint precedes all others.
+
+% TODO: render docs/uml/sprint/uc_sprint1.puml and uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint1.png}
+%   \caption{Use case diagram --- Sprint 1}
+%   \label{fig:uc-s1}
+% \end{figure}
+
+\subsubsection{Authentication sequence}
+The nominal authentication scenario involves the browser, the authentication controller, the
+authentication service, the token service and the user repository. It shows where the password is
+verified, where the two tokens are produced, and why only one of them is written to a cookie.
+
+% TODO: render docs/uml/sprint/seq_sprint1_login.puml and uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/seq_sprint1_login.png}
+%   \caption{Sequence diagram --- authentication}
+%   \label{fig:seq-s1-login}
+% \end{figure}
+
+\subsubsection{Design decisions}
+Three decisions taken in this sprint constrain the whole platform and are therefore justified here
+rather than in the realisation.
+
+\textbf{A modular monolith rather than services.} The code is organised into independent functional
+packages, each with its own Controller $\rightarrow$ Service $\rightarrow$ Repository $\rightarrow$
+Domain layering. A single deployable artefact keeps transactions local and avoids distributed
+consistency, which matters because the financial computations of Release~3 read from several modules
+within one transaction. The package boundaries preserve the option of extraction later.
+
+\textbf{Two tokens rather than one.} A short-lived access token held in memory is paired with a
+refresh token confined to an \texttt{HttpOnly} cookie. A single long-lived token stored in the
+browser would be readable by any injected script; splitting them means the credential that can mint
+new sessions is never reachable from JavaScript. The refresh token is additionally \emph{rotated} on
+every use, so a stolen cookie stops working as soon as the legitimate holder refreshes.
+
+\textbf{Revocation by version rather than by blacklist.} JWTs are self-contained and cannot be
+withdrawn once issued. A server-side blacklist would reintroduce the shared state the stateless
+design avoids. Storing a single integer per user and embedding it in each token achieves the same
+result: incrementing it invalidates every session of that identity at once, at the cost of one
+integer comparison per request.
+
+\subsection{Realization of Sprint 1}
 
 \subsubsection{Modular monolith structure}
-The application follows a \textbf{modular monolith} architecture: the code is organised into
-independent functional packages, each exposing its own Controller $\rightarrow$ Service
-$\rightarrow$ Repository $\rightarrow$ Domain layering. The modules are \texttt{auth},
-\texttt{user}, \texttt{project}, \texttt{team}, \texttt{workload}, \texttt{kpi}, \texttt{billing},
-\texttt{mission}, \texttt{governance} and \texttt{shared}. This structure allows each subsequent
-sprint to add its module without touching the previous ones.
+The modules are \texttt{auth}, \texttt{user}, \texttt{project}, \texttt{team}, \texttt{workload},
+\texttt{kpi}, \texttt{billing}, \texttt{mission}, \texttt{governance} and \texttt{shared}. Each
+subsequent sprint adds its module without modifying the previous ones.
 
 \subsubsection{Base entity and automatic auditing}
-All business entities inherit from \texttt{BaseEntity}, which centralises the auto-generated
-primary key, the \texttt{createdAt} / \texttt{updatedAt} timestamps managed by \texttt{@PrePersist}
-and \texttt{@PreUpdate}, and the \texttt{deleted} marker implementing logical deletion. No data is
-ever physically erased, and every repository implicitly filters on \texttt{deleted = false}. This
-guarantees the traceability required by the auditability requirement (NFR-008).
+All business entities inherit from \texttt{BaseEntity}, which centralises the auto-generated primary
+key, the \texttt{createdAt} and \texttt{updatedAt} timestamps managed by \texttt{@PrePersist} and
+\texttt{@PreUpdate}, and the \texttt{deleted} marker implementing logical deletion. No data is ever
+physically erased, and every repository implicitly filters on \texttt{deleted = false}. This
+satisfies the auditability requirement (NFR-008).
 
 \subsubsection{Schema management through Flyway}
-The database structure is managed exclusively by Flyway. Hibernate never emits implicit DDL:
-the property \texttt{spring.jpa.\allowbreak hibernate.\allowbreak ddl-auto} is set to \texttt{validate}.
-The versioned migrations are idempotent and constitute the living documentation of the schema.
+The database structure is managed exclusively by Flyway. Hibernate never emits implicit DDL: the
+property \texttt{spring.jpa.\allowbreak hibernate.\allowbreak ddl-auto} is set to \texttt{validate},
+so a divergence between the entities and the schema stops the application at startup rather than
+corrupting data at runtime. The versioned migrations are idempotent and constitute the living
+documentation of the schema.
 
-\subsubsection{Token issuance}
-On \texttt{POST /api/auth/login}, the authentication service verifies the e-mail and compares the
-supplied password with the BCrypt hash (strength~12), checks that the account is active, then
-issues:
+\subsubsection{Token issuance and rotation}
+On \texttt{POST /api/auth/login}, the authentication service verifies the e-mail, compares the
+supplied password with the BCrypt hash, checks that the account is active, then issues a short-lived
+JWT access token signed with \texttt{HMAC-SHA512} carrying the e-mail, the token version and the list
+of permission codes, together with a refresh token placed in the protected cookie.
 
-\begin{itemize}
-  \item a short-lived \textbf{JWT access token} signed with \texttt{HMAC-SHA512}, carrying the
-        e-mail, the token version and the list of permission codes;
-  \item an opaque \textbf{refresh token} placed in an \texttt{HttpOnly} / \texttt{Secure} /
-        \texttt{SameSite=Strict} cookie.
-\end{itemize}
-
-Separating the two tokens, access token in memory and refresh token in a cookie, protects
-against XSS attacks: the more powerful refresh token is never reachable from JavaScript.
+\texttt{POST /api/auth/refresh} exchanges a valid cookie for a new access token \emph{and} a new
+refresh cookie; the previous one is rejected from that moment on.
 
 \subsubsection{Immediate revocation by token version}
-Revocation rests on a \texttt{token\_version} field persisted in the \texttt{users} table. The
-current version is embedded in every issued token. On each request, the
-\texttt{JwtAuthenticationFilter} compares the version carried by the token with the value read from
-the Caffeine cache; if they differ, the request is rejected with \texttt{401 Unauthorized}.
+Revocation rests on a \texttt{token\_version} field persisted in the \texttt{users} table and
+embedded in every issued token. On each request the \texttt{JwtAuthenticationFilter} compares the
+version carried by the token with the value read from an in-memory cache; if they differ the request
+is rejected with \texttt{401 Unauthorized}. Incrementing the field therefore closes every active
+session of that identity instantly, which is what happens on logout and on password change, the
+latter also terminating sessions opened on other devices.
 
-Incrementing \texttt{token\_version} therefore invalidates every active session of that identity
-instantly: on logout, and on password change, which closes sessions opened on other devices. The
-cache avoids a database access on every request while keeping consistency without distributed
-state.
+\subsubsection{Protection against repeated failures}
+\texttt{LoginAttemptTracker} counts consecutive failures per identity and temporarily refuses further
+attempts, answering \texttt{429 Too Many Requests}. Password guessing is therefore bounded without
+locking a legitimate account permanently.
 
 \subsubsection{Forced password change on first login}
-When an account is created, the administrator sets a temporary password and \texttt{first\_login}
-is set to \texttt{true}. The token issued at the first connection carries a restricted right: only
-\texttt{POST /api/\allowbreak auth/\allowbreak change-password} is authorised. Once the password is changed,
-\texttt{first\_login} becomes \texttt{false} and an unrestricted token is issued.
+When an account is created the administrator sets a temporary password and \texttt{first\_login} is
+set to \texttt{true}. The token issued at the first connection carries a restricted right enforced by
+\texttt{FirstLoginFilter}: only \texttt{POST /api/\allowbreak auth/\allowbreak change-password} is
+authorised. Once the password is changed, \texttt{first\_login} becomes \texttt{false} and an
+unrestricted token is issued.
 
-% --- Screenshot slot: uncomment once img/ui_login.png is captured ---
+% TODO: capture as img/ui_login.png, then uncomment.
 % \begin{figure}[H]
 %   \centering
 %   \includegraphics[width=0.8\columnwidth]{img/ui_login.png}
@@ -95,46 +179,55 @@ is set to \texttt{true}. The token issued at the first connection carries a rest
 %   \label{fig:ui-login}
 % \end{figure}
 
-\subsection{Tests and Validation}
-The authentication chain is covered by automated backend tests verifying the nominal path and the
-rejection paths.
+\subsection{Testing and Validation}
+The authentication chain is covered by an integration test suite exercising the nominal path and each
+rejection path against a real HTTP layer.
 
-\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
+\begin{longtable}{|m{4.6cm}|m{5.2cm}|m{4.6cm}|}
 \hline
-\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
+\textbf{Test case} & \textbf{Scenario} & \textbf{Expected result} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-Successful login & Submit a valid e-mail and password on an active account & HTTP 200, access token
-returned and refresh cookie set \\
+Valid credentials & Submit a correct e-mail and password on an active account & HTTP 200, access
+token returned and refresh cookie set \\
 \hline
 Wrong password & Submit a valid e-mail with an incorrect password & HTTP 401, no token issued \\
 \hline
-Inactive account & Submit valid credentials on a deactivated account & HTTP 401, access refused \\
+Unknown e-mail & Submit an address that matches no account & HTTP 401, identical response to a wrong
+password \\
 \hline
-First login & Call a business endpoint with a first-login token & Access refused; only the password
-change endpoint is reachable \\
+Refresh with a valid cookie & Call the refresh endpoint with the cookie obtained at login & HTTP 200,
+a new access token is returned \\
 \hline
-Revocation & Call an endpoint with a token issued before a password change & HTTP 401, stale token
-version detected \\
+Refresh without a cookie & Call the refresh endpoint with no cookie & HTTP 401 \\
+\hline
+Rotation & Refresh once, then replay the previous cookie & HTTP 401, the superseded cookie is
+rejected \\
+\hline
+Logout & Log out, then attempt to refresh & HTTP 401, the session is closed \\
+\hline
+Authenticated context & Call the context endpoint with a valid token & HTTP 200, identity and
+permissions returned \\
+\hline
+Missing token & Call the context endpoint with no token & HTTP 401 \\
 \hline
 \caption{Test cases --- Sprint 1}
 \label{tab:tests-s1}
 \end{longtable}
 
-\subsection{Sprint Outcome}
-At the end of Sprint~1 the platform is a running, secured application shell: a user can sign in,
-is forced to choose a personal password, and their sessions can be cut off immediately. The
-auditing, logical deletion and schema-migration mechanisms are in place and will be inherited by
-every module built afterwards.
+\subsection{Sprint 1 Result}
+At the end of Sprint~1 the platform is a running, secured application shell. A user can sign in, is
+forced to choose a personal password, and their sessions can be cut off immediately; repeated failed
+attempts are throttled and a stolen refresh cookie is invalidated by rotation. The auditing, logical
+deletion and schema-migration mechanisms are in place and are inherited by every module built
+afterwards.
 
-\subsection{Transition to the Next Sprint}
-The application authenticates its users but does not yet distinguish what each of them may do:
-the token carries permission codes that nothing populates yet. Sprint~2 therefore builds the
-dynamic authorization model that fills this gap, together with the management of the users and
-resources it applies to.
+The application authenticates its users but does not yet distinguish what each of them may do: the
+token carries permission codes that nothing populates. Sprint~2 builds the dynamic authorization
+model that fills this gap, together with the management of the users and resources it applies to.
 
 % =====================================================================
 \section{Sprint 2 --- Dynamic Access Control, Users and Resources}
