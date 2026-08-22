@@ -204,3 +204,50 @@ Doing it earlier hides gaps behind the French fallback described in D-01.
 **Detection:** `frontend/pms-frontend/tools/find-french.py` reports the current count. It matches
 accented characters *and* a list of unambiguous French words, because a large share of the interface
 text carries no accent at all — `Supprimer`, `Annuler`, `Ajouter`, `Enregistrer`, `Statut`.
+
+---
+
+## D-10 — Marketing tagline on the login page
+
+**Affected:** login screen (`auth` scope).
+
+**Root cause:** the hero carried generated advertising copy rather than product identity:
+
+> Précision et Contrôle pour vos Projets d'Entreprise
+> Gérez les charges, la facturation et les missions complexes avec une architecture robuste conçue
+> pour les Directeurs et Administrateurs.
+
+Two problems beyond the tone. It claims an audience ("conçue pour les Directeurs et
+Administrateurs") that contradicts the product — every role signs in here, including developers.
+And it duplicated in both catalogues text that no one reads twice.
+
+**Correction:** the hero now renders `app.name` and `app.tagline`, the same keys the sidebar already
+used. The `auth.hero` block was deleted from both catalogues since nothing referenced it any more.
+
+**Verification:** login hero reads **PMS / ST2I Enterprise**, unchanged across FR↔EN — a product
+name does not translate. `auth` scope at 23 keys with EN/FR parity, no dangling `auth.hero`
+reference in the source.
+
+---
+
+## D-11 — Company logo loaded from an external Google URL (open)
+
+Found while doing D-10, not reported.
+
+Both `login.component.ts` and `sidebar.component.ts` load the ST2I logo from a hardcoded
+`https://lh3.googleusercontent.com/aida-public/…` address. There is no local logo asset in the
+project.
+
+Why it matters:
+
+- The URL is a generated, non-permanent one. When it expires the logo disappears from the sign-in
+  screen and the sidebar, in both the running app and any screenshot taken afterwards.
+- The application contacts Google on every page load, purely to fetch its own branding.
+- The containerized deployment is otherwise self-contained; this is the single outbound dependency
+  in the interface.
+- A demonstration on a machine without internet access shows no logo at all — worth knowing before
+  a defence.
+
+**Fix:** drop the real logo into `public/` and reference it locally. Left open because the actual
+image file is not in the repository; `report/.../img/logoSociete.png` is a placeholder awaiting the
+company's own asset.
