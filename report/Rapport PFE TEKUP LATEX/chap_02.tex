@@ -263,12 +263,21 @@ glance. & High & Sprint 7 \\
 US-26 & As a user, I want a consistent and responsive interface so that the platform is comfortable
 to use daily. & Medium & Sprint 8 \\
 \hline
+US-27 & As a project manager, I want to organise the work into iterations so that delivery is
+planned in sprints. \\
+\hline
+US-28 & As a project manager, I want a prioritised and estimated product backlog so that the
+remaining work is visible. \\
+\hline
+US-29 & As a developer, I want to follow the current iteration on a board so that I know what is
+in progress. \\
+\hline
 \caption{Product backlog of the PMS platform}
 \label{tab:backlog}
 \end{longtable}
 
 \section{Release and Sprint Planning}
-The backlog is distributed across four releases grouping nine sprints. Each release brings the
+The backlog is distributed across four releases grouping ten sprints. Each release brings the
 product to a coherent level of maturity: R1 makes the platform usable and secure, R2 opens
 operational steering, R3 delivers the financial and governance value, and R4 consolidates the
 whole.
@@ -286,19 +295,21 @@ US-03 \\
 \cline{2-4}
  & Sprint 2 & Dynamic RBAC, users, resources & US-04 to US-07 \\
 \hline
-\multirow{2}{*}{R2 --- Operations} & Sprint 3 & Projects and lifecycle & US-08 to US-10 \\
+\multirow{3}{*}{R2 --- Operations} & Sprint 3 & Projects and lifecycle & US-08 to US-10 \\
 \cline{2-4}
  & Sprint 4 & Teams and workload & US-11 to US-14 \\
+\cline{2-4}
+ & Sprint 5 & Agile planning: backlog and iterations & US-27 to US-29 \\
 \hline
-\multirow{3}{*}{R3 --- Finance} & Sprint 5 & Billing and missions & US-15 to US-18 \\
+\multirow{3}{*}{R3 --- Finance} & Sprint 6 & Billing and missions & US-15 to US-18 \\
 \cline{2-4}
- & Sprint 6 & Governance & US-19 to US-21 \\
+ & Sprint 7 & Governance & US-19 to US-21 \\
 \cline{2-4}
- & Sprint 7 & Internal quote and KPI engine & US-22 to US-25 \\
+ & Sprint 8 & Internal quote and KPI engine & US-22 to US-25 \\
 \hline
-\multirow{2}{*}{R4 --- Delivery} & Sprint 8 & Consolidation, tests, deployment & US-26 \\
+\multirow{2}{*}{R4 --- Delivery} & Sprint 9 & Consolidation, tests, deployment & US-26 \\
 \cline{2-4}
- & Sprint 9 & Containerization and continuous delivery & Technical sprint, no user story \\
+ & Sprint 10 & Containerization and continuous delivery & Technical sprint, no user story \\
 \hline
 \caption{Distribution of the backlog across releases and sprints}
 \label{tab:planning}
@@ -308,8 +319,8 @@ US-03 \\
 The internship ran from 5 January to 30 August 2026, that is thirty-four weeks. Six weeks were
 devoted to the preparation phase, which analyses the existing Excel process before any code is
 written, and one week to the final assembly of the report. The remaining twenty-seven weeks were
-divided into nine sprints of three weeks each. A uniform sprint length was adopted so that the
-increments remain comparable and the schedule stays legible.
+divided into ten sprints. Seven of them last three weeks; the three shorter ones cover the smaller
+perimeters, namely agile planning, interface consolidation and the delivery chain.
 
 \begin{longtable}{|m{4.0cm}|m{3.0cm}|m{3.0cm}|m{1.8cm}|}
 \hline
@@ -329,19 +340,21 @@ Sprint 3 & 30 March & 17 April & 3 \\
 \hline
 Sprint 4 & 20 April & 8 May & 3 \\
 \hline
-Sprint 5 & 11 May & 29 May & 3 \\
+Sprint 5 & 11 May & 22 May & 2 \\
 \hline
-Sprint 6 & 1 June & 19 June & 3 \\
+Sprint 6 & 25 May & 12 June & 3 \\
 \hline
-Sprint 7 & 22 June & 10 July & 3 \\
+Sprint 7 & 15 June & 3 July & 3 \\
 \hline
-Sprint 8 & 13 July & 31 July & 3 \\
+Sprint 8 & 6 July & 24 July & 3 \\
 \hline
-Sprint 9 & 3 August & 21 August & 3 \\
+Sprint 9 & 27 July & 7 August & 2 \\
+\hline
+Sprint 10 & 10 August & 21 August & 2 \\
 \hline
 Report finalisation & 24 August & 28 August & 1 \\
 \hline
-\caption{Schedule of the preparation phase and the nine sprints}
+\caption{Schedule of the preparation phase and the ten sprints}
 \label{tab:schedule}
 \end{longtable}
 

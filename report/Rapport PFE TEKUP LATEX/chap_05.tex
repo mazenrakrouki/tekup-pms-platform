@@ -1,42 +1,87 @@
-\chapter{Release 2 --- Project and Operational Management}
+\chapter{Project and Operational Management}
 
 \section*{Introduction}
 Release~1 delivered a secured and administrable platform, but one that managed no project. This
-release opens operational steering. Sprint~3 introduces the central entity of the whole domain ---
-the project, with its controlled lifecycle and its budget; Sprint~4 populates it with a team and
-with the workload data on which every later indicator depends.
+release opens operational steering. Sprint~3 introduces the central entity of the whole domain, the
+project, with its controlled lifecycle and its budget. Sprint~4 populates it with a team and with
+the workload data on which every later indicator depends. Sprint~5 adds the agile planning of that
+work, through a product backlog and iterations.
 
-At the end of this release, a project can be created, staffed, planned, and its actual consumption
-recorded: everything the financial engine of Release~3 will need as input.
+At the end of this release a project can be created, staffed, planned, its actual consumption
+recorded and its remaining work organised into sprints: everything the financial engine of
+Release~3 will need as input.
 
 % =====================================================================
-\section{Sprint 3 --- Project Management and Lifecycle}
+\section{Release 2 backlog}
+The second release realises the user stories of the product backlog
+(Table~\ref{tab:backlog}) that concern operational steering. As in the previous release, each story
+is expanded into the technical work it required.
 
-\subsection{Sprint Objective}
-Deliver the management of projects: creation with their contractual and financial identity,
-assignment of a project manager, and a lifecycle that the application enforces rather than merely
-documents.
+\begin{longtable}{|m{1.5cm}|m{6.8cm}|m{5.2cm}|m{1.4cm}|}
+\hline
+\textbf{Story} & \textbf{Need} & \textbf{Technical work} & \textbf{Sprint} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+US-08 & Create a project with its contractual and financial identity & Project entity reproducing
+the identification sheet, effective budget derived from amendments & 3 \\
+\hline
+US-09 & Prevent a project from reaching an inconsistent state & Status enumeration carrying its own
+legal transitions, refusal with 422 in the service layer & 3 \\
+\hline
+US-10 & Assign a project manager and keep the history & Assignment closed rather than overwritten,
+single active assignment enforced by a partial unique index & 3 \\
+\hline
+US-11 & Build the project team & Team assignment with a validity period, permission and project
+scope both checked & 4 \\
+\hline
+US-12 & Plan the monthly workload per resource & Workload plan stored as a monthly time series, one
+row per project, resource and month & 4 \\
+\hline
+US-13 & Record the effort actually consumed & Actual workload restricted to assigned projects,
+month normalised to its first day, uniqueness enforced by index & 4 \\
+\hline
+US-14 & Validate a period and freeze it & Validation by the project manager, immutability of a
+validated month & 4 \\
+\hline
+US-27 & Organise the work into iterations & Sprint entity with goal, dates and lifecycle, scoped to
+a project & 5 \\
+\hline
+US-28 & Maintain a prioritised and estimated product backlog & Backlog item with priority and an
+estimate in man-days, unattached to any sprint until committed & 5 \\
+\hline
+US-29 & Follow the progress of the current iteration on a board & Board columns derived from the
+item status, move endpoint reassigning sprint and column together & 5 \\
+\hline
+\caption{Backlog of release 2}
+\label{tab:backlog-r2}
+\end{longtable}
 
-\subsection{Functional Scope}
-This sprint covers user stories US-08 to US-10: creating and configuring a project, controlling its
-status transitions, and assigning its project manager.
+% =====================================================================
+\section{Sprint 3 --- Project management and lifecycle}
 
-\subsection{Features Implemented}
-\begin{itemize}
-  \item Project creation with code, client, funder, engagement type, currency and budget.
-  \item Controlled status lifecycle with server-side enforcement.
-  \item Effective budget derived from the initial budget and its amendments.
-  \item Project manager assignment, with a single active assignment at a time.
-  \item Project archiving, distinct from closure.
-\end{itemize}
+\subsection{Sprint 3 use case diagram}
+The sprint covers the use cases through which a project comes into existence and changes state:
+creating and configuring a project, changing its status, assigning its manager, and archiving it
+once completed. All of them are reserved to the director, except archiving which the project
+manager may also perform.
 
-\subsection{Technical Realisation}
+% TODO: render docs/uml/sprint/uc_sprint3.puml then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint3.png}
+%   \caption{Use case diagram of sprint 3}
+%   \label{fig:uc-s3}
+% \end{figure}
 
-\subsubsection{Project identity}
+\subsection{Sprint 3 analysis and design}
+
+\subsubsection{Model of the project and its team}
 The \texttt{project} module reproduces the identification sheet of the reference workbook: project
 code, client, funder, business model, engagement type (fixed price or time~\&~material), project
-currency with its contractual exchange rate, initial budget, sold workload and provisions. The
-class model of the module is given in Figure~\ref{fig:class-proj}.
+currency with its contractual exchange rate, initial budget, sold workload and provisions.
 
 \begin{figure}[H]
   \centering
@@ -45,16 +90,10 @@ class model of the module is given in Figure~\ref{fig:class-proj}.
   \label{fig:class-proj}
 \end{figure}
 
-\subsubsection{A lifecycle enforced by the domain}
+\subsubsection{The project lifecycle}
 A project moves through five states: \texttt{DRAFT}, \texttt{ACTIVE}, \texttt{ON\_HOLD},
-\texttt{COMPLETED} and \texttt{CANCELLED}. Not every transition is legal: a completed project
-cannot return to draft, a cancelled project is terminal.
-
-The rule is carried by the enumeration itself, through a \texttt{canTransitionTo} operation that
-each status answers for its own legal successors. The service layer consults it before any status
-change and rejects an illegal transition with \texttt{HTTP 422 Unprocessable Entity}. Placing the
-rule in the domain rather than in the controller guarantees that no future entry point can bypass
-it.
+\texttt{COMPLETED} and \texttt{CANCELLED}. Not every transition is legal: a completed project cannot
+return to draft, and a cancelled project is terminal.
 
 \begin{figure}[H]
   \centering
@@ -63,20 +102,30 @@ it.
   \label{fig:state}
 \end{figure}
 
-Archiving is deliberately \textbf{not} a state but a flag on a completed project: an archived
-project leaves the active lists while remaining restorable, which a terminal state would not allow.
+\subsubsection{Design decisions}
+\textbf{The lifecycle rule belongs to the domain, not to the controller.} The legal successors of a
+state are carried by the enumeration itself, through a \texttt{canTransitionTo} operation that each
+status answers for itself. The service consults it before any status change and rejects an illegal
+transition with \texttt{HTTP 422}. Had the rule been placed in the controller, a future entry point,
+an import or a scheduled job could have bypassed it silently.
 
-\subsubsection{Effective budget}
-A project carries an initial budget and, once amendments exist, a revised budget. Every computation
-uses the \textbf{effective budget}: the revised budget when it is defined, the initial budget
-otherwise. This value has a \textbf{single writer}, the amendment, which prevents the two
-figures from drifting apart, a failure mode observed in the original workbook where the budget was
-edited in several places.
+\textbf{Archiving is a flag, not a state.} An archived project leaves the active lists while
+remaining restorable. Modelling it as a sixth state would have made it terminal, and a terminal
+state cannot be undone.
 
-\subsubsection{Project manager assignment}
-A project has exactly one active project manager at any time, but keeps the history of previous
-assignments. Assigning a new manager therefore closes the current assignment rather than
-overwriting it, preserving the traceability required for auditing.
+\textbf{The effective budget has a single writer.} A project carries an initial budget and, once
+amendments exist, a revised budget. Every computation reads the effective budget: the revised one
+when defined, the initial one otherwise. Only the amendment writes it. In the original workbook the
+budget was editable in several places, and the copies drifted; a single writer makes that failure
+structurally impossible.
+
+\subsection{Sprint 3 realization}
+
+\subsubsection{Project identity and manager assignment}
+A project has exactly one active project manager at any time but keeps the history of previous
+assignments. Assigning a new manager closes the current assignment rather than overwriting it, so
+past workload remains attributable to the person who was responsible at the time. A partial unique
+index guarantees that only one assignment is active.
 
 % TODO: capture as img/ui_projects.png and img/ui_project_detail.png, then uncomment.
 % \begin{figure}[H]
@@ -86,102 +135,67 @@ overwriting it, preserving the traceability required for auditing.
 %   \label{fig:ui-projects}
 % \end{figure}
 
-\subsection{Tests and Validation}
-Validation focuses on the lifecycle, since it is the rule most likely to be violated by a client
-application.
-
-\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
-\hline
-\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-Legal transition & Move a project from \texttt{DRAFT} to \texttt{ACTIVE} & HTTP 200, status updated
-\\
-\hline
-Illegal transition & Move a project from \texttt{COMPLETED} back to \texttt{DRAFT} & HTTP 422,
-status unchanged \\
-\hline
-Terminal state & Attempt any transition out of \texttt{CANCELLED} & HTTP 422 \\
-\hline
-Effective budget & Add an amendment then read the project & Computations use the revised budget \\
-\hline
-Manager assignment & Assign a second project manager & Previous assignment closed, one active
-manager remains \\
-\hline
-\caption{Test cases --- Sprint 3}
-\label{tab:tests-s3}
-\end{longtable}
-
-\subsection{Sprint Outcome}
-Projects exist, carry their contractual and financial identity, and follow a lifecycle the
-application enforces. The invalid states that a spreadsheet cannot prevent are now structurally
-impossible.
-
-\subsection{Transition to the Next Sprint}
-A project without a team consumes nothing and produces no indicator. Sprint~4 therefore staffs the
-project and captures the effort planned and consumed, the raw material of the whole financial
-model.
-
 % =====================================================================
-\section{Sprint 4 --- Teams and Workload Management}
+\section{Sprint 4 --- Team assignment and workload}
 
-\subsection{Sprint Objective}
-Allow a project manager to build the project team, plan the monthly workload, and let developers
-record the effort actually consumed, with the guarantees of integrity the indicators will depend
-on.
+\subsection{Sprint 4 use case diagram}
+The sprint covers the use cases that feed the platform with the effort data: building the team,
+planning the monthly workload, submitting the effort actually consumed, and validating it. The
+developer appears here as an actor for the first time, since submitting one's own workload is the
+only write operation that role performs.
 
-\subsection{Functional Scope}
-This sprint covers user stories US-11 to US-14: building the team, planning the workload,
-submitting actual workload, and validating it.
+% TODO: render docs/uml/sprint/uc_sprint4.puml then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint4.png}
+%   \caption{Use case diagram of sprint 4}
+%   \label{fig:uc-s4}
+% \end{figure}
 
-\subsection{Features Implemented}
-\begin{itemize}
-  \item Assignment and removal of team members, with preserved history.
-  \item Monthly workload planning per resource.
-  \item Submission of actual workload, restricted to assigned projects.
-  \item Validation of submitted workload by the project manager.
-  \item Immutability of a validated period.
-\end{itemize}
+\subsection{Sprint 4 analysis and design}
 
-\subsection{Technical Realisation}
-
-\subsubsection{Team assignment}
-A team assignment links a user to a project with a role in the team and a validity period. A
-developer may belong to several projects simultaneously. Removing a member closes the assignment
-rather than deleting it, so that past workload remains attributable.
-
-Assignment is protected by \textbf{two distinct checks}, illustrated in
-Figure~\ref{fig:seq-assign}: the caller must hold the \texttt{ASSIGN\_DEVELOPER} permission
-\emph{and} the target project must fall within their scope. The permission answers ``what may I
-do''; the scope answers ``on which projects''. Conflating the two would let a project manager act
-on a project that is not theirs.
+\subsubsection{Sequence of the ``Assign a developer'' use case}
+Assignment is protected by two distinct checks: the caller must hold the \texttt{ASSIGN\_DEVELOPER}
+permission \emph{and} the target project must fall within their scope. The permission answers
+``what may I do''; the scope answers ``on which projects''.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\columnwidth]{img/seq_assign_developer.png}
-  \caption{Sequence --- assigning a developer, permission and scope}
+  \caption{Sequence diagram of the ``Assign a developer'' use case}
   \label{fig:seq-assign}
 \end{figure}
 
-\subsubsection{Two kinds of workload}
-The model distinguishes the \textbf{workload plan} (what is forecast) from the \textbf{actual
-workload} (what was consumed). Both are stored as a monthly time series, one row per project,
-resource and month, rather than as a wide grid of month columns.
+\subsubsection{Design decisions}
+\textbf{Permission and scope are separate concerns.} Conflating them would let a project manager
+holding the permission act on a project that is not theirs. Keeping them distinct is what allows the
+same role to be granted broadly while its reach stays bounded by assignment.
 
-\subsubsection{Period normalisation and uniqueness}
-A month is stored as the first day of that month. This normalisation is what makes uniqueness
-enforceable: without it, two entries for the same month recorded on different days would coexist
-silently. A unique partial index guarantees a single retained value per cell, and it is that value
-which feeds the indicator engine.
+\textbf{A monthly time series, not a grid of columns.} The workbook stores months as columns, which
+is why adding a year means editing the sheet structure. The platform stores one row per project,
+resource and month. The same information becomes queryable, aggregatable and extensible without
+schema change.
 
-\subsubsection{Validation and immutability}
-A developer submits their own workload, on assigned projects only. The project manager then
-validates it. Once a period is validated it becomes \textbf{immutable}: a later correction cannot
-silently rewrite a month on which a monthly review has already been based. This constraint is the
-direct answer to the traceability weakness identified in the Excel process.
+\textbf{A month is normalised to its first day.} Without normalisation, two entries for the same
+month recorded on different days would coexist silently and both would feed the indicators. Storing
+the first day of the month is what makes a unique index enforceable, and it is that uniqueness the
+whole financial engine relies on.
+
+\textbf{A validated period is immutable.} Once the project manager validates a month, it can no
+longer be rewritten. A later correction cannot silently change a month on which a monthly review has
+already been based. This is the direct answer to the traceability weakness of the Excel process.
+
+\subsection{Sprint 4 realization}
+
+\subsubsection{Team assignment}
+A team assignment links a user to a project with a role in the team and a validity period. A
+developer may belong to several projects simultaneously. Removing a member closes the assignment
+rather than deleting it.
+
+\subsubsection{Planned and actual workload}
+The model distinguishes the workload plan, which is forecast, from the actual workload, which was
+consumed. A developer submits their own workload on assigned projects only; the project manager then
+validates it.
 
 % TODO: capture as img/ui_workload.png, then uncomment.
 % \begin{figure}[H]
@@ -191,45 +205,91 @@ direct answer to the traceability weakness identified in the Excel process.
 %   \label{fig:ui-workload}
 % \end{figure}
 
-\subsection{Tests and Validation}
+% =====================================================================
+\section{Sprint 5 --- Agile planning}
 
-\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
-\hline
-\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-Authorised assignment & Assign a developer with the permission, on a project in scope & HTTP 201,
-assignment recorded \\
-\hline
-Out-of-scope assignment & Assign on a project outside the caller's scope & HTTP 403 \\
-\hline
-Submission on an unassigned project & Submit workload on a project the developer is not assigned to
-& Refused \\
-\hline
-Duplicate month & Submit twice for the same project, resource and month & A single retained value
-\\
-\hline
-Validated period & Modify a period already validated & Refused, period immutable \\
-\hline
-\caption{Test cases --- Sprint 4}
-\label{tab:tests-s4}
-\end{longtable}
+\subsection{Sprint 5 use case diagram}
+The sprint covers the planning of the work itself: creating an iteration, maintaining a prioritised
+product backlog, committing items to an iteration, and following their progress on a board.
+Maintaining the plan is reserved to the project manager; the director and the developer read it.
 
-\subsection{Sprint Outcome}
-Projects now carry a team, a forecast and a measured consumption, all captured under integrity
-constraints that a spreadsheet cannot express: no duplicate month, no entry on an unassigned
-project, no silent rewriting of a validated period.
+% TODO: render docs/uml/sprint/uc_sprint5.puml then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint5.png}
+%   \caption{Use case diagram of sprint 5}
+%   \label{fig:uc-s5}
+% \end{figure}
 
-\subsection{Transition to the Next Sprint}
-The cost side of the project is now measurable. The revenue side is not: nothing yet records what
-is invoiced, nor the expenses that weigh on the margin. Release~3 delivers the financial and
-governance value of the platform, starting with billing and missions.
+\subsection{Sprint 5 analysis and design}
+
+\subsubsection{Model of the backlog and its iterations}
+A sprint belongs to a project and carries a goal, a start and end date, and a lifecycle
+(\texttt{PLANNED}, \texttt{ACTIVE}, \texttt{CLOSED}). A backlog item belongs to a project and
+\emph{optionally} to a sprint, and carries a title, a priority, an estimate and a status.
+
+% TODO: render docs/uml/sprint/class_agile.puml then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.8\columnwidth]{img/class_agile.png}
+%   \caption{Class diagram --- agile planning}
+%   \label{fig:class-agile}
+% \end{figure}
+
+\subsubsection{Design decisions}
+\textbf{The link to a sprint is optional, and that is the model.} An item whose sprint is undefined
+is precisely an item in the product backlog: identified and estimated, but not yet committed. Making
+the association mandatory would have required a fictitious ``unassigned'' sprint per project, which
+carries no meaning and would have to be excluded from every query.
+
+\textbf{Estimates are expressed in man-days, not in story points.} Story points are the more usual
+agile unit, but the whole platform already reasons in man-days: the workload plan, the loaded cost
+rate and the indicator engine all use them. An estimate in points would have been the only figure in
+the system that could not be compared with anything else. Man-days keep the backlog commensurable
+with the effort actually recorded.
+
+\textbf{Deleting a sprint returns its items to the product backlog.} An iteration that is abandoned
+does not destroy the work identified for it; the items simply become unplanned again, which is the
+behaviour Scrum prescribes when a sprint is cancelled. The alternative, refusing deletion while
+items remain attached, was implemented first and rejected: besides being awkward, it left the items
+referencing a logically deleted sprint through a foreign key that was still valid.
+
+\textbf{An item may never join the iteration of another project.} Assigning a sprint verifies that
+the sprint belongs to the same project as the item, and answers \texttt{404} otherwise. Without that
+check, a caller could attach an item to a foreign iteration simply by guessing an identifier, and
+the relation would cross the project boundary the whole authorization model is built on.
+
+\textbf{The administrator receives neither permission.} \texttt{MANAGE\_AGILE} is granted to the
+project manager and \texttt{VIEW\_AGILE} to the director, the project manager and the developer.
+The administrator role governs the platform, not the content of projects, and the audit that
+rebuilt the authorization matrix deliberately reduced it to that. Granting it here would have
+quietly reintroduced what the audit removed.
+
+\subsection{Sprint 5 realization}
+
+\subsubsection{Iterations and the product backlog}
+The module exposes two nested resources under a project, one for iterations and one for backlog
+items, following the convention already used by governance and missions. Authorization is carried by
+the service layer rather than the controller, as elsewhere in the platform, so that no entry point
+can reach an unprotected method.
+
+\subsubsection{The board}
+The board presents the items of the selected iteration in three columns derived from their status,
+alongside a column holding the product backlog. Moving a card calls a single endpoint that
+reassigns the iteration and the column together, because on a board those two actions are one
+gesture: dragging a card from the backlog into the current sprint changes both at once.
+
+% TODO: capture as img/ui_agile_board.png, then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/ui_agile_board.png}
+%   \caption{Agile planning board}
+%   \label{fig:ui-agile}
+% \end{figure}
 
 \section*{Conclusion}
 Release~2 turned a secured shell into an operational tool: projects with an enforced lifecycle,
-teams with traceable assignments, and workload captured as a reliable monthly time series. The data
-required by the financial engine is now available and trustworthy, which is the precondition for
-the indicators built in the next release.
+teams with traceable assignments, workload captured as a reliable monthly time series, and the
+remaining work organised into a prioritised backlog and iterations. The data required by the
+financial engine is now available and trustworthy, which is the precondition for the indicators
+built in the next release.

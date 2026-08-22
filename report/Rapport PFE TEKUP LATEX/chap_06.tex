@@ -2,13 +2,13 @@
 
 \section*{Introduction}
 This release delivers the value for which the platform was commissioned: replacing the financial
-logic of the Excel workbook. Sprint~5 records the revenue side (billing milestones, payments,
-amendments) and the mission expenses that weigh on the margin. Sprint~6 adds the governance
-registers that document the life of a project. Sprint~7 closes the loop with the internal quote and
+logic of the Excel workbook. Sprint~6 records the revenue side (billing milestones, payments,
+amendments) and the mission expenses that weigh on the margin. Sprint~7 adds the governance
+registers that document the life of a project. Sprint~8 closes the loop with the internal quote and
 the indicator engine, which consumes everything built since Release~1.
 
 % =====================================================================
-\section{Sprint 5 --- Billing and Missions}
+\section{Sprint 6 --- Billing and Missions}
 
 \subsection{Sprint Objective}
 Record what the project earns and what it spends outside labour: billing milestones with their
@@ -93,7 +93,7 @@ Amendment impact & Add an amendment & Revised budget updated, milestones recompu
 Mission in a foreign currency & Record components in another currency & Each converted at the
 mission date before summation \\
 \hline
-\caption{Test cases --- Sprint 5}
+\caption{Test cases --- Sprint 6}
 \label{tab:tests-s5}
 \end{longtable}
 
@@ -104,10 +104,10 @@ platform holds every input the margin computation requires.
 
 \subsection{Transition to the Next Sprint}
 Financial tracking answers ``how much''; it does not answer ``what is threatening this project''.
-Sprint~6 adds the governance registers that document risks, deliverables and changes.
+Sprint~7 adds the governance registers that document risks, deliverables and changes.
 
 % =====================================================================
-\section{Sprint 6 --- Project Governance}
+\section{Sprint 7 --- Project Governance}
 
 \subsection{Sprint Objective}
 Deliver the governance registers of the reference workbook: risks, deliverables, stakeholders and
@@ -132,7 +132,7 @@ individual complexity than in being attached to the project rather than kept in 
 document, which is what the spreadsheet process could not guarantee.
 
 The \textbf{deliverable register} carries a functional responsibility beyond documentation: the
-delivery rate used by the indicator engine of Sprint~7 is derived from it, as the ratio of
+delivery rate used by the indicator engine of Sprint~8 is derived from it, as the ratio of
 delivered and validated deliverables to planned deliverables. This is why deliverables carry a
 controlled status rather than a free-text field.
 
@@ -170,7 +170,7 @@ Authorization & Access a register without the governance permission & HTTP 403 \
 \hline
 Logical deletion & Delete a register entry & Entry deactivated, history preserved \\
 \hline
-\caption{Test cases --- Sprint 6}
+\caption{Test cases --- Sprint 7}
 \label{tab:tests-s6}
 \end{longtable}
 
@@ -179,11 +179,11 @@ The qualitative dimension of project steering is now captured in the platform, a
 register provides the delivery rate the indicator engine needs.
 
 \subsection{Transition to the Next Sprint}
-Every input is now available: labour cost, other costs, invoiced revenue, delivery progress. Sprint~7
+Every input is now available: labour cost, other costs, invoiced revenue, delivery progress. Sprint~8
 assembles them into the indicators that were the original purpose of the project.
 
 % =====================================================================
-\section{Sprint 7 --- Internal Quote and Indicator Engine}
+\section{Sprint 8 --- Internal Quote and Indicator Engine}
 
 \subsection{Sprint Objective}
 Deliver the economic baseline of a project, the internal quote, and the engine that computes
@@ -287,7 +287,7 @@ Financial confidentiality & Read the indicators as a developer & Financial data 
 \hline
 Internal quote access & Read the quote without the dedicated permission & HTTP 403 \\
 \hline
-\caption{Test cases --- Sprint 7}
+\caption{Test cases --- Sprint 8}
 \label{tab:tests-s7}
 \end{longtable}
 

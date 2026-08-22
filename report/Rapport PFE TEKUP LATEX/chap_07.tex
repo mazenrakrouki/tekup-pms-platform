@@ -3,12 +3,12 @@
 \section*{Introduction}
 The functional scope of the platform was completed at the end of Release~3. This final release makes
 it deliverable: a coherent and accessible user interface, a verified authorization policy, a
-security review, and a reproducible deployment. It gathers two sprints: Sprint~8 consolidates the interface and
-verifies the platform, Sprint~9 makes it reproducibly deployable and continuously verified.
+security review, and a reproducible deployment. It gathers two sprints: Sprint~9 consolidates the interface and
+verifies the platform, Sprint~10 makes it reproducibly deployable and continuously verified.
 Neither delivers new business functionality; both deliver deliverability.
 
 % =====================================================================
-\section{Sprint 8 --- Interface Consolidation, Testing and Deployment}
+\section{Sprint 9 --- Interface Consolidation, Testing and Deployment}
 
 \subsection{Sprint Objective}
 Bring the platform to a deliverable state: unify the user interface, verify that the security model
@@ -112,7 +112,7 @@ and against an older one applies exactly the missing migrations.
 
 This packaging is sufficient to run the application, but not to \emph{deploy} it reproducibly:
 it still assumes a host on which the right Java version, the right Node version and a correctly
-provisioned PostgreSQL instance are already present. Sprint~9 removes that assumption.
+provisioned PostgreSQL instance are already present. Sprint~10 removes that assumption.
 
 \subsection{Tests and Validation}
 
@@ -137,7 +137,7 @@ Menu consistency & Sign in with each of the four roles & Each menu matches the p
 Deployment & Start the artefact against an empty and an existing database & Schema created, then
 migrated without loss \\
 \hline
-\caption{Test cases --- Sprint 8}
+\caption{Test cases --- Sprint 9}
 \label{tab:tests-s8}
 \end{longtable}
 
@@ -147,11 +147,11 @@ reviewed for the common vulnerabilities, and packaged as a runnable artefact.
 
 \subsection{Transition to the Next Sprint}
 One gap remains between ``it runs on my machine'' and ``it can be deployed'': the artefact still
-depends on a correctly prepared host. Sprint~9 closes that gap with containerization and a
+depends on a correctly prepared host. Sprint~10 closes that gap with containerization and a
 continuous integration pipeline.
 
 % =====================================================================
-\section{Sprint 9 --- Containerization and Continuous Delivery}
+\section{Sprint 10 --- Containerization and Continuous Delivery}
 
 \subsection{Sprint Objective}
 Make the platform reproducibly deployable and continuously verified: package each component as a
@@ -263,7 +263,7 @@ Persistence & Stop and restart the stack & Data preserved; a volume reset replay
 Development loop & Run the native backend and frontend while the stack is up & Both coexist, no
 port collision \\
 \hline
-\caption{Test cases --- Sprint 9}
+\caption{Test cases --- Sprint 10}
 \label{tab:tests-s9}
 \end{longtable}
 
@@ -273,7 +273,7 @@ change is now verified automatically. The deployment procedure, the environment 
 backup method and the known pitfalls are documented.
 
 \subsection{Final State of the Product}
-At the end of the nine sprints, PMS covers the whole scope identified during the analysis of the
+At the end of the ten sprints, PMS covers the whole scope identified during the analysis of the
 Excel workbook: dynamic authorization, project and team management, workload planning and
 recording, billing, missions, governance and the earned-value indicator engine, all behind a
 unified interface. Table~\ref{tab:final} summarises the path from the reference workbook to the
@@ -295,15 +295,17 @@ Sprint 3 & Projects and lifecycle & Identification sheet \\
 \hline
 Sprint 4 & Teams, workload plan and actuals & Forecast cost and actual cost sheets \\
 \hline
-Sprint 5 & Billing, payments, amendments, missions & Billing progress and missions sheets \\
+Sprint 5 & Agile planning: product backlog and iterations & --- (no spreadsheet equivalent) \\
 \hline
-Sprint 6 & Governance registers & Risks, deliverables, stakeholders, changes sheets \\
+Sprint 6 & Billing, payments, amendments, missions & Billing progress and missions sheets \\
 \hline
-Sprint 7 & Internal quote and indicator engine & Statistics and dashboard sheets \\
+Sprint 7 & Governance registers & Risks, deliverables, stakeholders, changes sheets \\
 \hline
-Sprint 8 & Interface consolidation, tests, security review & --- (quality) \\
+Sprint 8 & Internal quote and indicator engine & Statistics and dashboard sheets \\
 \hline
-Sprint 9 & Containerization and continuous delivery & --- (delivery chain) \\
+Sprint 9 & Interface consolidation, tests, security review & --- (quality) \\
+\hline
+Sprint 10 & Containerization and continuous delivery & --- (delivery chain) \\
 \hline
 \caption{From the reference workbook to the delivered platform}
 \label{tab:final}
