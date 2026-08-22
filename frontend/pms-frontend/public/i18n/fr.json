@@ -161,6 +161,8 @@
     "hint": "Clic pour sélectionner, double-clic pour ouvrir",
     "select": "Sélectionner",
     "none": "Aucun projet ne correspond à votre recherche.",
-    "end": "Fin"
+    "end": "Fin",
+    "mine": "Qui m’est assigné",
+    "favorite": "Favori"
   }
 }

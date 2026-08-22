@@ -55,6 +55,11 @@ const RECENT_MAX = 6;
                   <span class="pp-qa-metaitem"><i class="bi bi-building"></i>{{ p.client || '—' }}</span>
                   <span class="pp-qa-metaitem"><i class="bi bi-person-badge"></i>{{ p.chefProjetName || '—' }}</span>
                 </div>
+                @if (p.chefProjetId === myId) {
+                  <span class="pp-qa-mine"><i class="bi bi-person-check"></i> {{ 'picker.mine' | transloco }}</span>
+                } @else if (isFav(p.id)) {
+                  <span class="pp-qa-mine" style="color:var(--c-amber)"><i class="bi bi-star-fill"></i> {{ 'picker.favorite' | transloco }}</span>
+                }
                 <i class="bi bi-arrow-right pp-qa-go"></i>
               </button>
             }
@@ -236,15 +241,16 @@ const RECENT_MAX = 6;
     .pp-qa-label { font-size: 12px; font-weight: 700; letter-spacing: .03em; color: var(--text-2);
       display: inline-flex; align-items: center; gap: .4rem; }
     .pp-qa-label > .bi { color: var(--c-amber, #f59e0b); }
-    .pp-qa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: .875rem; }
-    .pp-qa-card { position: relative; text-align: left; padding: 1rem 1.125rem; border: 1px solid var(--border);
+    .pp-qa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .pp-qa-card { position: relative; text-align: left; padding: 1.15rem 1.25rem; min-height: 132px;
+                 display: flex; flex-direction: column; gap: .55rem; border: 1px solid var(--border);
       border-radius: 14px; background: var(--surface-1, var(--surface)); cursor: pointer;
       transition: transform .12s, border-color .12s, box-shadow .12s; display: flex; flex-direction: column; gap: .4rem; }
     .pp-qa-card:hover { transform: translateY(-2px); border-color: var(--c-brand);
       box-shadow: 0 8px 22px rgba(0,0,0,.10); }
     .pp-qa-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
     .pp-qa-code { font-family: var(--font-mono, monospace); font-weight: 800; font-size: 12px; color: var(--c-brand); }
-    .pp-qa-name { font-size: 14px; font-weight: 700; color: var(--text-1); line-height: 1.3;
+    .pp-qa-name { font-size: 15px; font-weight: 700; color: var(--text-1); line-height: 1.3;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .pp-qa-meta { display: flex; flex-direction: column; gap: .2rem; margin-top: .1rem; }
     .pp-qa-metaitem { font-size: 12px; color: var(--text-2); display: inline-flex; align-items: center; gap: .4rem;
@@ -410,7 +416,7 @@ export class ProjectPickerComponent {
     return this.recents().map(id => byId.get(id)).filter((p): p is Project => !!p).slice(0, RECENT_MAX);
   });
 
-  /** Landing quick-access cards: assigned → recent → favorites → active → any, deduped, max 6. */
+  /** Landing shortcut cards: assigned → recent → favorites → active → any, deduped, max 12. */
   readonly quickAccess = computed(() => {
     const all = this.projects();
     if (!all.length) return [];
@@ -420,7 +426,7 @@ export class ProjectPickerComponent {
     const out: Project[] = [];
     const add = (arr: (Project | undefined)[]) => {
       for (const p of arr) {
-        if (p && !seen.has(p.id)) { seen.add(p.id); out.push(p); if (out.length >= 6) return; }
+        if (p && !seen.has(p.id)) { seen.add(p.id); out.push(p); if (out.length >= 12) return; }
       }
     };
     add(all.filter(p => p.chefProjetId === this.myId));

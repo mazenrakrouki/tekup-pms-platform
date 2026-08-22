@@ -161,6 +161,8 @@
     "hint": "Click to select, double-click to open",
     "select": "Select",
     "none": "No project matches your search.",
-    "end": "End"
+    "end": "End",
+    "mine": "Assigned to me",
+    "favorite": "Favorite"
   }
 }
