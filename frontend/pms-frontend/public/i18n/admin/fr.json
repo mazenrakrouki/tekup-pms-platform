@@ -1,0 +1,139 @@
+{
+  "breadcrumb": {
+    "users": "Utilisateurs",
+    "roles": "Rôles & permissions",
+    "permissions": "Permissions"
+  },
+  "users": {
+    "title": "Gestion des utilisateurs",
+    "new": "Nouvel utilisateur",
+    "search": {
+      "placeholder": "Rechercher par nom ou email…",
+      "aria": "Rechercher un utilisateur",
+      "reset": "Réinitialiser"
+    },
+    "filter": {
+      "roleAria": "Filtrer par rôle",
+      "allRoles": "Tous les rôles",
+      "allStatuses": "Tous les statuts"
+    },
+    "results": {
+      "one": "1 résultat",
+      "other": "{{count}} résultats"
+    },
+    "table": {
+      "name": "Nom",
+      "email": "Email",
+      "role": "Rôle",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "state": {
+      "active": "Actif",
+      "inactive": "Inactif"
+    },
+    "actions": {
+      "edit": "Modifier",
+      "editAria": "Modifier l'utilisateur",
+      "resetPassword": "Réinitialiser le mot de passe",
+      "deactivate": "Désactiver",
+      "deactivateAria": "Désactiver l'utilisateur",
+      "reactivate": "Réactiver",
+      "reactivateAria": "Réactiver l'utilisateur"
+    },
+    "empty": {
+      "noMatchTitle": "Aucun résultat",
+      "noMatchDesc": "Aucun utilisateur ne correspond à votre recherche ou à vos filtres.",
+      "resetFilters": "Réinitialiser les filtres",
+      "noneTitle": "Aucun utilisateur",
+      "noneDesc": "Créez le premier compte utilisateur."
+    },
+    "reset": {
+      "title": "Compte réinitialisé",
+      "done": "Le compte de {{name}} a été réinitialisé.",
+      "mustChange": "L'utilisateur devra changer son mot de passe à sa prochaine connexion.",
+      "communicate": "Communiquez ce mot de passe temporaire à l'utilisateur, il ne sera plus affiché."
+    },
+    "form": {
+      "editTitle": "Modifier l'utilisateur",
+      "newTitle": "Nouvel utilisateur",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "role": "Rôle",
+      "selectRole": "Sélectionner un rôle",
+      "created": "Utilisateur créé.",
+      "communicate": "Communiquez ce mot de passe initial à l'utilisateur, il ne sera plus affiché :"
+    },
+    "msg": {
+      "allRequired": "Tous les champs sont requis.",
+      "updated": "Utilisateur mis à jour.",
+      "created": "Utilisateur créé.",
+      "passwordCopied": "Mot de passe copié.",
+      "resetConfirm": "Réinitialiser le compte de {{name}} ? Un mot de passe temporaire sera généré et devra être changé à la prochaine connexion.",
+      "resetConfirmTitle": "Réinitialiser le compte",
+      "resetError": "Erreur lors de la réinitialisation du compte.",
+      "deactivateConfirm": "Désactiver {{name}} ?",
+      "deactivateTitle": "Désactiver le compte",
+      "deactivated": "Utilisateur désactivé.",
+      "deactivateError": "Erreur lors de la désactivation.",
+      "reactivateConfirm": "Réactiver {{name}} ?",
+      "reactivateTitle": "Réactiver le compte",
+      "reactivated": "Utilisateur réactivé.",
+      "reactivateError": "Erreur lors de la réactivation."
+    }
+  },
+  "roles": {
+    "title": "Rôles",
+    "new": "Nouveau rôle",
+    "search": "Rechercher un rôle...",
+    "table": {
+      "role": "Rôle",
+      "description": "Description",
+      "users": "Utilisateurs",
+      "actions": "Actions"
+    },
+    "system": "système",
+    "systemTitle": "Rôle système, non renommable et non supprimable",
+    "editAction": "Modifier / permissions",
+    "form": {
+      "editTitle": "Modifier le rôle",
+      "newTitle": "Nouveau rôle",
+      "name": "Nom",
+      "nameLocked": "Nom verrouillé (rôle système).",
+      "descriptionPlaceholder": "Rôle de l'utilisateur en une ligne",
+      "selected": "{{count}} sélectionnée(s)"
+    },
+    "empty": "Aucun rôle",
+    "msg": {
+      "loadFailed": "Impossible de charger les rôles.",
+      "cannotDeleteSystem": "Rôle système, suppression impossible",
+      "cannotDeleteAssigned": "Rôle affecté à des utilisateurs, suppression impossible",
+      "deleteTitle": "Supprimer le rôle",
+      "nameRequired": "Le nom du rôle est requis.",
+      "nameFormat": "Le nom doit être en MAJUSCULES_SNAKE (ex. CHEF_PROJET).",
+      "updated": "Rôle mis à jour.",
+      "created": "Rôle créé.",
+      "deleteConfirm": "Supprimer le rôle « {{name}} » ?",
+      "deleted": "Rôle supprimé."
+    }
+  },
+  "permissions": {
+    "title": "Référentiel de permissions",
+    "search": "Rechercher une permission...",
+    "roles": "Rôles",
+    "noRole": "aucun rôle",
+    "empty": "Aucune permission ne correspond"
+  },
+  "modules": {
+    "ADMIN": "Administration",
+    "AGILE": "Planification agile",
+    "CHARGE": "Charges",
+    "EQUIPE": "Équipe",
+    "FACTURATION": "Facturation",
+    "GOVERNANCE": "Gouvernance",
+    "KPI": "Indicateurs",
+    "MISSION": "Missions",
+    "PROJET": "Projets",
+    "RESSOURCE": "Ressources"
+  }
+}

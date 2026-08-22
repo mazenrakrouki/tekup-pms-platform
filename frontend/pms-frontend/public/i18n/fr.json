@@ -70,7 +70,8 @@
     "deactivate": "Désactiver",
     "restore": "Restaurer",
     "archive": "Archiver",
-    "unarchive": "Désarchiver"
+    "unarchive": "Désarchiver",
+    "saveFailed": "Erreur lors de l'enregistrement."
   },
   "nav": {
     "section": {

@@ -70,7 +70,8 @@
     "deactivate": "Deactivate",
     "restore": "Restore",
     "archive": "Archive",
-    "unarchive": "Unarchive"
+    "unarchive": "Unarchive",
+    "saveFailed": "Could not save. Please try again."
   },
   "nav": {
     "section": {

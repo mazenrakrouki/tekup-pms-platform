@@ -294,3 +294,44 @@ English, but the interface is bilingual, so the expansion is translated rather t
 
 **Verification:** login reads **PMS / Project Management System** in English and
 **PMS / Système de gestion de projets** in French. Root catalogue at 141 keys, EN/FR parity.
+
+---
+
+## D-14 — Admin session translated, AGILE module labelled
+
+**Affected:** Users, Roles & permissions, Permission catalogue.
+
+**Correction:** the three admin components are wired to a new `admin` Transloco scope with 101 keys
+in each language. Nothing French remains in any of them, templates and TypeScript alike — toasts,
+confirmation dialogs and validation messages included, not only visible labels.
+
+**Module labels.** The permission catalogue and the role editor grouped permissions by the raw
+module code coming from the database: `CHARGE`, `EQUIPE`, `PROJET`, `RESSOURCE`, `FACTURATION`.
+Those are identifiers, half of them French, shown directly to an administrator. They now render
+through an `admin.modules.*` map, so the codes stay in the database, where RBAC references them,
+while the interface shows a readable name.
+
+The **AGILE** module is included: "Agile planning" / "Planification agile". Its two permissions,
+`VIEW_AGILE` and `MANAGE_AGILE`, were already exposed by the API from migration V27 — verified by
+querying `/api/admin/permissions` — so the sprint and backlog module was already assignable to a
+role. What was missing was a readable label, not the permissions themselves.
+
+**Bug found by testing rather than by reading.** The first conversion produced
+`{{ "'admin.breadcrumb.users' | transloco" }}` on the users breadcrumb: a quoted string literal
+inside the interpolation, so Angular rendered the expression as text instead of evaluating it. The
+build was clean and the page loaded; only opening it in a browser showed the raw key. Fixed, and a
+scan confirmed no other occurrence of the pattern in the codebase.
+
+**Verification:** FR↔EN round trip on all three pages, instant, no reload.
+
+| Page | EN | FR |
+|---|---|---|
+| Permissions | Permission catalogue · Agile planning · Workload · Team | Référentiel de permissions · Planification agile · Charges · Équipe |
+| Users | Users · User management · Name, Email, Role, Status | Utilisateurs · Gestion des utilisateurs · Nom, Email, Rôle, Statut |
+| Roles | Roles & permissions · Role, Description, Users | Rôles & permissions · Rôle, Description, Utilisateurs |
+
+Role name badges keep showing `DIRECTEUR`, `CHEF_PROJET` and so on. Those are database identifiers
+referenced by the authorization matrix, not interface text, and translating them would break the
+link between what an administrator sees and what the system enforces.
+
+**Progress on D-09:** 609 → **537 lines**, 32 → 31 files.

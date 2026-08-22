@@ -1,0 +1,139 @@
+{
+  "breadcrumb": {
+    "users": "Users",
+    "roles": "Roles & permissions",
+    "permissions": "Permissions"
+  },
+  "users": {
+    "title": "User management",
+    "new": "New user",
+    "search": {
+      "placeholder": "Search by name or email…",
+      "aria": "Search a user",
+      "reset": "Clear"
+    },
+    "filter": {
+      "roleAria": "Filter by role",
+      "allRoles": "All roles",
+      "allStatuses": "All statuses"
+    },
+    "results": {
+      "one": "1 result",
+      "other": "{{count}} results"
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "state": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "actions": {
+      "edit": "Edit",
+      "editAria": "Edit user",
+      "resetPassword": "Reset password",
+      "deactivate": "Deactivate",
+      "deactivateAria": "Deactivate user",
+      "reactivate": "Reactivate",
+      "reactivateAria": "Reactivate user"
+    },
+    "empty": {
+      "noMatchTitle": "No matches",
+      "noMatchDesc": "No user matches your search or filters.",
+      "resetFilters": "Clear filters",
+      "noneTitle": "No users",
+      "noneDesc": "Create the first user account."
+    },
+    "reset": {
+      "title": "Account reset",
+      "done": "The account of {{name}} has been reset.",
+      "mustChange": "The user will have to change their password at next sign-in.",
+      "communicate": "Give this temporary password to the user, it will not be shown again."
+    },
+    "form": {
+      "editTitle": "Edit user",
+      "newTitle": "New user",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "role": "Role",
+      "selectRole": "Select a role",
+      "created": "User created.",
+      "communicate": "Give this initial password to the user, it will not be shown again:"
+    },
+    "msg": {
+      "allRequired": "All fields are required.",
+      "updated": "User updated.",
+      "created": "User created.",
+      "passwordCopied": "Password copied.",
+      "resetConfirm": "Reset the account of {{name}}? A temporary password will be generated and must be changed at next sign-in.",
+      "resetConfirmTitle": "Reset the account",
+      "resetError": "Could not reset the account.",
+      "deactivateConfirm": "Deactivate {{name}}?",
+      "deactivateTitle": "Deactivate the account",
+      "deactivated": "User deactivated.",
+      "deactivateError": "Could not deactivate the account.",
+      "reactivateConfirm": "Reactivate {{name}}?",
+      "reactivateTitle": "Reactivate the account",
+      "reactivated": "User reactivated.",
+      "reactivateError": "Could not reactivate the account."
+    }
+  },
+  "roles": {
+    "title": "Roles",
+    "new": "New role",
+    "search": "Search a role...",
+    "table": {
+      "role": "Role",
+      "description": "Description",
+      "users": "Users",
+      "actions": "Actions"
+    },
+    "system": "system",
+    "systemTitle": "System role, cannot be renamed or deleted",
+    "editAction": "Edit / permissions",
+    "form": {
+      "editTitle": "Edit role",
+      "newTitle": "New role",
+      "name": "Name",
+      "nameLocked": "Name locked (system role).",
+      "descriptionPlaceholder": "One line describing this role",
+      "selected": "{{count}} selected"
+    },
+    "empty": "No roles",
+    "msg": {
+      "loadFailed": "Could not load the roles.",
+      "cannotDeleteSystem": "System role, cannot be deleted",
+      "cannotDeleteAssigned": "Role assigned to users, cannot be deleted",
+      "deleteTitle": "Delete the role",
+      "nameRequired": "The role name is required.",
+      "nameFormat": "The name must be UPPERCASE_SNAKE (e.g. CHEF_PROJET).",
+      "updated": "Role updated.",
+      "created": "Role created.",
+      "deleteConfirm": "Delete the role \"{{name}}\"?",
+      "deleted": "Role deleted."
+    }
+  },
+  "permissions": {
+    "title": "Permission catalogue",
+    "search": "Search a permission...",
+    "roles": "Roles",
+    "noRole": "no role",
+    "empty": "No permission matches"
+  },
+  "modules": {
+    "ADMIN": "Administration",
+    "AGILE": "Agile planning",
+    "CHARGE": "Workload",
+    "EQUIPE": "Team",
+    "FACTURATION": "Billing",
+    "GOVERNANCE": "Governance",
+    "KPI": "Indicators",
+    "MISSION": "Missions",
+    "PROJET": "Projects",
+    "RESSOURCE": "Resources"
+  }
+}

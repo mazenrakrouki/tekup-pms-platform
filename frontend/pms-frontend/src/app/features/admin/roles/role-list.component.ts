@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { TranslocoModule, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RbacService } from '../../../core/services/rbac.service';
@@ -11,17 +12,18 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
 @Component({
   selector: 'app-role-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  providers: [provideTranslocoScope('admin')],
+  imports: [CommonModule, FormsModule, TranslocoModule],
   template: `
     <div class="topbar">
       <div class="tb-breadcrumb">
         <i class="bi bi-shield-lock" style="font-size:13px;color:var(--text-3)"></i>
         <span class="bc-sep">›</span>
-        <span class="bc-curr">Rôles &amp; permissions</span>
+        <span class="bc-curr">{{ 'admin.breadcrumb.roles' | transloco }}</span>
       </div>
       <div class="tb-right">
         <button class="btn btn-primary btn-sm" (click)="openCreate()">
-          <i class="bi bi-plus-lg"></i>Nouveau rôle
+          <i class="bi bi-plus-lg"></i>{{ 'admin.roles.new' | transloco }}
         </button>
       </div>
     </div>
@@ -29,11 +31,11 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
     <div class="page-body">
       <div class="card">
         <div class="card-header justify-content-between">
-          <span>Rôles</span>
+          <span>{{ 'admin.roles.title' | transloco }}</span>
           <div class="input-wrap" style="width:260px;max-width:100%">
             <i class="bi bi-search input-icon"></i>
             <input type="search" class="form-control form-control-sm"
-                   placeholder="Rechercher un rôle..."
+                   [placeholder]="'admin.roles.search' | transloco"
                    [ngModel]="search()" (ngModelChange)="search.set($event)">
           </div>
         </div>
@@ -42,11 +44,11 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
           <table class="table table-hover mb-0 align-middle">
             <thead>
               <tr>
-                <th>Rôle</th>
+                <th>{{ 'admin.roles.table.role' | transloco }}</th>
                 <th class="d-none d-md-table-cell">Description</th>
                 <th class="text-center">Permissions</th>
-                <th class="text-center">Utilisateurs</th>
-                <th class="text-end">Actions</th>
+                <th class="text-center">{{ 'admin.roles.table.users' | transloco }}</th>
+                <th class="text-end">{{ 'admin.roles.table.actions' | transloco }}</th>
               </tr>
             </thead>
             <tbody>
@@ -61,8 +63,8 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
                       <div class="d-flex align-items-center gap-2">
                         <span class="fw-semibold">{{ r.name }}</span>
                         @if (r.system) {
-                          <span class="badge-draft" style="font-size:10px" title="Rôle système — non renommable, non supprimable">
-                            <i class="bi bi-lock-fill me-1"></i>système
+                          <span class="badge-draft" style="font-size:10px" [title]="'admin.roles.systemTitle' | transloco">
+                            <i class="bi bi-lock-fill me-1"></i>{{ 'admin.roles.system' | transloco }}
                           </span>
                         }
                       </div>
@@ -71,7 +73,7 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
                     <td class="text-center"><span class="badge-active">{{ r.permissions.length }}</span></td>
                     <td class="text-center cell-muted">{{ r.userCount }}</td>
                     <td class="text-end">
-                      <button class="btn btn-ghost btn-icon btn-sm" (click)="openEdit(r)" title="Modifier / permissions">
+                      <button class="btn btn-ghost btn-icon btn-sm" (click)="openEdit(r)" [title]="'admin.roles.editAction' | transloco">
                         <i class="bi bi-pencil"></i>
                       </button>
                       <button class="btn btn-ghost btn-icon btn-sm"
@@ -88,7 +90,7 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
                   <tr><td colspan="5">
                     <div class="empty-state">
                       <div class="es-icon"><i class="bi bi-shield-lock"></i></div>
-                      <div class="es-title">Aucun rôle</div>
+                      <div class="es-title">{{ 'admin.roles.empty' | transloco }}</div>
                     </div>
                   </td></tr>
                 }
@@ -107,7 +109,7 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">
-                {{ editing() ? 'Modifier le rôle' : 'Nouveau rôle' }}
+                {{ (editing() ? 'admin.roles.form.editTitle' : 'admin.roles.form.newTitle') | transloco }}
               </h5>
               <button type="button" class="btn-close" (click)="showModal.set(false)"></button>
             </div>
@@ -120,27 +122,27 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
                          (ngModelChange)="form.name = $event.toUpperCase()">
                   @if (editing()?.system) {
                     <div style="font-size:11px;color:var(--text-3);margin-top:.25rem">
-                      Nom verrouillé (rôle système).
+                      {{ 'admin.roles.form.nameLocked' | transloco }}
                     </div>
                   }
                 </div>
                 <div class="col-md-7">
                   <label class="form-label">Description</label>
                   <input type="text" class="form-control" [(ngModel)]="form.description"
-                         placeholder="Rôle de l'utilisateur en une ligne">
+                         [placeholder]="'admin.roles.form.descriptionPlaceholder' | transloco">
                 </div>
               </div>
 
               <div class="d-flex align-items-center justify-content-between mb-2">
                 <label class="form-label mb-0">Permissions</label>
-                <span class="sel-count">{{ selectedIds().size }} sélectionnée(s)</span>
+                <span class="sel-count">{{ 'admin.roles.form.selected' | transloco: { count: selectedIds().size } }}</span>
               </div>
 
               <div class="perm-groups">
                 @for (g of moduleGroups(); track g.module) {
                   <div class="perm-group">
                     <div class="perm-group-head">
-                      <span class="perm-group-title">{{ g.module }}</span>
+                      <span class="perm-group-title">{{ 'admin.modules.' + g.module | transloco }}</span>
                       <button type="button" class="btn btn-ghost btn-sm perm-toggle"
                               (click)="toggleModule(g)">
                         {{ allSelected(g) ? 'Tout retirer' : 'Tout cocher' }}
@@ -161,7 +163,7 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
               </div>
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
                 Enregistrer
@@ -204,6 +206,7 @@ export class RoleListComponent implements OnInit {
   private readonly rbac = inject(RbacService);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
+  private readonly t     = inject(TranslocoService);
 
   roles = signal<Role[]>([]);
   allPermissions = signal<Permission[]>([]);
@@ -243,14 +246,14 @@ export class RoleListComponent implements OnInit {
     this.loading.set(true);
     this.rbac.listRoles().subscribe({
       next: r => { this.roles.set(r); this.loading.set(false); },
-      error: () => { this.loading.set(false); this.toast.error('Impossible de charger les rôles.'); }
+      error: () => { this.loading.set(false); this.toast.error(this.t.translate('admin.roles.msg.loadFailed')); }
     });
   }
 
   deleteHint(r: Role): string {
-    if (r.system) return 'Rôle système — suppression impossible';
-    if (r.userCount > 0) return 'Rôle affecté à des utilisateurs — suppression impossible';
-    return 'Supprimer le rôle';
+    if (r.system) return this.t.translate('admin.roles.msg.cannotDeleteSystem');
+    if (r.userCount > 0) return this.t.translate('admin.roles.msg.cannotDeleteAssigned');
+    return this.t.translate('admin.roles.msg.deleteTitle');
   }
 
   openCreate(): void {
@@ -290,9 +293,9 @@ export class RoleListComponent implements OnInit {
 
   save(): void {
     const name = this.form.name.trim();
-    if (!name) { this.toast.error('Le nom du rôle est requis.'); return; }
+    if (!name) { this.toast.error(this.t.translate('admin.roles.msg.nameRequired')); return; }
     if (!/^[A-Z][A-Z0-9_]*$/.test(name)) {
-      this.toast.error('Le nom doit être en MAJUSCULES_SNAKE (ex. CHEF_PROJET).');
+      this.toast.error(this.t.translate('admin.roles.msg.nameFormat'));
       return;
     }
     this.saving.set(true);
@@ -307,7 +310,7 @@ export class RoleListComponent implements OnInit {
       next: () => {
         this.saving.set(false);
         this.showModal.set(false);
-        this.toast.success(editing ? 'Rôle mis à jour.' : 'Rôle créé.');
+        this.toast.success(this.t.translate(editing ? 'admin.roles.msg.updated' : 'admin.roles.msg.created'));
         this.load();
       },
       error: (e) => {
@@ -319,9 +322,11 @@ export class RoleListComponent implements OnInit {
 
   async remove(r: Role): Promise<void> {
     if (r.system || r.userCount > 0) return;
-    if (!await this.confirm.ask(`Supprimer le rôle « ${r.name} » ?`, 'Supprimer le rôle')) return;
+    if (!await this.confirm.ask(
+      this.t.translate('admin.roles.msg.deleteConfirm', { name: r.name }),
+      this.t.translate('admin.roles.msg.deleteTitle'))) return;
     this.rbac.deleteRole(r.id).subscribe({
-      next: () => { this.toast.success('Rôle supprimé.'); this.load(); },
+      next: () => { this.toast.success(this.t.translate('admin.roles.msg.deleted')); this.load(); },
       error: (e) => this.toast.error(e.error?.detail ?? 'Suppression impossible.')
     });
   }

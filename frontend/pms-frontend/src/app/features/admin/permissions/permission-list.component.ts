@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { TranslocoModule, provideTranslocoScope } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RbacService } from '../../../core/services/rbac.service';
@@ -10,7 +11,8 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
 @Component({
   selector: 'app-permission-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  providers: [provideTranslocoScope('admin')],
+  imports: [CommonModule, FormsModule, TranslocoModule],
   template: `
     <div class="topbar">
       <div class="tb-breadcrumb">
@@ -23,11 +25,11 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
     <div class="page-body">
       <div class="card">
         <div class="card-header justify-content-between">
-          <span>Référentiel de permissions</span>
+          <span>{{ 'admin.permissions.title' | transloco }}</span>
           <div class="input-wrap" style="width:260px;max-width:100%">
             <i class="bi bi-search input-icon"></i>
             <input type="search" class="form-control form-control-sm"
-                   placeholder="Rechercher une permission..."
+                   [placeholder]="'admin.permissions.search' | transloco"
                    [ngModel]="search()" (ngModelChange)="search.set($event)">
           </div>
         </div>
@@ -44,7 +46,7 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
           @for (g of filteredGroups(); track g.module) {
             <div class="module-block">
               <div class="module-head">
-                <span class="module-name">{{ g.module }}</span>
+                <span class="module-name">{{ 'admin.modules.' + g.module | transloco }}</span>
                 <span class="module-count">{{ g.permissions.length }}</span>
               </div>
               <div class="table-responsive">
@@ -53,7 +55,7 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
                     <tr>
                       <th style="width:230px">Code</th>
                       <th>Description</th>
-                      <th>Rôles</th>
+                      <th>{{ 'admin.permissions.roles' | transloco }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -69,7 +71,7 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
                               }
                             </div>
                           } @else {
-                            <span class="no-role"><i class="bi bi-dash-circle me-1"></i>aucun rôle</span>
+                            <span class="no-role"><i class="bi bi-dash-circle me-1"></i>{{ 'admin.permissions.noRole' | transloco }}</span>
                           }
                         </td>
                       </tr>
@@ -82,7 +84,7 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
           @if (filteredGroups().length === 0) {
             <div class="empty-state">
               <div class="es-icon"><i class="bi bi-key"></i></div>
-              <div class="es-title">Aucune permission ne correspond</div>
+              <div class="es-title">{{ 'admin.permissions.empty' | transloco }}</div>
             </div>
           }
         }

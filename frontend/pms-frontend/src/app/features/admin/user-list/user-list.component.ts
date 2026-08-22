@@ -1,4 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
+import { TranslocoModule, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
@@ -16,7 +17,8 @@ type SortDir = 'asc' | 'desc';
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  providers: [provideTranslocoScope('admin')],
+  imports: [CommonModule, FormsModule, PaginationComponent, TranslocoModule],
   styles: [`
     .toolbar { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;
       padding:.75rem 1rem; border-bottom:1px solid var(--border); }
@@ -47,7 +49,7 @@ type SortDir = 'asc' | 'desc';
       <div class="tb-breadcrumb">
         <i class="bi bi-person-lines-fill" style="font-size:13px;color:var(--text-3)"></i>
         <span class="bc-sep">›</span>
-        <span class="bc-curr">Utilisateurs</span>
+        <span class="bc-curr">{{ 'admin.breadcrumb.users' | transloco }}</span>
       </div>
       <div class="tb-right">
         <button class="btn btn-primary btn-sm" (click)="openCreate()">
@@ -58,7 +60,7 @@ type SortDir = 'asc' | 'desc';
 
     <div class="page-body">
       <div class="page-header">
-        <h1 class="page-title">Gestion des utilisateurs</h1>
+        <h1 class="page-title">{{ 'admin.users.title' | transloco }}</h1>
       </div>
 
       <div class="card">
@@ -67,31 +69,31 @@ type SortDir = 'asc' | 'desc';
           <div class="input-wrap" style="flex:1;min-width:200px;max-width:320px">
             <i class="bi bi-search input-icon"></i>
             <input type="search" class="form-control form-control-sm"
-                   placeholder="Rechercher par nom ou email…"
+                   [placeholder]="'admin.users.search.placeholder' | transloco"
                    [ngModel]="search()" (ngModelChange)="onSearchChange($event)"
-                   aria-label="Rechercher un utilisateur">
+                   [attr.aria-label]="'admin.users.search.aria' | transloco">
           </div>
 
           <select class="form-select form-select-sm" style="width:auto"
-                  [ngModel]="roleFilter()" (ngModelChange)="onRoleChange($event)" aria-label="Filtrer par rôle">
-            <option value="">Tous les rôles</option>
+                  [ngModel]="roleFilter()" (ngModelChange)="onRoleChange($event)" [attr.aria-label]="'admin.users.filter.roleAria' | transloco">
+            <option value="">{{ 'admin.users.filter.allRoles' | transloco }}</option>
             @for (r of roles(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
           </select>
 
           <select class="form-select form-select-sm" style="width:auto"
                   [ngModel]="statusFilter()" (ngModelChange)="onStatusChange($event)" aria-label="Filtrer par statut">
-            <option value="">Tous les statuts</option>
-            <option value="true">Actif</option>
-            <option value="false">Inactif</option>
+            <option value="">{{ 'admin.users.filter.allStatuses' | transloco }}</option>
+            <option value="true">{{ 'admin.users.state.active' | transloco }}</option>
+            <option value="false">{{ 'admin.users.state.inactive' | transloco }}</option>
           </select>
 
           @if (hasFilters()) {
             <button class="btn btn-ghost btn-sm" (click)="clearFilters()">
-              <i class="bi bi-x-lg me-1"></i>Réinitialiser
+              <i class="bi bi-x-lg me-1"></i>{{ 'admin.users.search.reset' | transloco }}
             </button>
           }
 
-          <span class="count">{{ totalElements() }} résultat{{ totalElements() !== 1 ? 's' : '' }}</span>
+          <span class="count">{{ (totalElements() === 1 ? 'admin.users.results.one' : 'admin.users.results.other') | transloco: { count: totalElements() } }}</span>
         </div>
 
         <div class="table-responsive">
@@ -100,15 +102,15 @@ type SortDir = 'asc' | 'desc';
               <tr>
                 <th class="th-sort" [class.is-sorted]="sortCol()==='lastName'" [attr.aria-sort]="ariaSort('lastName')"
                     tabindex="0" (click)="toggleSort('lastName')" (keydown.enter)="toggleSort('lastName')" (keydown.space)="toggleSort('lastName'); $event.preventDefault()">
-                  <span class="th-inner">Nom <i class="bi caret" [ngClass]="caret('lastName')"></i></span>
+                  <span class="th-inner">{{ 'admin.users.table.name' | transloco }} <i class="bi caret" [ngClass]="caret('lastName')"></i></span>
                 </th>
                 <th class="th-sort" [class.is-sorted]="sortCol()==='email'" [attr.aria-sort]="ariaSort('email')"
                     tabindex="0" (click)="toggleSort('email')" (keydown.enter)="toggleSort('email')" (keydown.space)="toggleSort('email'); $event.preventDefault()">
                   <span class="th-inner">Email <i class="bi caret" [ngClass]="caret('email')"></i></span>
                 </th>
-                <th>Rôle</th>
-                <th>Statut</th>
-                <th class="text-end">Actions</th>
+                <th>{{ 'admin.users.table.role' | transloco }}</th>
+                <th>{{ 'admin.users.table.status' | transloco }}</th>
+                <th class="text-end">{{ 'admin.users.table.actions' | transloco }}</th>
               </tr>
             </thead>
             <tbody>
@@ -129,25 +131,25 @@ type SortDir = 'asc' | 'desc';
                     <td class="u-mail">{{ u.email }}</td>
                     <td><span class="role-badge-light">{{ u.roleName }}</span></td>
                     <td>
-                      <span [class]="u.active ? 'badge-active' : 'badge-cancelled'">{{ u.active ? 'Actif' : 'Inactif' }}</span>
+                      <span [class]="u.active ? 'badge-active' : 'badge-cancelled'">{{ (u.active ? 'admin.users.state.active' : 'admin.users.state.inactive') | transloco }}</span>
                     </td>
                     <td class="text-end" style="white-space:nowrap">
                       <button class="btn btn-ghost btn-icon btn-sm" (click)="openEdit(u)"
-                              title="Modifier" aria-label="Modifier l'utilisateur">
+                              [title]="'admin.users.actions.edit' | transloco" [attr.aria-label]="'admin.users.actions.editAria' | transloco">
                         <i class="bi bi-pencil"></i>
                       </button>
                       @if (u.active) {
                         <button class="btn btn-ghost btn-icon btn-sm act-info" (click)="resetAccount(u)"
-                                title="Réinitialiser le mot de passe" aria-label="Réinitialiser le mot de passe">
+                                [title]="'admin.users.actions.resetPassword' | transloco" [attr.aria-label]="'admin.users.actions.resetPassword' | transloco">
                           <i class="bi bi-key"></i>
                         </button>
                         <button class="btn btn-ghost btn-icon btn-sm act-warn" (click)="deactivate(u)"
-                                title="Désactiver" aria-label="Désactiver l'utilisateur">
+                                [title]="'admin.users.actions.deactivate' | transloco" [attr.aria-label]="'admin.users.actions.deactivateAria' | transloco">
                           <i class="bi bi-person-dash"></i>
                         </button>
                       } @else {
                         <button class="btn btn-ghost btn-icon btn-sm act-ok" (click)="reactivate(u)"
-                                title="Réactiver" aria-label="Réactiver l'utilisateur">
+                                [title]="'admin.users.actions.reactivate' | transloco" [attr.aria-label]="'admin.users.actions.reactivateAria' | transloco">
                           <i class="bi bi-person-check"></i>
                         </button>
                       }
@@ -160,17 +162,17 @@ type SortDir = 'asc' | 'desc';
                       @if (hasFilters()) {
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-search"></i></div>
-                          <div class="es-title">Aucun résultat</div>
-                          <div class="es-desc">Aucun utilisateur ne correspond à votre recherche ou à vos filtres.</div>
+                          <div class="es-title">{{ 'admin.users.empty.noMatchTitle' | transloco }}</div>
+                          <div class="es-desc">{{ 'admin.users.empty.noMatchDesc' | transloco }}</div>
                           <button class="btn btn-outline-secondary btn-sm mt-3" (click)="clearFilters()">
-                            <i class="bi bi-x-lg me-1"></i>Réinitialiser les filtres
+                            <i class="bi bi-x-lg me-1"></i>{{ 'admin.users.empty.resetFilters' | transloco }}
                           </button>
                         </div>
                       } @else {
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-people"></i></div>
-                          <div class="es-title">Aucun utilisateur</div>
-                          <div class="es-desc">Créez le premier compte utilisateur.</div>
+                          <div class="es-title">{{ 'admin.users.empty.noneTitle' | transloco }}</div>
+                          <div class="es-desc">{{ 'admin.users.empty.noneDesc' | transloco }}</div>
                           <button class="btn btn-primary btn-sm mt-3" (click)="openCreate()">
                             <i class="bi bi-plus-lg me-1"></i>Nouvel utilisateur
                           </button>
@@ -199,18 +201,18 @@ type SortDir = 'asc' | 'desc';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title"><i class="bi bi-key me-2 act-info"></i>Compte réinitialisé</h5>
+              <h5 class="modal-title"><i class="bi bi-key me-2 act-info"></i>{{ 'admin.users.reset.title' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showResetModal.set(false)"></button>
             </div>
             <div class="modal-body">
               @if (resetResult()) {
                 <p class="mb-3" style="font-size:13px">
-                  Le compte de <strong>{{ resetResult()!.userName }}</strong> a été réinitialisé.
-                  L'utilisateur devra changer son mot de passe à sa prochaine connexion.
+                  {{ 'admin.users.reset.done' | transloco: { name: resetResult()!.userName } }}
+                  {{ 'admin.users.reset.mustChange' | transloco }}
                 </p>
                 <div class="alert alert-warning py-2" style="font-size:12px">
                   <i class="bi bi-exclamation-triangle me-1"></i>
-                  Communiquez ce mot de passe temporaire à l'utilisateur — il ne sera plus affiché.
+                  {{ 'admin.users.reset.communicate' | transloco }}
                 </div>
                 <div class="input-group mt-2">
                   <input type="text" class="form-control monospace" [value]="resetResult()!.pwd" readonly aria-label="Mot de passe temporaire">
@@ -221,7 +223,7 @@ type SortDir = 'asc' | 'desc';
               }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-primary" (click)="showResetModal.set(false)">Fermer</button>
+              <button class="btn btn-primary" (click)="showResetModal.set(false)">{{ 'common.close' | transloco }}</button>
             </div>
           </div>
         </div>
@@ -235,27 +237,27 @@ type SortDir = 'asc' | 'desc';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">{{ editingId() ? "Modifier l'utilisateur" : 'Nouvel utilisateur' }}</h5>
+              <h5 class="modal-title">{{ (editingId() ? 'admin.users.form.editTitle' : 'admin.users.form.newTitle') | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showModal.set(false)"></button>
             </div>
             <div class="modal-body">
               <div class="row g-3">
                 <div class="col-6">
-                  <label class="form-label">Prénom <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" [(ngModel)]="form.firstName" placeholder="Prénom" autocomplete="given-name">
+                  <label class="form-label">{{ 'admin.users.form.firstName' | transloco }} <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" [(ngModel)]="form.firstName" [placeholder]="'admin.users.form.firstName' | transloco" autocomplete="given-name">
                 </div>
                 <div class="col-6">
-                  <label class="form-label">Nom <span class="text-danger">*</span></label>
-                  <input type="text" class="form-control" [(ngModel)]="form.lastName" placeholder="Nom" autocomplete="family-name">
+                  <label class="form-label">{{ 'admin.users.form.lastName' | transloco }} <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" [(ngModel)]="form.lastName" [placeholder]="'admin.users.form.lastName' | transloco" autocomplete="family-name">
                 </div>
                 <div class="col-12">
                   <label class="form-label">Email <span class="text-danger">*</span></label>
                   <input type="email" class="form-control" [(ngModel)]="form.email" placeholder="email@example.com" autocomplete="email">
                 </div>
                 <div class="col-12">
-                  <label class="form-label">Rôle <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'admin.users.form.role' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="form.roleId">
-                    <option [value]="0" disabled>Sélectionner un rôle</option>
+                    <option [value]="0" disabled>{{ 'admin.users.form.selectRole' | transloco }}</option>
                     @for (r of roles(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
                   </select>
                 </div>
@@ -263,9 +265,9 @@ type SortDir = 'asc' | 'desc';
               @if (errorMsg()) { <div class="alert alert-danger py-2 mt-3">{{ errorMsg() }}</div> }
               @if (initialPassword()) {
                 <div class="alert alert-success mt-3">
-                  <strong>Utilisateur créé.</strong> Communiquez ce mot de passe initial — il ne sera plus affiché&nbsp;:
+                  <strong>{{ 'admin.users.form.created' | transloco }}</strong> {{ 'admin.users.form.communicate' | transloco }}
                   <div class="input-group mt-2">
-                    <input type="text" class="form-control monospace" [value]="initialPassword()" readonly aria-label="Mot de passe initial">
+                    <input type="text" class="form-control monospace" [value]="initialPassword()" readonly [attr.aria-label]="'admin.users.form.created' | transloco">
                     <button class="btn btn-outline-secondary" type="button" (click)="copyPassword()" title="Copier" aria-label="Copier le mot de passe">
                       <i class="bi bi-clipboard"></i>
                     </button>
@@ -274,7 +276,7 @@ type SortDir = 'asc' | 'desc';
               }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showModal.set(false)">{{ initialPassword() ? 'Fermer' : 'Annuler' }}</button>
+              <button class="btn btn-secondary" (click)="showModal.set(false)">{{ (initialPassword() ? 'common.close' : 'common.cancel') | transloco }}</button>
               @if (!initialPassword()) {
                 <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
                   @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
@@ -291,6 +293,7 @@ type SortDir = 'asc' | 'desc';
 export class UserListComponent implements OnInit {
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
+  private readonly t     = inject(TranslocoService);
   constructor(private http: HttpClient) {}
 
   users = signal<User[]>([]);
@@ -399,7 +402,7 @@ export class UserListComponent implements OnInit {
 
   save(): void {
     if (!this.form.firstName || !this.form.lastName || !this.form.email || !this.form.roleId) {
-      this.errorMsg.set('Tous les champs sont requis.');
+      this.errorMsg.set(this.t.translate('admin.users.msg.allRequired'));
       return;
     }
     this.saving.set(true);
@@ -407,26 +410,26 @@ export class UserListComponent implements OnInit {
     const id = this.editingId();
     if (id) {
       this.http.put<User>(`${environment.apiUrl}/users/${id}`, this.form).subscribe({
-        next: () => { this.load(); this.showModal.set(false); this.saving.set(false); this.toast.success('Utilisateur mis à jour.'); },
-        error: (e) => { this.errorMsg.set(e.error?.message ?? 'Erreur lors de l\'enregistrement.'); this.saving.set(false); }
+        next: () => { this.load(); this.showModal.set(false); this.saving.set(false); this.toast.success(this.t.translate('admin.users.msg.updated')); },
+        error: (e) => { this.errorMsg.set(e.error?.message ?? this.t.translate('common.saveFailed')); this.saving.set(false); }
       });
     } else {
       this.http.post<UserCreateResult>(`${environment.apiUrl}/users`, this.form).subscribe({
-        next: (res) => { this.load(); this.saving.set(false); this.initialPassword.set(res.initialPassword); this.toast.success('Utilisateur créé.'); },
-        error: (e) => { this.errorMsg.set(e.error?.message ?? 'Erreur lors de l\'enregistrement.'); this.saving.set(false); }
+        next: (res) => { this.load(); this.saving.set(false); this.initialPassword.set(res.initialPassword); this.toast.success(this.t.translate('admin.users.msg.created')); },
+        error: (e) => { this.errorMsg.set(e.error?.message ?? this.t.translate('common.saveFailed')); this.saving.set(false); }
       });
     }
   }
 
   copyPassword(): void {
     const pwd = this.initialPassword();
-    if (pwd) navigator.clipboard.writeText(pwd).then(() => this.toast.info('Mot de passe copié.')).catch(() => {});
+    if (pwd) navigator.clipboard.writeText(pwd).then(() => this.toast.info(this.t.translate('admin.users.msg.passwordCopied'))).catch(() => {});
   }
 
   async resetAccount(u: User): Promise<void> {
     const confirmed = await this.confirm.ask(
-      `Réinitialiser le compte de ${u.firstName} ${u.lastName} ? Un mot de passe temporaire sera généré et devra être changé à la prochaine connexion.`,
-      'Réinitialiser le compte'
+      this.t.translate('admin.users.msg.resetConfirm', { name: `${u.firstName} ${u.lastName}` }),
+      this.t.translate('admin.users.msg.resetConfirmTitle')
     );
     if (!confirmed) return;
     this.http.patch<UserCreateResult>(`${environment.apiUrl}/users/${u.id}/reset-account`, {}).subscribe({
@@ -435,28 +438,32 @@ export class UserListComponent implements OnInit {
         this.showResetModal.set(true);
         this.load();
       },
-      error: () => this.toast.error('Erreur lors de la réinitialisation du compte.')
+      error: () => this.toast.error(this.t.translate('admin.users.msg.resetError'))
     });
   }
 
   copyResetPassword(): void {
     const pwd = this.resetResult()?.pwd;
-    if (pwd) navigator.clipboard.writeText(pwd).then(() => this.toast.info('Mot de passe copié.')).catch(() => {});
+    if (pwd) navigator.clipboard.writeText(pwd).then(() => this.toast.info(this.t.translate('admin.users.msg.passwordCopied'))).catch(() => {});
   }
 
   async deactivate(u: User): Promise<void> {
-    if (!await this.confirm.ask(`Désactiver ${u.firstName} ${u.lastName} ?`, 'Désactiver le compte')) return;
+    if (!await this.confirm.ask(
+      this.t.translate('admin.users.msg.deactivateConfirm', { name: `${u.firstName} ${u.lastName}` }),
+      this.t.translate('admin.users.msg.deactivateTitle'))) return;
     this.http.patch(`${environment.apiUrl}/users/${u.id}/deactivate`, {}).subscribe({
-      next: () => { this.load(); this.toast.success('Utilisateur désactivé.'); },
-      error: () => this.toast.error('Erreur lors de la désactivation.')
+      next: () => { this.load(); this.toast.success(this.t.translate('admin.users.msg.deactivated')); },
+      error: () => this.toast.error(this.t.translate('admin.users.msg.deactivateError'))
     });
   }
 
   async reactivate(u: User): Promise<void> {
-    if (!await this.confirm.ask(`Réactiver ${u.firstName} ${u.lastName} ?`, 'Réactiver le compte')) return;
+    if (!await this.confirm.ask(
+      this.t.translate('admin.users.msg.reactivateConfirm', { name: `${u.firstName} ${u.lastName}` }),
+      this.t.translate('admin.users.msg.reactivateTitle'))) return;
     this.http.patch(`${environment.apiUrl}/users/${u.id}/reactivate`, {}).subscribe({
-      next: () => { this.load(); this.toast.success('Utilisateur réactivé.'); },
-      error: () => this.toast.error('Erreur lors de la réactivation.')
+      next: () => { this.load(); this.toast.success(this.t.translate('admin.users.msg.reactivated')); },
+      error: () => this.toast.error(this.t.translate('admin.users.msg.reactivateError'))
     });
   }
 }
