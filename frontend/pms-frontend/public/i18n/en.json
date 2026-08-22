@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "PMS",
-    "tagline": "ST2I Enterprise"
+    "tagline": "ST2I Enterprise",
+    "fullName": "Project Management System"
   },
   "lang": {
     "label": "Language",

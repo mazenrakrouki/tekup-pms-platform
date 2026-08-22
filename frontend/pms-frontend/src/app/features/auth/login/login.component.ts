@@ -129,7 +129,7 @@ import { LanguageSwitcherComponent } from '../../../layout/language-switcher/lan
             style="width:160px;height:160px;object-fit:contain;filter:drop-shadow(0 8px 32px rgba(0,0,0,.5));margin-bottom:1.5rem"
           >
           <h2 class="login-hero-text mb-3">{{ 'app.name' | transloco }}</h2>
-          <p class="login-hero-sub">{{ 'app.tagline' | transloco }}</p>
+          <p class="login-hero-sub">{{ 'app.fullName' | transloco }}</p>
         </div>
 
         <!-- Footer -->

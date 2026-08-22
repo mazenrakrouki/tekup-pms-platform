@@ -251,3 +251,46 @@ Why it matters:
 **Fix:** drop the real logo into `public/` and reference it locally. Left open because the actual
 image file is not in the repository; `report/.../img/logoSociete.png` is a placeholder awaiting the
 company's own asset.
+
+---
+
+## D-12 — Charges tab rendered every row at once
+
+**Affected:** project detail, "Charges" tab (`/projects/{id}?tab=charges`).
+
+**Root cause:** both tables were loaded with a page size of 1000 and rendered whole:
+
+```ts
+this.workloadSvc.listPlanCharges(this.projectId, 0, 1000).subscribe(d => this.planCharges.set(d.content));
+this.workloadSvc.listChargesReelles(this.projectId, 0, 1000).subscribe(d => this.chargesReelles.set(d.content));
+```
+
+There was no pagination on either. The workload model is one row per resource, per month, per
+year, so the count grows with team size multiplied by project duration. On project 80 that is
+**240 rows in each table — 480 rows on a single tab**, all in the DOM.
+
+**Correction:** client-side pagination at **10 rows per page** on each table, reusing the existing
+`app-pagination` component rather than introducing another control. The two tables page
+independently, since they answer different questions. The pagination bar only appears when a table
+actually exceeds one page.
+
+The data was already fetched in one call, so paging is a pure slice — no additional server round
+trip. A `slicePage` helper clamps the page index with `Math.min`, so a shrinking list cannot leave
+the view on an empty page.
+
+**Verification:** on `/projects/80?tab=charges`, each table renders **10 rows** and reports
+`1–10 of 240 · Page 1 of 24`. Clicking next on the first table moves it to page 2 and changes its
+first row, while the second table stays where it was.
+
+---
+
+## D-13 — Login page did not say what PMS stands for
+
+**Affected:** login screen.
+
+**Correction:** the hero subtitle now renders `app.fullName`, added to the root catalogue in both
+languages — "Project Management System" and "Système de gestion de projets". The acronym is
+English, but the interface is bilingual, so the expansion is translated rather than frozen.
+
+**Verification:** login reads **PMS / Project Management System** in English and
+**PMS / Système de gestion de projets** in French. Root catalogue at 141 keys, EN/FR parity.

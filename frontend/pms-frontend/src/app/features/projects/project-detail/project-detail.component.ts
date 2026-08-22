@@ -18,6 +18,7 @@ import { Project, ProjectStatus, PROJECT_STATUS_LABELS } from '../../../core/mod
 import { KpiResponse } from '../../../core/models/kpi.model';
 import { TeamAssignment } from '../../../core/models/team.model';
 import { PlanCharge, ChargeReelle } from '../../../core/models/workload.model';
+import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { JalonFacturation, Avenant } from '../../../core/models/billing.model';
 import { Mission } from '../../../core/models/mission.model';
 import { Risk, Livrable, DemandeChangement } from '../../../core/models/governance.model';
@@ -27,7 +28,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, PaginationComponent],
   styles: [`
     .act-danger { color: var(--c-danger); }
     /* Interactive status control (Jira/Linear style) */
@@ -476,7 +477,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                     <tr><th>Ressource</th><th>Année</th><th>Mois</th><th class="text-end">Jours prévus</th></tr>
                   </thead>
                   <tbody>
-                    @for (c of planCharges(); track c.id) {
+                    @for (c of pagedPlanCharges(); track c.id) {
                       <tr>
                         <td>{{ c.userFullName }}</td>
                         <td>{{ c.year }}</td>
@@ -495,6 +496,12 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                   </tbody>
                 </table>
               </div>
+              @if (planCharges().length > planPageSize()) {
+                <app-pagination
+                  [page]="planPage()" [pageSize]="planPageSize()" [total]="planCharges().length"
+                  (pageChange)="planPage.set($event)"
+                  (pageSizeChange)="planPageSize.set($event); planPage.set(0)" />
+              }
             </div>
           </div>
           <div class="col-12">
@@ -508,7 +515,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                     <tr><th>Ressource</th><th>Année</th><th>Mois</th><th class="text-end">Jours réels</th><th>Statut</th></tr>
                   </thead>
                   <tbody>
-                    @for (c of chargesReelles(); track c.id) {
+                    @for (c of pagedChargesReelles(); track c.id) {
                       <tr>
                         <td>{{ c.userFullName }}</td>
                         <td>{{ c.year }}</td>
@@ -534,6 +541,12 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                   </tbody>
                 </table>
               </div>
+              @if (chargesReelles().length > actualPageSize()) {
+                <app-pagination
+                  [page]="actualPage()" [pageSize]="actualPageSize()" [total]="chargesReelles().length"
+                  (pageChange)="actualPage.set($event)"
+                  (pageSizeChange)="actualPageSize.set($event); actualPage.set(0)" />
+              }
             </div>
           </div>
         </div>
@@ -909,6 +922,19 @@ export class ProjectDetailComponent implements OnInit {
   team = signal<TeamAssignment[]>([]);
   planCharges = signal<PlanCharge[]>([]);
   chargesReelles = signal<ChargeReelle[]>([]);
+
+  // Ces deux tableaux peuvent compter des centaines de lignes : une ressource par mois
+  // et par année. Ils étaient rendus d'un bloc, ce qui allongeait l'onglet indéfiniment.
+  // Pagination côté client : les données sont déjà chargées, inutile de rappeler le serveur.
+  planPage       = signal(0);
+  planPageSize   = signal(10);
+  actualPage     = signal(0);
+  actualPageSize = signal(10);
+
+  readonly pagedPlanCharges = computed(() =>
+    slicePage(this.planCharges(), this.planPage(), this.planPageSize()));
+  readonly pagedChargesReelles = computed(() =>
+    slicePage(this.chargesReelles(), this.actualPage(), this.actualPageSize()));
   jalons = signal<JalonFacturation[]>([]);
   avenants = signal<Avenant[]>([]);
   missions = signal<Mission[]>([]);
@@ -1182,4 +1208,14 @@ export class ProjectDetailComponent implements OnInit {
       this.teamSvc.list(this.projectId).subscribe(d => this.team.set(d))
     );
   }
+}
+
+/**
+ * Tranche de page bornée. `Math.min` empêche une page vide lorsque la liste rétrécit
+ * (filtre, rechargement) alors que l'index de page courant pointe au-delà de la fin.
+ */
+function slicePage<T>(rows: T[], page: number, size: number): T[] {
+  const pages = Math.max(1, Math.ceil(rows.length / size));
+  const p = Math.min(page, pages - 1);
+  return rows.slice(p * size, p * size + size);
 }
