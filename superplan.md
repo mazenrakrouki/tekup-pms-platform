@@ -36,13 +36,13 @@ These hold for every chapter and are not renegotiated per section.
 | Ch | Title | Status |
 |---|---|---|
 | — | General introduction | written, revisit at the end |
-| 1 | Project Framework | **in progress** |
+| 1 | Project Framework | **done** |
 | 2 | Analysis and Specification of Requirements | pending |
 | 3 | System Architecture and Design | pending |
 | 4 | Authentication and Access Control (R1) | **done** — pattern reference |
-| 5 | Project and Operational Management (R2) | pending |
-| 6 | Financial Management and Governance (R3) | pending |
-| 7 | Consolidation, Delivery and Deployment (R4) | pending |
+| 5 | Project and Operational Management (R2) | **done** — 3 sprints, incl. new Sprint 5 Agile |
+| 6 | Financial Management and Governance (R3) | **done** — 3 sprints |
+| 7 | Consolidation, Delivery and Deployment (R4) | **done** — 2 sprints + final state |
 | — | General conclusion | written, revisit at the end |
 
 ### The sprint pattern (established in chapter 4)

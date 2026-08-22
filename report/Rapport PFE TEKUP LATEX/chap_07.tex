@@ -1,77 +1,99 @@
-\chapter{Release 4 --- Consolidation, Delivery and Deployment}
+\chapter{Consolidation, Delivery and Deployment}
 
 \section*{Introduction}
 The functional scope of the platform was completed at the end of Release~3. This final release makes
 it deliverable: a coherent and accessible user interface, a verified authorization policy, a
-security review, and a reproducible deployment. It gathers two sprints: Sprint~9 consolidates the interface and
-verifies the platform, Sprint~10 makes it reproducibly deployable and continuously verified.
-Neither delivers new business functionality; both deliver deliverability.
+security review, and a reproducible deployment. It gathers two sprints: Sprint~9 consolidates the
+interface and verifies the platform, Sprint~10 makes it reproducibly deployable and continuously
+verified. Neither delivers new business functionality; both deliver deliverability.
 
 % =====================================================================
-\section{Sprint 9 --- Interface Consolidation, Testing and Deployment}
+\section{Release 4 backlog}
+The last release carries a single user story. The remainder of its content is cross-cutting quality
+work that no functional story expresses, which is itself characteristic of a consolidation release.
 
-\subsection{Sprint Objective}
-Bring the platform to a deliverable state: unify the user interface, verify that the security model
-behaves as designed, review the application against the common web vulnerabilities, and package it
-for deployment.
+\begin{longtable}{|m{1.5cm}|m{6.8cm}|m{5.2cm}|m{1.4cm}|}
+\hline
+\textbf{Story} & \textbf{Need} & \textbf{Technical work} & \textbf{Sprint} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+US-26 & A consistent, accessible and responsive interface & Design system of tokens and shared
+components applied across every module & 9 \\
+\hline
+--- & Verify that the authorization model behaves as designed & Automated suite asserting, for each
+protected endpoint, that the permission grants and its absence refuses & 9 \\
+\hline
+--- & Review the application against the common web vulnerabilities & Category-by-category review
+with the measure taken recorded for each & 9 \\
+\hline
+--- & Deploy reproducibly on any host & Container image per component, orchestration with health
+probes and startup ordering & 10 \\
+\hline
+--- & Verify every change automatically & Continuous integration pipeline building, testing and
+assembling the stack & 10 \\
+\hline
+\caption{Backlog of release 4}
+\label{tab:backlog-r4}
+\end{longtable}
 
-\subsection{Functional Scope}
-This sprint covers user story US-26, a consistent and responsive interface, and the
-cross-cutting quality work that no single functional story carries.
+% =====================================================================
+\section{Sprint 9 --- Interface consolidation, testing and security}
 
-\subsection{Features Implemented}
-\begin{itemize}
-  \item Frontend application structure and session handling.
-  \item Authorization model applied to the interface.
-  \item Design system unifying the screens of the eight modules.
-  \item Automated test suite covering the business rules and the access control.
-  \item Security review against the common web vulnerabilities.
-  \item Deployment packaging.
-\end{itemize}
+\subsection{Sprint 9 use case diagram}
+This sprint adds no use case. It acts on those already delivered, by unifying the screens through
+which they are reached and by verifying that the authorization attached to each of them behaves as
+specified. The relevant view is therefore not a new use case diagram but the global one of
+Chapter~2, now entirely covered by the interface.
 
-\subsection{Technical Realisation}
+\subsection{Sprint 9 analysis and design}
 
-\subsubsection{Frontend structure and session handling}
-The client is a single-page application organised by feature, mirroring the backend modules. The
-access token obtained at sign-in is kept in memory and attached to every request by an HTTP
-interceptor; the refresh token remains in its \texttt{HttpOnly} cookie, unreachable from
-JavaScript. When a request returns \texttt{401}, the interceptor attempts a single refresh before
-returning the user to the sign-in screen.
-
-\subsubsection{Authorization applied to the interface}
-The interface consumes the permission list returned by \texttt{GET /api/me/context} and derives
-from it both the navigation menu and the visibility of individual actions. A button that the user
-is not entitled to use is not merely disabled: it is absent.
+\subsubsection{Where authorization is decided}
+The interface consumes the permission list returned by the context endpoint and derives from it both
+the navigation menu and the visibility of individual actions. A button the user is not entitled to
+use is not merely disabled: it is absent.
 
 This must be understood correctly, and the report states it explicitly: hiding a control is an
 \textbf{ergonomic} measure, not a security measure. The authorization decision is taken by the
 server on every request, as described in Sprint~2. The client-side rule exists so that the user is
 never offered an action that would be refused; it is never the thing that refuses it.
 
-\subsubsection{Design system and interface consolidation}
-The eight modules were built successively, each with its own screens. This sprint unified them
-behind a single design system: a token-based visual language (colours, typography, spacing,
-elevation) declared once and consumed by every screen, together with a set of shared components
-(pagination, selection, confirmation dialog, notifications) reused across the modules rather than
-reimplemented in each.
+\subsubsection{Design decisions}
+\textbf{A design system rather than eight sets of screens.} The modules were built successively,
+each with its own screens. Rather than harmonising them by hand, a token-based visual language,
+covering colours, typography, spacing and elevation, is declared once and consumed everywhere, with
+a set of shared components reused rather than reimplemented. Harmonising by hand would have left the
+next module free to diverge again.
 
-The consolidation also addressed accessibility and consistency: sortable table headers announcing
-their state, labelled icon-only controls, explicit empty states in place of blank tables, and a
-responsive layout. The interface being the only part of the platform its users ever see, this
-convergence matters as much to adoption as the correctness of the engine behind it.
+\textbf{Testing concentrates on what a regression makes expensive.} Not everything is worth an
+automated test. The suite covers the business rules and the authorization model: lifecycle
+transitions, the billing ceiling, workload uniqueness and immutability, multi-currency conversion,
+and the indicator formulas compared against the reference workbook.
 
-\subsubsection{Test strategy}
-Testing concentrates on what a regression would make expensive: the business rules and the
-authorization model. The automated backend suite covers the lifecycle transitions, the billing
-ceiling, workload uniqueness and immutability, the multi-currency conversions, and the indicator
-formulas compared against the reference workbook.
+\textbf{Access control is tested in both directions.} For each protected endpoint the suite asserts
+that a caller holding the permission succeeds \emph{and} that a caller without it is refused.
+Testing only the success path would leave the platform's central claim unverified: it is the refusal
+that proves the policy is enforced.
 
-The access control receives dedicated attention: for each protected endpoint, the suite verifies
-that a caller holding the permission succeeds and that a caller without it is refused. This is what
-makes the ``configurable authorization'' claim verifiable rather than merely stated.
+\subsection{Sprint 9 realization}
+
+\subsubsection{Frontend structure and session handling}
+The client is a single-page application organised by feature, mirroring the backend modules. The
+access token obtained at sign-in is kept in memory and attached to every request by an HTTP
+interceptor; the refresh token remains in its \texttt{HttpOnly} cookie, unreachable from JavaScript.
+When a request returns \texttt{401}, the interceptor attempts a single refresh before returning the
+user to the sign-in screen.
+
+\subsubsection{Interface consolidation}
+Beyond the visual language, the consolidation addressed accessibility and consistency: sortable
+table headers announcing their state, labelled icon-only controls, explicit empty states in place of
+blank tables, and a responsive layout. The interface being the only part of the platform its users
+ever see, this convergence matters as much to adoption as the correctness of the engine behind it.
 
 \subsubsection{Security review}
-The application was reviewed against the common categories of web vulnerability:
+The application was reviewed against the common categories of web vulnerability.
 
 \begin{longtable}{|m{4.6cm}|m{10cm}|}
 \hline
@@ -85,94 +107,43 @@ Broken access control & Every endpoint annotated with its required permission; s
 independently of permission; no role name tested in code \\
 \hline
 Cryptographic failures & Passwords hashed with BCrypt; tokens signed; refresh token confined to an
-\texttt{HttpOnly}, \texttt{Secure}, \texttt{SameSite} cookie \\
+\texttt{HttpOnly}, \texttt{Secure}, \texttt{SameSite} cookie and rotated on every use \\
 \hline
 Injection & Parameterised queries through the ORM; no string-built SQL \\
 \hline
-Identification and session failures & Short-lived access token; instant revocation by token
-version; forced password change on first login \\
+Identification and session failures & Short-lived access token; instant revocation by token version;
+forced password change on first login; repeated failures throttled \\
 \hline
 Sensitive data exposure & Financial data filtered by permission; internal quote behind a dedicated
 permission; computed amounts never persisted \\
 \hline
-Security misconfiguration & Schema managed by versioned migrations with the ORM in validation
-mode; secrets externalised as environment variables \\
+Security misconfiguration & Schema managed by versioned migrations with the ORM in validation mode;
+secrets externalised as environment variables \\
 \hline
 \caption{Security review by vulnerability category}
 \label{tab:owasp}
 \end{longtable}
 
-\subsubsection{Packaging}
+\subsubsection{Packaging, and what it does not solve}
 At the close of this sprint the platform is packaged as an executable archive for the backend and a
-static build for the frontend, with the database schema brought up to date by the migration tool at
-startup and all configuration supplied by environment variables.
+static build for the frontend, with the schema brought up to date by the migration tool at startup
+and all configuration supplied by environment variables. Startup is idempotent: deploying the same
+artefact against an up-to-date database changes nothing, and against an older one applies exactly
+the missing migrations.
 
-Startup is idempotent: deploying the same artefact against an up-to-date database changes nothing,
-and against an older one applies exactly the missing migrations.
-
-This packaging is sufficient to run the application, but not to \emph{deploy} it reproducibly:
-it still assumes a host on which the right Java version, the right Node version and a correctly
-provisioned PostgreSQL instance are already present. Sprint~10 removes that assumption.
-
-\subsection{Tests and Validation}
-
-\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
-\hline
-\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-Business rule suite & Run the automated backend tests & All pass \\
-\hline
-Permission granted & Call each protected endpoint with the permission & Operation performed \\
-\hline
-Permission missing & Call each protected endpoint without it & HTTP 403 \\
-\hline
-Financial confidentiality & Browse the interface as a developer & No financial figure exposed \\
-\hline
-Menu consistency & Sign in with each of the four roles & Each menu matches the permissions held \\
-\hline
-Deployment & Start the artefact against an empty and an existing database & Schema created, then
-migrated without loss \\
-\hline
-\caption{Test cases --- Sprint 9}
-\label{tab:tests-s8}
-\end{longtable}
-
-\subsection{Sprint Outcome}
-The platform is functionally complete, verified on its business rules and its authorization model,
-reviewed for the common vulnerabilities, and packaged as a runnable artefact.
-
-\subsection{Transition to the Next Sprint}
-One gap remains between ``it runs on my machine'' and ``it can be deployed'': the artefact still
-depends on a correctly prepared host. Sprint~10 closes that gap with containerization and a
-continuous integration pipeline.
+This is sufficient to \emph{run} the application but not to \emph{deploy} it reproducibly: it still
+assumes a host on which the right Java version, the right Node version and a correctly provisioned
+PostgreSQL instance are already present. Sprint~10 removes that assumption.
 
 % =====================================================================
-\section{Sprint 10 --- Containerization and Continuous Delivery}
+\section{Sprint 10 --- Containerization and continuous delivery}
 
-\subsection{Sprint Objective}
-Make the platform reproducibly deployable and continuously verified: package each component as a
-container image, orchestrate the whole stack with a single command, and automate build, test and
-integration checks on every change.
+\subsection{Sprint 10 use case diagram}
+Like the previous one, this sprint adds no business use case. Its actor is not a user of the
+platform but the person deploying it, and its scenarios are building the images, starting the stack
+and verifying a change automatically. The deployment view of Chapter~3 is the relevant diagram.
 
-\subsection{Functional Scope}
-This sprint delivers no new business functionality. Its scope is the delivery chain itself, and it
-addresses an item already open in the project's engineering backlog: the absence of deployment
-documentation and of any reproducible deployment procedure.
-
-\subsection{Features Implemented}
-\begin{itemize}
-  \item Container image for the backend, built in two stages and running as a non-root user.
-  \item Container image for the frontend, serving the production build and reverse-proxying the API.
-  \item Orchestration of the three services with health checks and startup ordering.
-  \item Continuous integration pipeline: build, tests, image construction, end-to-end smoke test.
-  \item Deployment documentation and an architecture decision record superseding the previous one.
-\end{itemize}
-
-\subsection{Technical Realisation}
+\subsection{Sprint 10 analysis and design}
 
 \subsubsection{A reconsidered architecture decision}
 The project had initially recorded a decision to run natively, without containers, justified by
@@ -185,41 +156,39 @@ move to containers, states what it changes, and confirms what it does \emph{not}
 particular, three containers are \textbf{not} three microservices: the modular monolith decision
 stands. What is containerized is one application, its database and its static server.
 
-\subsubsection{Image construction}
-Both images are built in two stages, so that the build toolchain never reaches the runtime image:
-the backend image contains a Java runtime and the application archive, with neither Maven nor
-sources; the frontend image contains a web server and the compiled assets, with no Node runtime.
-The backend container runs as a dedicated unprivileged user rather than as root.
+\subsubsection{Design decisions}
+\textbf{Two build stages, so the toolchain never reaches the runtime image.} The backend image
+contains a Java runtime and the application archive, with neither Maven nor sources; the frontend
+image contains a web server and the compiled assets, with no Node runtime.
 
-Tests are deliberately \textbf{not} executed during image construction. Building an image is a
-packaging step; the quality gate belongs to the pipeline. Running the suite in both places would
-double build time without producing any additional signal.
+\textbf{Tests are not run during image construction.} Building an image is a packaging step; the
+quality gate belongs to the pipeline. Running the suite in both places would double build time
+without producing any additional signal.
 
-\subsubsection{Single origin through the reverse proxy}
-The web server serves the application and forwards \texttt{/api} to the backend container. The
-browser therefore contacts a single origin, which has a concrete consequence: the cross-origin
-configuration required by the development setup becomes unnecessary, and the refresh cookie,
-restricted to its own path and marked \texttt{SameSite=Strict}, works without any exception.
-The containerized deployment is, on this point, simpler and safer than the development loop.
+\textbf{A single origin through the reverse proxy.} The web server serves the application and
+forwards \texttt{/api} to the backend container, so the browser contacts one origin. The
+cross-origin configuration required by the development setup becomes unnecessary, and the refresh
+cookie, restricted to its own path and marked \texttt{SameSite=Strict}, works without any exception.
+On this point the containerized deployment is simpler and safer than the development loop.
 
-\subsubsection{Startup ordering and health probes}
-Composing three services raises an ordering problem: a container being \emph{started} is not the
-same as a container being \emph{ready}. The stack therefore relies on health probes rather than on
-declaration order. The database is probed over TCP, because the temporary server used during
-initialisation accepts only local socket connections and would otherwise be reported ready too
-early. The backend exposes a health endpoint, deliberately left unauthenticated but returning no
-detail, and is given a generous startup window because its first run applies the full set of
-schema migrations, including the demonstration dataset.
+\textbf{Ordering by health probe, not by declaration order.} A container being \emph{started} is not
+the same as a container being \emph{ready}. The database is probed over TCP, because the temporary
+server used during initialisation accepts only local socket connections and would otherwise be
+reported ready too early. The backend exposes a health endpoint, deliberately unauthenticated but
+returning no detail, with a generous startup window because its first run applies the full set of
+schema migrations.
+
+\subsection{Sprint 10 realization}
 
 \subsubsection{Defects revealed by the exercise}
 Preparing the pipeline exposed three pre-existing defects that native execution had concealed. The
 most consequential concerned the frontend build configuration: the production configuration never
 substituted the production environment file, so the production bundle embedded the development API
-address. On the development machine the application appeared to work, because the bundle was calling the
-local backend, while it would have been broken on any other host. The second was a build wrapper
+address. On the development machine the application appeared to work, because the bundle was calling
+the local backend, while it would have been broken on any other host. The second was a build wrapper
 documented in the project files but absent from the repository. The third was an ignore rule that
-silently excluded the configuration template from version control, precisely the file the
-deployment procedure requires.
+silently excluded the configuration template from version control, precisely the file the deployment
+procedure requires.
 
 That these defects surfaced only when the delivery chain was automated is itself the argument for
 automating it.
@@ -228,54 +197,18 @@ automating it.
 The pipeline separates what must always hold from what is only meaningful on integration branches.
 Compilation, the backend test suite, the production frontend build and the construction of both
 images run on every proposed change: a component that only breaks after merging is not a gate. The
-end-to-end test, which starts the full stack and performs a real authentication through the
-reverse proxy, runs on integration branches, where its cost is justified. Image publication is
-reserved for the main branch.
+end-to-end test, which starts the full stack and performs a real authentication through the reverse
+proxy, runs on integration branches, where its cost is justified. Image publication is reserved for
+the main branch.
 
 The frontend job also carries an explicit guard against the defect described above: it fails if the
 development address reappears in the production bundle.
 
-\subsection{Tests and Validation}
-
-\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
-\hline
-\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-Environment substitution & Inspect the production bundle & The development address is absent \\
-\hline
-Unprivileged execution & Inspect the identity inside the backend container & Non-root user \\
-\hline
-Full stack startup & Start the three services & All three reported healthy \\
-\hline
-Schema migration & Count the applied migrations on a pristine volume & All migrations applied \\
-\hline
-End-to-end authentication & Authenticate through the reverse proxy & Token returned and refresh
-cookie set \\
-\hline
-Client-side routing & Reload a deep application route & The application is served, not a 404 \\
-\hline
-Persistence & Stop and restart the stack & Data preserved; a volume reset replays the migrations \\
-\hline
-Development loop & Run the native backend and frontend while the stack is up & Both coexist, no
-port collision \\
-\hline
-\caption{Test cases --- Sprint 10}
-\label{tab:tests-s9}
-\end{longtable}
-
-\subsection{Sprint Outcome}
-The platform is deployable by a single command on any machine running a container engine, and every
-change is now verified automatically. The deployment procedure, the environment variables, the
-backup method and the known pitfalls are documented.
-
-\subsection{Final State of the Product}
+% =====================================================================
+\section{Final state of the product}
 At the end of the ten sprints, PMS covers the whole scope identified during the analysis of the
-Excel workbook: dynamic authorization, project and team management, workload planning and
-recording, billing, missions, governance and the earned-value indicator engine, all behind a
+Excel workbook: dynamic authorization, project and team management, workload planning and recording,
+agile planning, billing, missions, governance and the earned-value indicator engine, all behind a
 unified interface. Table~\ref{tab:final} summarises the path from the reference workbook to the
 delivered platform.
 
@@ -314,6 +247,6 @@ Sprint 10 & Containerization and continuous delivery & --- (delivery chain) \\
 \section*{Conclusion}
 Release~4 closed the construction of the platform by addressing what functionality alone does not
 deliver: a coherent interface, a verified security model and a reproducible deployment. The
-incremental path followed since Release~1 (foundation, operations, finance, consolidation)
-produced a platform whose every increment was demonstrable in isolation, and whose final state
-covers the entire business logic previously carried by the Excel workbook.
+incremental path followed since Release~1 (foundation, operations, finance, consolidation) produced
+a platform whose every increment was demonstrable in isolation, and whose final state covers the
+entire business logic previously carried by the Excel workbook.
