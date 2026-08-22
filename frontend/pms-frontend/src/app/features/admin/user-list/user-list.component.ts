@@ -59,7 +59,6 @@ type SortDir = 'asc' | 'desc';
     <div class="page-body">
       <div class="page-header">
         <h1 class="page-title">Gestion des utilisateurs</h1>
-        <p class="page-subtitle">{{ totalElements() }} utilisateur{{ totalElements() !== 1 ? 's' : '' }} · comptes &amp; accès</p>
       </div>
 
       <div class="card">

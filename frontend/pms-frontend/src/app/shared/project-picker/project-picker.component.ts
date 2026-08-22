@@ -6,6 +6,7 @@ import { TeamService } from '../../core/services/team.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Project, PROJECT_STATUS_LABELS, ProjectStatus } from '../../core/models/project.model';
 import { PaginationComponent } from '../pagination/pagination.component';
+import { TranslocoModule } from '@jsverse/transloco';
 
 const FAV_KEY = 'pms.projectPicker.favorites';
 const RECENT_KEY = 'pms.projectPicker.recents';
@@ -22,44 +23,38 @@ const RECENT_MAX = 6;
 @Component({
   selector: 'app-project-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, TranslocoModule],
   template: `
     <!-- ── No selection: on-topic feature landing ── -->
     @if (!selected()) {
       <div class="pp-landing">
+        <!-- Pas de titre ici : la page porte déjà le sien. Ce bloc dit quoi faire,
+             il ne redit pas où l'on est. -->
         <div class="pp-hero">
           <div class="pp-hero-icon"><i class="bi {{ featureIcon() }}"></i></div>
           <div class="pp-hero-text">
-            <h1 class="pp-hero-title">{{ featureTitle() || 'Sélectionner un projet' }}</h1>
-            <p class="pp-hero-desc">{{ featureDescription() || emptyHint() }}</p>
+            <p class="pp-hero-lead">{{ 'picker.chooseProject' | transloco }}</p>
           </div>
           <button class="btn btn-primary pp-hero-btn" (click)="openModal()">
-            <i class="bi bi-search me-1"></i>Parcourir tous les projets
+            <i class="bi bi-search me-1"></i>{{ 'picker.browseAll' | transloco }}
             @if (projects().length) { <span class="pp-hero-count">{{ projects().length }}</span> }
           </button>
         </div>
 
+        <!-- Les projets récents restent directement cliquables : c'est un raccourci
+             réel vers un travail en cours, pas une section décorative. -->
         @if (quickAccess().length) {
-          <div class="pp-qa-label">
-            <i class="bi bi-lightning-charge-fill"></i> Accès rapide — reprenez là où vous en étiez
-          </div>
           <div class="pp-qa-grid">
             @for (p of quickAccess(); track p.id) {
-              <button type="button" class="pp-qa-card" (click)="confirm(p)">
+              <button type="button" class="pp-qa-card" (click)="confirm(p)" [title]="p.code">
                 <div class="pp-qa-top">
-                  <span class="pp-qa-code">{{ p.code }}</span>
-                  <span [class]="badgeClass(p.status)">{{ statusLabel(p.status) }}</span>
+                  <span class="pp-qa-name">{{ p.name }}</span>
+                  <span [class]="badgeClass(p.status)">{{ 'status.' + p.status | transloco }}</span>
                 </div>
-                <div class="pp-qa-name">{{ p.name }}</div>
                 <div class="pp-qa-meta">
                   <span class="pp-qa-metaitem"><i class="bi bi-building"></i>{{ p.client || '—' }}</span>
                   <span class="pp-qa-metaitem"><i class="bi bi-person-badge"></i>{{ p.chefProjetName || '—' }}</span>
                 </div>
-                @if (p.chefProjetId === myId) {
-                  <span class="pp-qa-mine"><i class="bi bi-person-check"></i> Assigné</span>
-                } @else if (isFav(p.id)) {
-                  <span class="pp-qa-mine" style="color:var(--c-amber,#f59e0b)"><i class="bi bi-star-fill"></i> Favori</span>
-                }
                 <i class="bi bi-arrow-right pp-qa-go"></i>
               </button>
             }
@@ -75,36 +70,36 @@ const RECENT_MAX = 6;
           <div class="pp-ctx-head">
             <i class="bi bi-folder-check pp-ctx-icon"></i>
             <span class="pp-ctx-code">{{ selected()!.code }}</span>
-            <span [class]="badgeClass(selected()!.status)">{{ statusLabel(selected()!.status) }}</span>
+            <span [class]="badgeClass(selected()!.status)">{{ 'status.' + selected()!.status | transloco }}</span>
           </div>
           <div class="pp-ctx-name">{{ selected()!.name }}</div>
           <div class="pp-ctx-stats">
             <div class="pp-stat">
-              <span class="pp-stat-label"><i class="bi bi-person-badge"></i> Chef de projet</span>
+              <span class="pp-stat-label"><i class="bi bi-person-badge"></i> {{ 'picker.manager' | transloco }}</span>
               <span class="pp-stat-val">{{ selected()!.chefProjetName || '—' }}</span>
             </div>
             <div class="pp-stat">
-              <span class="pp-stat-label"><i class="bi bi-people"></i> Équipe</span>
+              <span class="pp-stat-label"><i class="bi bi-people"></i> {{ 'picker.team' | transloco }}</span>
               <span class="pp-stat-val">{{ teamCount() === null ? '…' : teamCount() }}</span>
             </div>
             <div class="pp-stat">
-              <span class="pp-stat-label"><i class="bi bi-wallet2"></i> Budget</span>
+              <span class="pp-stat-label"><i class="bi bi-wallet2"></i> {{ 'picker.budget' | transloco }}</span>
               <span class="pp-stat-val">{{ budget() }}</span>
             </div>
             <div class="pp-stat">
-              <span class="pp-stat-label"><i class="bi bi-calendar3"></i> Période</span>
+              <span class="pp-stat-label"><i class="bi bi-calendar3"></i> {{ 'picker.period' | transloco }}</span>
               <span class="pp-stat-val">{{ period() }}</span>
             </div>
             @if (selected()!.client) {
               <div class="pp-stat">
-                <span class="pp-stat-label"><i class="bi bi-building"></i> Client</span>
+                <span class="pp-stat-label"><i class="bi bi-building"></i> {{ 'picker.client' | transloco }}</span>
                 <span class="pp-stat-val">{{ selected()!.client }}</span>
               </div>
             }
           </div>
         </div>
         <button class="btn btn-outline-secondary pp-ctx-change" (click)="openModal()">
-          <i class="bi bi-arrow-left-right me-1"></i>Changer de projet
+          <i class="bi bi-arrow-left-right me-1"></i>{{ 'picker.change' | transloco }}
         </button>
       </div>
     }
@@ -116,32 +111,32 @@ const RECENT_MAX = 6;
         <div class="modal-dialog modal-xl modal-dialog-centered" (click)="$event.stopPropagation()">
           <div class="modal-content pp-modal">
             <div class="modal-header">
-              <h5 class="modal-title"><i class="bi bi-folder2-open me-2"></i>Sélectionner un projet</h5>
-              <button type="button" class="btn-close" (click)="close()" aria-label="Fermer"></button>
+              <h5 class="modal-title"><i class="bi bi-folder2-open me-2"></i>{{ 'picker.modalTitle' | transloco }}</h5>
+              <button type="button" class="btn-close" (click)="close()" [attr.aria-label]="'common.close' | transloco"></button>
             </div>
 
             <div class="pp-search-row">
               <div class="input-wrap pp-search">
                 <i class="bi bi-search input-icon"></i>
                 <input type="search" class="form-control"
-                       placeholder="Rechercher par code, nom, client ou chef de projet…"
+                       [placeholder]="'picker.searchPlaceholder' | transloco"
                        [ngModel]="search()" (ngModelChange)="onSearch($event)">
               </div>
               <div class="pp-filters">
                 <button type="button" class="pp-chip" [class.pp-chip-on]="onlyMine()"
-                        (click)="onlyMine.set(!onlyMine()); page.set(0)" title="Mes projets assignés">
-                  <i class="bi bi-person-check"></i> Assignés
+                        (click)="onlyMine.set(!onlyMine()); page.set(0)" [title]="'picker.assigned' | transloco">
+                  <i class="bi bi-person-check"></i> {{ 'picker.assigned' | transloco }}
                 </button>
                 <button type="button" class="pp-chip" [class.pp-chip-on]="onlyFav()"
-                        (click)="onlyFav.set(!onlyFav()); page.set(0)" title="Favoris">
-                  <i class="bi bi-star-fill"></i> Favoris
+                        (click)="onlyFav.set(!onlyFav()); page.set(0)" [title]="'picker.favorites' | transloco">
+                  <i class="bi bi-star-fill"></i> {{ 'picker.favorites' | transloco }}
                 </button>
               </div>
             </div>
 
             @if (recentProjects().length && !search() && !onlyMine() && !onlyFav()) {
               <div class="pp-recents">
-                <span class="pp-recents-label"><i class="bi bi-clock-history"></i> Récents</span>
+                <span class="pp-recents-label"><i class="bi bi-clock-history"></i> {{ 'picker.recents' | transloco }}</span>
                 @for (p of recentProjects(); track p.id) {
                   <button type="button" class="pp-recent-chip" (click)="confirm(p)" [title]="p.name">
                     <span class="pp-recent-code">{{ p.code }}</span>
@@ -156,13 +151,13 @@ const RECENT_MAX = 6;
                 <thead>
                   <tr>
                     <th style="width:36px"></th>
-                    <th style="width:130px">Code</th>
-                    <th>Projet</th>
-                    <th class="d-none d-lg-table-cell">Client</th>
-                    <th style="width:96px">Statut</th>
-                    <th class="d-none d-xl-table-cell">Chef de projet</th>
-                    <th class="d-none d-xl-table-cell" style="width:100px">Début</th>
-                    <th class="d-none d-xl-table-cell" style="width:100px">Fin</th>
+                    <th style="width:130px">{{ 'picker.code' | transloco }}</th>
+                    <th>{{ 'picker.project' | transloco }}</th>
+                    <th class="d-none d-lg-table-cell">{{ 'picker.client' | transloco }}</th>
+                    <th style="width:96px">{{ 'common.status' | transloco }}</th>
+                    <th class="d-none d-xl-table-cell">{{ 'picker.manager' | transloco }}</th>
+                    <th class="d-none d-xl-table-cell" style="width:100px">{{ 'picker.start' | transloco }}</th>
+                    <th class="d-none d-xl-table-cell" style="width:100px">{{ 'picker.end' | transloco }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -181,11 +176,11 @@ const RECENT_MAX = 6;
                       <td>
                         <div class="pp-name">{{ p.name }}</div>
                         @if (p.chefProjetId === myId) {
-                          <span class="pp-mine"><i class="bi bi-person-check"></i> Assigné</span>
+                          <span class="pp-mine"><i class="bi bi-person-check"></i> {{ 'picker.assigned' | transloco }}</span>
                         }
                       </td>
                       <td class="d-none d-lg-table-cell pp-muted">{{ p.client || '—' }}</td>
-                      <td><span [class]="badgeClass(p.status)">{{ statusLabel(p.status) }}</span></td>
+                      <td><span [class]="badgeClass(p.status)">{{ 'status.' + p.status | transloco }}</span></td>
                       <td class="d-none d-xl-table-cell pp-muted">{{ p.chefProjetName || '—' }}</td>
                       <td class="d-none d-xl-table-cell pp-muted pp-num">{{ p.startDate || '—' }}</td>
                       <td class="d-none d-xl-table-cell pp-muted pp-num">{{ p.endDate || '—' }}</td>
@@ -209,10 +204,10 @@ const RECENT_MAX = 6;
               (pageSizeChange)="pageSize.set($event); page.set(0)" />
 
             <div class="modal-footer">
-              <span class="pp-hint">Clic pour sélectionner · double-clic pour ouvrir</span>
+              <span class="pp-hint">{{ 'picker.hint' | transloco }}</span>
               <button class="btn btn-secondary" (click)="close()">Annuler</button>
               <button class="btn btn-primary" [disabled]="!pending()" (click)="confirm(pending()!)">
-                <i class="bi bi-check-lg me-1"></i>Sélectionner
+                <i class="bi bi-check-lg me-1"></i>{{ 'picker.select' | transloco }}
               </button>
             </div>
           </div>
@@ -340,7 +335,7 @@ export class ProjectPickerComponent {
   onlyMine = signal(false);
   onlyFav = signal(false);
   page = signal(0);
-  pageSize = signal(10);
+  pageSize = signal(12);
   pending = signal<Project | null>(null);
   teamCount = signal<number | null>(null);
   favorites = signal<Set<number>>(this.loadFavorites());
@@ -433,7 +428,7 @@ export class ProjectPickerComponent {
     add(all.filter(p => fav.has(p.id)));
     add(all.filter(p => p.status === 'ACTIVE'));
     add(all);
-    return out.slice(0, 6);
+    return out.slice(0, 12);
   });
 
   // ── Actions ────────────────────────────────────────────────────

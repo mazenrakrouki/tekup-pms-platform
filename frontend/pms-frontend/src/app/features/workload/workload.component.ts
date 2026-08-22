@@ -92,7 +92,6 @@ interface MatrixResource { userId: number; name: string; role: string; }
         <div class="page-header d-flex align-items-start justify-content-between flex-wrap gap-2">
           <div>
             <h1 class="page-title">Matrice d'occupation</h1>
-            <p class="page-subtitle">Planification des ressources (JH) — plan vs. réel, mois par mois.</p>
           </div>
           <div class="d-flex gap-2">
             <button class="btn btn-outline-secondary btn-sm" (click)="exportCsv()" [disabled]="periods().length === 0">

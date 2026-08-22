@@ -141,7 +141,6 @@ type View = number | null;
     <div class="page-body">
       <div class="page-header">
         <h1 class="page-title">{{ 'agile.title' | transloco }}</h1>
-        <p class="page-subtitle">{{ 'agile.subtitle' | transloco }}</p>
       </div>
 
       @if (!selected()) {

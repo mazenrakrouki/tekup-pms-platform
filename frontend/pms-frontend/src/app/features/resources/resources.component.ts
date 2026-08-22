@@ -52,10 +52,6 @@ type SortDir = 'asc' | 'desc';
     <div class="page-body">
       <div class="page-header">
         <h1 class="page-title">{{ 'resources.title' | transloco }}</h1>
-        <p class="page-subtitle">
-          {{ (resources().length === 1 ? 'resources.subtitle.one' : 'resources.subtitle.other')
-             | transloco: { count: resources().length } }}
-        </p>
       </div>
 
       <div class="card">

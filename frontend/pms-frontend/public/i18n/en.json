@@ -140,5 +140,27 @@
   },
   "palette": {
     "placeholder": "Search a page or a project..."
+  },
+  "picker": {
+    "chooseProject": "Select a project to continue",
+    "browseAll": "Browse projects",
+    "change": "Change project",
+    "modalTitle": "Select a project",
+    "searchPlaceholder": "Search by code, name, client or project manager…",
+    "assigned": "Assigned to me",
+    "favorites": "Favorites",
+    "recents": "Recent",
+    "code": "Code",
+    "project": "Project",
+    "client": "Client",
+    "start": "Start",
+    "manager": "Project manager",
+    "team": "Team",
+    "budget": "Budget",
+    "period": "Period",
+    "hint": "Click to select, double-click to open",
+    "select": "Select",
+    "none": "No project matches your search.",
+    "end": "End"
   }
 }

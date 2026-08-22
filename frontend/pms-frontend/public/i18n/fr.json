@@ -140,5 +140,27 @@
   },
   "palette": {
     "placeholder": "Rechercher une page ou un projet..."
+  },
+  "picker": {
+    "chooseProject": "Sélectionnez un projet pour continuer",
+    "browseAll": "Parcourir les projets",
+    "change": "Changer de projet",
+    "modalTitle": "Sélectionner un projet",
+    "searchPlaceholder": "Rechercher par code, nom, client ou chef de projet…",
+    "assigned": "Qui me sont assignés",
+    "favorites": "Favoris",
+    "recents": "Récents",
+    "code": "Code",
+    "project": "Projet",
+    "client": "Client",
+    "start": "Début",
+    "manager": "Chef de projet",
+    "team": "Équipe",
+    "budget": "Budget",
+    "period": "Période",
+    "hint": "Clic pour sélectionner, double-clic pour ouvrir",
+    "select": "Sélectionner",
+    "none": "Aucun projet ne correspond à votre recherche.",
+    "end": "Fin"
   }
 }

@@ -64,7 +64,6 @@ type SortDir = 'asc' | 'desc';
       <div class="page-header d-flex align-items-start justify-content-between flex-wrap gap-2">
         <div>
           <h1 class="page-title">Projets</h1>
-          <p class="page-subtitle">{{ headerCount() }}</p>
         </div>
         <div class="pms-tabs">
           <button class="tab-item" [class.active]="mode() === 'active'" (click)="setMode('active')">

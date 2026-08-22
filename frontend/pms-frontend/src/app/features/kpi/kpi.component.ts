@@ -107,7 +107,6 @@ interface ChartRow {
       <div class="page-header d-flex align-items-start justify-content-between flex-wrap gap-2">
         <div>
           <h1 class="page-title">Indicateurs de performance</h1>
-          <p class="page-subtitle">Marge, coût estimé final (EAC) et rentabilité de votre portefeuille projets.</p>
         </div>
       </div>
 
