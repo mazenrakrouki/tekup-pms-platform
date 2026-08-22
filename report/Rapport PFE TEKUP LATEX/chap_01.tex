@@ -1,27 +1,120 @@
-\chapter{Project Context and Methodology}
+\chapter{Project Framework}
 
 \section*{Introduction}
-This first chapter situates the project in its context. It presents the host organization,
-analyses the existing project-tracking process, built on Excel workbooks, and identifies its
-limitations. From this study follow the problem statement, the proposed solution (the PMS
-platform), and the development methodology adopted to build it.
+This first chapter situates the project in its context. It presents the host organization and the
+subject assigned by that organization, analyses the project-tracking process currently in place,
+which rests on Excel workbooks, and compares it with the tools available on the market. From this
+study follow the problem statement, the proposed solution, and the management methodology adopted
+to build it.
 
-\section{Project Framework}
-This work constitutes a Final Year Project (\textit{Projet de Fin d'Études}) submitted for the
-National Engineering Diploma. It was carried out within a digital services company (ESN) that
-designs and implements information systems for its clients under contract, most often on a
-fixed-price (FP) or time-and-material (T\&M) basis.
+% =====================================================================
+\section{Host organization}
 
-\section{Host Organization}
-The host company operates as a software solutions integrator. Its activity rests on running
-several projects simultaneously, mobilising a pool of resources (developers, business analysts,
-project managers) assigned to client projects. The company's profitability depends directly on its
-ability to control, for each project, the balance between the workload sold, the workload actually
-consumed, and the revenue invoiced.
+\subsection{Presentation of ST2i}
+This work was carried out at \textbf{ST2i}, a consulting firm created in the early 1990s and a
+member of \textbf{STUDI Group}, an international multidisciplinary engineering group. ST2i
+positions itself on high value-added segments in information technology, geomatics and the new
+information and communication technologies.
 
-\section{Study of the Existing System}
+The company has carried out projects in more than fifteen countries: Tunisia, Algeria, Mali, Côte
+d'Ivoire, Senegal, Burkina Faso, Benin, Togo, Cameroon, Guinea, the Democratic Republic of the
+Congo, Mauritania, Saudi Arabia and Canada, among others. Its head office is in Tunis, in the Lac~II
+business district.
 
-\subsection{The Current Process}
+% TODO: add img/st2i_logo.png then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.35\columnwidth]{img/st2i_logo.png}
+%   \caption{Logo of ST2i}
+%   \label{fig:st2i-logo}
+% \end{figure}
+
+\subsection{Areas of expertise}
+ST2i operates in four complementary areas.
+
+\begin{itemize}
+  \item \textbf{Information systems.} Auditing existing systems and designing strategic and
+        operational master plans, particularly for public administrations and public
+        establishments.
+  \item \textbf{Geomatics and geographic information systems.} A multidisciplinary team of
+        geomatics experts, developers and technicians covering a broad range of specialised
+        software solutions.
+  \item \textbf{Telecommunications and ICT.} Auditing existing networks, steering projects under
+        way, and defining the specifications of new solutions and networks.
+  \item \textbf{Engineering software.} Standard, open products that respect the regulations in
+        force and the working methods of the various professional disciplines.
+\end{itemize}
+
+\subsection{Services offered}
+The firm structures its offer around three service lines.
+
+\begin{itemize}
+  \item \textbf{Studies and consulting}: strategic and sectoral studies, information system
+        urbanisation, networks and digital development of territories.
+  \item \textbf{Project-owner assistance}: support in the controlled conduct of complex projects,
+        covering the validation of execution projects, coordination, monitoring and control,
+        technical acceptance, dispute resolution and project closure.
+  \item \textbf{Development and integration of solutions}: design, implementation and deployment of
+        computing and telecommunications solutions across a range of environments and
+        architectures.
+\end{itemize}
+
+The third line is the one that concerns this project directly, and it is also the activity whose
+economics the platform described in this report is meant to steer.
+
+\subsection{Organizational structure}
+% TODO: add img/st2i_organigramme.png then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.9\columnwidth]{img/st2i_organigramme.png}
+%   \caption{Organizational chart of ST2i}
+%   \label{fig:st2i-org}
+% \end{figure}
+
+% =====================================================================
+\section{Project framework}
+
+\subsection{Context and assigned subject}
+This work constitutes a Final Year Project submitted for the National Engineering Diploma. It
+responds to subject~6 of the ST2i PFE Book 2025--2026, on the \textit{C.DEV} track:
+\emph{design and development of a centralised platform for the management and steering of
+information technology projects}.
+
+As stated by the company, the platform must centralise all information attached to IT projects,
+that is owners, project managers, teams, budgets, specifications, workload in man-days and
+expenses. It must offer complete financial monitoring covering costs, forecasts, variances and
+gains or losses; operational monitoring covering progress, delays, milestones and payments; and
+agile planning through sprints and a backlog. It must finally provide dynamic dashboards showing
+the state of the project portfolio, team performance and risks. The stated aim is to optimise
+steering, automate the collection of information and improve decision-making.
+
+The technical skills listed for the subject are databases, Java, Spring Boot and Angular, which
+correspond exactly to the stack retained in Chapter~3. The project ran from 5~January to
+30~August~2026.
+
+This framing matters for a reason specific to the subject: the company that steers IT projects for
+its clients is itself the user of the platform. The requirements were therefore not gathered from
+hypothetical users but read directly from the instrument the company already uses every day, which
+is the object of the study below.
+
+\subsection{Project objectives}
+Four objectives were set at the outset.
+
+\begin{itemize}
+  \item Replace the dispersion of one workbook per project by a single, shared and reliable source
+        of information.
+  \item Reproduce the financial model of the existing process faithfully rather than approximate
+        it, since that model is the company's real specification.
+  \item Partition access to information, so that the financial data of a project is visible only to
+        those entitled to it, which a spreadsheet cannot enforce.
+  \item Keep the authorization policy configurable, so that a change in the company's rules does not
+        require a new version of the software.
+\end{itemize}
+
+% =====================================================================
+\section{Study of the existing system}
+
+\subsection{The current process}
 Each project is tracked through an Excel workbook, the ``project review sheet'', comprising
 around twenty interconnected tabs. For a given project, this workbook centralises all steering
 information: project identification and budget, resource cost rates, planned workload, actual
@@ -55,7 +148,7 @@ of the project. \\
 \label{tab:excel-structure}
 \end{longtable}
 
-\subsection{Analysis of the Reference Workbook}
+\subsection{Analysis of the reference workbook}
 The workbook provided by the company (reference \texttt{F-AFF-13}, version~03) is the true
 functional specification of the platform: it contains twenty-one sheets and more than two thousand
 formulas that encode the company's real steering logic. Its analysis constituted the preparation
@@ -307,7 +400,83 @@ Statistiques & Earned-value engine, EAC, margins, accrued income & KPI engine (S
 \label{tab:excel-traceability}
 \end{longtable}
 
-\subsection{Critique of the Existing System}
+\subsection{Existing market solutions}
+Before deciding to develop a platform, the question of adopting an existing tool has to be
+answered. Four widely deployed solutions were examined. The criteria are not general ones: they are
+taken from the workbook analysed above, because a replacement tool is only useful if it can carry
+the business logic the workbook already encodes.
+
+\textbf{Microsoft Project} is the reference for scheduling. It handles task dependencies, critical
+paths and resource levelling well, and it does attach a cost to a resource. That cost, however, is
+a rate attached to the resource, not a rate attached to the resource \emph{for a given year}, and
+the tool has no notion of a billing milestone expressed as a percentage of a contract, nor of
+revenue earned but not yet invoiced. It plans work; it does not steer a contract.
+
+\textbf{Jira} is the reference for agile planning, and its backlog and sprint management are
+considerably richer than what this project needed to build. It carries no financial model natively:
+costing requires marketplace applications such as Tempo, and even then the model is time-based
+rather than contract-based. Its permission schemes are powerful but operate on issues and projects
+rather than on individual financial fields, so the requirement that a developer must never see the
+margin of the project they work on is awkward to express.
+
+\textbf{Odoo Project} comes closest, because it belongs to a suite that already contains invoicing
+and timesheets, so the link between effort and revenue exists. Its cost model nonetheless rests on
+a single hourly cost per employee, and its margin computation is Odoo's own. Adopting it would mean
+either accepting a financial model different from the one the company uses, or customising a full
+ERP, which is a heavier commitment than developing a focused application.
+
+\textbf{monday.com} offers flexible boards, formula columns and attractive dashboards. Its formulas
+are evaluated per board and do not compose across boards, which reproduces at a different scale the
+very fragility that makes the current workbook unreliable. It has no earned-value model.
+
+\subsection{Comparative synthesis}
+Table~\ref{tab:market-comparison} compares the four tools against the requirements extracted from
+the workbook. The symbol $\bullet$ marks native support, $\circ$ support obtainable through
+configuration or an add-on, and \textbf{--} the absence of the capability.
+
+\begin{longtable}{|m{5.4cm}|c|c|c|c|c|}
+\hline
+\textbf{Requirement from the workbook} & \textbf{MS Project} & \textbf{Jira} & \textbf{Odoo} &
+\textbf{monday} & \textbf{PMS} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Loaded cost rate per resource and per year & -- & -- & -- & -- & $\bullet$ \\
+\hline
+Billing milestones as a percentage of contract, capped at 100\% & -- & -- & $\circ$ & -- &
+$\bullet$ \\
+\hline
+Revenue earned but not yet invoiced & -- & -- & $\circ$ & -- & $\bullet$ \\
+\hline
+Earned-value indicators (EV, EAC, ETC, margin) & $\circ$ & -- & -- & -- & $\bullet$ \\
+\hline
+Multi-currency conversion at the business date & -- & -- & $\circ$ & -- & $\bullet$ \\
+\hline
+Mission expenses decomposed by component & -- & -- & $\circ$ & -- & $\bullet$ \\
+\hline
+Authorization configurable without redeployment & $\circ$ & $\circ$ & $\circ$ & -- & $\bullet$ \\
+\hline
+Agile planning: backlog and sprints & $\circ$ & $\bullet$ & $\bullet$ & $\bullet$ & $\bullet$ \\
+\hline
+Scheduling and critical path & $\bullet$ & $\circ$ & $\bullet$ & $\circ$ & -- \\
+\hline
+\caption{Comparison of existing tools against the requirements of the reference workbook}
+\label{tab:market-comparison}
+\end{longtable}
+
+The table should be read in both directions. The existing tools are strong exactly where the
+workbook is weak, in scheduling and in agile planning, and PMS makes no attempt to compete with
+Microsoft Project on critical-path analysis. They are absent exactly where the workbook is strong,
+in the financial model that ties a loaded cost rate to a year, a milestone to a percentage of a
+contract, and an accrual to work already delivered.
+
+That asymmetry is the justification for building rather than buying. The company did not keep the
+workbook because it was unaware of these tools; it kept it because none of them models the economics
+of a consulting firm working on fixed-price and time-and-material contracts in several currencies.
+The purpose of PMS is to carry that model reliably, not to reinvent project scheduling.
+\subsection{Critique of the existing system}
 While this workbook expresses a proven business logic, its medium, the spreadsheet,
 introduces structural limitations:
 
@@ -325,101 +494,120 @@ introduces structural limitations:
     preserved.
 \end{itemize}
 
-\section{Problem Statement}
+\section{Problem statement}
 The central question is therefore the following: \emph{how can the company be equipped with a
 centralised, reliable and secure tool that automates the project financial logic currently carried
 by Excel, while remaining configurable enough to absorb the evolution of business rules without a
-rewrite?} Two requirements emerge: preserving the richness of the existing business model (cost
-rates, workload plan, EAC, margins, billing) and guaranteeing a \emph{dynamic} authorization
-architecture, decoupled from roles.
+rewrite?}
 
-\section{Proposed Solution}
+Two requirements emerge from the study. The first is fidelity: the platform must preserve the
+richness of the existing business model, that is cost rates, workload plan, estimate at completion,
+margins and billing, rather than a simplified approximation of it, because that model is what the
+company actually uses to decide. The second is configurability: the authorization architecture must
+be dynamic and decoupled from roles, so that a change in who may see what is an administrative act
+rather than a release.
+
+\section{Proposed solution}
 The chosen solution is the development of a centralised web platform, \textbf{PMS}
 (\textit{Project Management System}). It provides a single source of information and automates the
-operational and financial steering of projects. Its objectives are to:
+operational and financial steering of projects. Its functional objectives are to:
 
 \begin{itemize}
     \item centralise project, resource and team data;
-    \item plan workload (in man-days) and record actual workload;
-    \item manage billing milestones and missions;
-    \item automatically compute financial indicators (EAC, margins, billing progress, remaining
-    work, drift);
+    \item plan workload in man-days and record actual workload;
+    \item manage billing milestones, payments, contract amendments and missions;
+    \item support agile planning of the work through a product backlog and sprints;
+    \item automatically compute financial indicators, that is earned value, estimate at completion,
+          margins, billing progress, remaining work and drift;
     \item provide decision-support dashboards tailored to each user profile;
     \item rest on a dynamic ``Role $\rightarrow$ Permission $\rightarrow$ Module'' access control.
 \end{itemize}
 
-\section{Development Methodology}
+% =====================================================================
+\section{Project management methodology}
 
-\subsection{An Incremental and Iterative Approach}
-The construction of PMS follows an \textbf{incremental and iterative} approach. Rather than
-delivering the whole platform at once, the work was broken down into successive increments, each
-one delivering a coherent and demonstrable subset of the product: a functional perimeter, its
-persistence, its REST API, its access rules and its user interface.
+\subsection{The Scrum framework}
+Scrum is an agile framework for developing products incrementally. Rather than specifying a system
+completely before building it, Scrum organises the work into short iterations called \textbf{sprints},
+each producing an increment of the product that can be demonstrated and evaluated. Requirements are
+held in an ordered \textbf{product backlog}, from which the items to be built are drawn at the
+start of every sprint into a \textbf{sprint backlog}.
 
-This choice is dictated by the nature of the domain. The PMS business model is deeply
-interdependent: the KPI engine consumes workload, billing, cost rates and the internal quote.
-It cannot be built in a single pass without the risk of discovering integration errors too late.
-Proceeding by increments allows each functional block to be validated against the reference Excel
-model before the next one is built on top of it.
+The framework rests on empirical process control: rather than predicting the whole system in
+advance, it inspects a working increment at regular intervals and adapts the remaining work
+accordingly.
 
-\subsection{Engineering Phases and Development Sprints}
-Two distinct notions structure this report and must not be confused:
+% TODO: add img/scrum_cycle.png then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.8\columnwidth]{img/scrum_cycle.png}
+%   \caption{The Scrum cycle}
+%   \label{fig:scrum-cycle}
+% \end{figure}
+
+\subsection{Scrum roles}
+Scrum defines three accountabilities.
 
 \begin{itemize}
-    \item The \textbf{engineering phases} (business analysis, architecture design, database
-    design and UML modelling) constitute the upstream study work. They are presented in
-    Chapters~2 and~3.
-    \item The \textbf{development sprints} describe the progressive construction of the software.
-    Each sprint delivers a functional increment of the platform. They are presented in
-    Chapters~4 to~7.
+  \item The \textbf{Product Owner} is responsible for the value of the product. This role orders the
+        product backlog, arbitrates priorities and accepts or rejects the increment.
+  \item The \textbf{Scrum Master} is responsible for the process. This role ensures the framework is
+        understood and applied, and removes the impediments that slow the work.
+  \item The \textbf{Development Team} builds the increment. It is self-organising: it decides how to
+        turn a backlog item into working software.
 \end{itemize}
 
-\subsection{Organisation into Releases and Sprints}
-The realisation was organised into \textbf{four releases} grouping \textbf{nine sprints}. Each
-release corresponds to a coherent stage of product maturity, and each sprint to an increment that
-can be demonstrated in isolation.
+\subsection{Scrum ceremonies}
+Four events structure a sprint, complemented by the continuous refinement of the backlog.
 
-\begin{longtable}{|m{2.6cm}|m{2.0cm}|m{9.8cm}|}
-\hline
-\textbf{Release} & \textbf{Sprint} & \textbf{Functional increment delivered} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-\multirow{2}{*}{R1 --- Foundation} & Sprint 1 & Technical foundation and authentication \\
-\cline{2-3}
- & Sprint 2 & Dynamic RBAC, users and resources \\
-\hline
-\multirow{2}{*}{R2 --- Operations} & Sprint 3 & Project management and lifecycle \\
-\cline{2-3}
- & Sprint 4 & Teams and workload management \\
-\hline
-\multirow{3}{*}{R3 --- Finance} & Sprint 5 & Billing and missions \\
-\cline{2-3}
- & Sprint 6 & Project governance \\
-\cline{2-3}
- & Sprint 7 & Internal quote and KPI engine \\
-\hline
-R4 --- Delivery & Sprint 8 & Consolidation, testing and deployment \\
-\hline
-\caption{Organisation of the realisation into releases and sprints}
-\label{tab:releases}
-\end{longtable}
+\begin{itemize}
+  \item \textbf{Sprint planning} opens the sprint. The team selects the backlog items it commits to
+        and defines the sprint goal.
+  \item The \textbf{daily scrum} is a short synchronisation in which the team reviews its progress
+        towards the sprint goal and adjusts its plan.
+  \item The \textbf{sprint review} presents the increment to the stakeholders and gathers their
+        feedback.
+  \item The \textbf{sprint retrospective} closes the sprint by examining the process itself and
+        identifying an improvement to apply next.
+  \item \textbf{Backlog refinement} runs continuously: items are clarified, split and re-ordered so
+        that the next sprint can start from a ready backlog.
+\end{itemize}
 
-Each sprint is presented in this report according to a constant structure: objective, functional
-scope, features implemented, technical realisation, tests and validation, sprint outcome, and
-transition to the next sprint.
+\subsection{Adaptation to this project}
+Scrum assumes a team. This project was carried out by a single student developer, so the framework
+was applied in a deliberately reduced form, and it is worth stating plainly which parts were kept
+and which were not.
 
-\subsection{Sources of Truth}
-Project conduct also relies on a \textbf{priority of sources of truth}: validated architecture
-decisions take precedence, followed by business instructions, then the reality extracted from the
-Excel file, then the specifications (BRS, use cases, SRS), and finally the project plan, considered
-a strategic orientation to be challenged.
+The \textbf{iterative and incremental principle was kept in full}, and it was the right choice for
+this domain. The PMS business model is deeply interdependent: the indicator engine consumes
+workload, billing, cost rates and the internal quote. Building it in a single pass would have meant
+discovering integration errors only at the end. Proceeding by increments allowed each functional
+block to be validated against the reference workbook before the next was built on top of it.
+
+The roles were distributed as the situation allowed. The \textbf{industrial supervisor acted as
+product owner}, arbitrating priorities and validating each increment against the company's
+expectations. The \textbf{academic supervisor} followed the engineering and documentation quality.
+The author held the development role.
+
+The ceremonies were adapted rather than performed formally. With one developer there is no daily
+synchronisation to hold, and no retrospective in the collective sense. What replaced the sprint
+review is more specific to this project and more demanding: \textbf{each increment was validated
+against the Excel workbook itself}, by reproducing on the platform a computation the workbook
+already performed and comparing the two results. The workbook, being the company's real
+specification, served as the acceptance criterion.
+
+Two distinct notions structure the remainder of this report and must not be confused. The
+\textbf{engineering phases}, that is business analysis, architecture design, database design and
+UML modelling, constitute the upstream study work and are presented in Chapters~2 and~3. The
+\textbf{development sprints} describe the progressive construction of the software, each delivering
+a functional increment, and are presented in Chapters~4 to~7. The distribution of the backlog across
+releases and sprints, together with the schedule, is established in Chapter~2.
 
 \section*{Conclusion}
-The study of the context and of the existing system highlighted the need to replace scattered Excel
-tracking with a centralised, reliable and configurable platform, and set out the incremental
-approach adopted to build it. The next chapter deepens this ambition by analysing and specifying
-precisely the functional and non-functional requirements of the system, together with the product
-backlog that structures the development sprints.
+This chapter presented ST2i and the subject it assigned, then studied the process currently used to
+steer projects. The analysis of the reference workbook showed a rich and proven business model
+carried by a fragile medium, and the comparison with the tools available on the market showed that
+none of them models that economics natively. From this follows the problem statement and the
+solution retained: a centralised platform that reproduces the financial model faithfully while
+making its authorization policy configurable. The next chapter specifies precisely what the system
+must do, for whom, and under which rules.
