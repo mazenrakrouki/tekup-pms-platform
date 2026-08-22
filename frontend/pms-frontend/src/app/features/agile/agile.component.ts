@@ -145,9 +145,7 @@ type View = number | null;
 
       @if (!selected()) {
         <app-project-picker [selected]="selected()"
-                            [featureTitle]="'agile.title' | transloco"
                             featureIcon="bi-kanban"
-                            [featureDescription]="'agile.selectProject' | transloco"
                             (projectSelected)="select($event)" />
       } @else {
 

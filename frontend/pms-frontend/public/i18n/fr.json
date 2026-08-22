@@ -99,7 +99,8 @@
     "changes": "Changements",
     "users": "Utilisateurs",
     "roles": "Rôles",
-    "permissions": "Permissions"
+    "permissions": "Permissions",
+    "internalQuote": "Devis interne"
   },
   "roles": {
     "ADMIN": "Administrateur",
@@ -166,5 +167,8 @@
     "end": "Fin",
     "mine": "Qui m’est assigné",
     "favorite": "Favori"
+  },
+  "workload": {
+    "matrix": "Matrice d'occupation"
   }
 }

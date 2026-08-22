@@ -328,9 +328,7 @@ export class ProjectPickerComponent {
 
   selected = input<Project | null>(null);
   emptyHint = input<string>('Choisissez un projet pour continuer.');
-  featureTitle = input<string>('');
   featureIcon = input<string>('bi-folder2-open');
-  featureDescription = input<string>('');
   projectSelected = output<Project>();
 
   readonly myId = this.auth.currentUserId;

@@ -335,3 +335,56 @@ referenced by the authorization matrix, not interface text, and translating them
 link between what an administrator sees and what the system enforces.
 
 **Progress on D-09:** 609 → **537 lines**, 32 → 31 files.
+
+---
+
+## D-15 — Three modules lost their page title (regression from D-03)
+
+**Reported by the user.** Correct report, and a genuine regression I introduced.
+
+**Root cause.** D-03 removed the `<h1>` that `project-picker` rendered from its `featureTitle`
+input, because it duplicated the host page's own title. That was right for the pages that had one.
+But **Billing, Missions and Governance never had a `page-title` of their own** — they relied
+entirely on the picker's heading. Removing it left those three pages with no title at all.
+
+An audit of every module page confirmed the extent:
+
+| Module | own `page-title` before the fix |
+|---|---|
+| Billing, Missions, Governance | **0** |
+| Internal quote | **0** (no picker either, so never had one) |
+| Workload | 1, but nested inside `@if (selected())` — invisible until a project was chosen |
+| KPI, Agile, Resources, Projects | 1 |
+
+**Correction — the page owns its title, the picker only offers an action.** That is the rule the
+`ui-ux-pro-max` accessibility guideline states as *heading hierarchy*: one `<h1>` per page,
+unconditionally present. Concretely:
+
+- `page-header` with an `<h1>` added to Billing, Missions, Governance and Internal quote.
+- Workload's title moved out of `@if (selected())` so it exists before a project is picked; the old
+  "Matrice d'occupation" heading became an `<h2>` section title, which is what it actually is.
+- The titles reuse the existing `nav.*` root keys, already translated. The sidebar label and the
+  page heading are therefore always the same words — click "Billing", land on a page titled
+  "Billing". No new vocabulary, no drift between menu and page.
+- `featureTitle` and `featureDescription` are now unused everywhere and were deleted from the picker
+  and from all four remaining callers. This closes **D-08**.
+
+**Design note.** Querying the skill's database for an enterprise dashboard returned the
+"Data-Dense Dashboard" style, whose palette (`#1E40AF` primary, `#F8FAFC` background) is within a
+shade of what PMS already uses (`#2563EB`, `#F8FAFC`). No palette change was made: the existing
+design system already matches the recommendation, and consistency was the stated rule. The fix
+needed was structural, not cosmetic.
+
+**Verification:** every module page reports exactly **one** `.page-title`, translating instantly.
+
+| Route | EN | FR |
+|---|---|---|
+| `/billing` | Billing | Facturation |
+| `/workload` | Workload | Charges |
+| `/governance` | Governance | Gouvernance |
+| `/missions` | Missions | Missions |
+
+One trap worth recording: the first measurement showed `/billing` reading "Facturation" in both
+languages. That was a stale lazy-loaded chunk, not a translation failure — a hard reload showed the
+correct behaviour. When verifying a lazy-loaded route after a rebuild, reload rather than trusting
+in-app navigation.

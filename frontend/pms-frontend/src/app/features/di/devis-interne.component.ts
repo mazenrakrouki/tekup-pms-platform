@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -16,7 +17,7 @@ import { Project } from '../../core/models/project.model';
 @Component({
   selector: 'app-devis-interne',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslocoModule],
   template: `
     <div class="topbar">
       <div class="tb-breadcrumb">
@@ -34,6 +35,9 @@ import { Project } from '../../core/models/project.model';
     </div>
 
     <div class="page-body">
+      <div class="page-header">
+        <h1 class="page-title">{{ 'nav.internalQuote' | transloco }}</h1>
+      </div>
       @if (di(); as d) {
         <!-- ── Totaux ── -->
         <div class="row g-3 mb-4">

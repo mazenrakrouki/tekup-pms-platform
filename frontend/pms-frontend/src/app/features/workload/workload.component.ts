@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, signal, inject } from '@angular/core';
+import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -17,7 +18,7 @@ interface MatrixResource { userId: number; name: string; role: string; }
 @Component({
   selector: 'app-workload',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProjectPickerComponent],
+  imports: [CommonModule, FormsModule, ProjectPickerComponent, TranslocoModule],
   styles: [`
     .wl-metric-card { padding: 1.1rem 1.15rem; }
     .wl-value-lg { font-size: 1.5rem; }
@@ -78,12 +79,13 @@ interface MatrixResource { userId: number; name: string; role: string; }
       </div>
     </div>
     <div class="page-body">
+      <div class="page-header">
+        <h1 class="page-title">{{ 'nav.workload' | transloco }}</h1>
+      </div>
       <!-- Project selector -->
       <div class="mb-4">
         <app-project-picker [selected]="selected()"
-                            featureTitle="Charges de travail"
                             featureIcon="bi-calendar3"
-                            featureDescription="Planifiez le plan de charge et suivez les charges réelles de vos projets, ressource par ressource."
                             (projectSelected)="select($event)" />
       </div>
 
@@ -91,7 +93,7 @@ interface MatrixResource { userId: number; name: string; role: string; }
         <!-- Header -->
         <div class="page-header d-flex align-items-start justify-content-between flex-wrap gap-2">
           <div>
-            <h1 class="page-title">Matrice d'occupation</h1>
+            <h2 class="section-title">{{ 'workload.matrix' | transloco }}</h2>
           </div>
           <div class="d-flex gap-2">
             <button class="btn btn-outline-secondary btn-sm" (click)="exportCsv()" [disabled]="periods().length === 0">

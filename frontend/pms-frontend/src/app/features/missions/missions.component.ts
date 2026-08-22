@@ -1,4 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
+import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -15,7 +16,7 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
 @Component({
   selector: 'app-missions',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProjectPickerComponent],
+  imports: [CommonModule, FormsModule, ProjectPickerComponent, TranslocoModule],
   styles: [`
     /* Expanded composantes sub-row — token-based so it adapts to dark mode (replaces bg-light/bg-white) */
     .sub-row > td { background: var(--surface-2); }
@@ -39,12 +40,13 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
       </div>
     </div>
     <div class="page-body">
+      <div class="page-header">
+        <h1 class="page-title">{{ 'nav.missions' | transloco }}</h1>
+      </div>
       <!-- Project selector -->
       <div class="mb-4">
         <app-project-picker [selected]="selected()"
-                            featureTitle="Missions"
                             featureIcon="bi-airplane"
-                            featureDescription="Gérez les missions et leurs composantes pour chacun de vos projets."
                             (projectSelected)="select($event)" />
       </div>
 

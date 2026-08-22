@@ -99,7 +99,8 @@
     "changes": "Changes",
     "users": "Users",
     "roles": "Roles",
-    "permissions": "Permissions"
+    "permissions": "Permissions",
+    "internalQuote": "Internal quote"
   },
   "roles": {
     "ADMIN": "Administrator",
@@ -166,5 +167,8 @@
     "end": "End",
     "mine": "Assigned to me",
     "favorite": "Favorite"
+  },
+  "workload": {
+    "matrix": "Occupancy matrix"
   }
 }

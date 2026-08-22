@@ -1,4 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
+import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -18,7 +19,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
 @Component({
   selector: 'app-governance',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProjectPickerComponent],
+  imports: [CommonModule, FormsModule, ProjectPickerComponent, TranslocoModule],
   template: `
     <div class="topbar">
       <div class="tb-breadcrumb">
@@ -36,12 +37,13 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
       </div>
     </div>
     <div class="page-body">
+      <div class="page-header">
+        <h1 class="page-title">{{ 'nav.governance' | transloco }}</h1>
+      </div>
       <!-- Project selector -->
       <div class="mb-4">
         <app-project-picker [selected]="selected()"
-                            featureTitle="Gouvernance"
                             featureIcon="bi-shield-check"
-                            featureDescription="Suivez les risques, livrables, demandes de changement et parties prenantes de vos projets."
                             (projectSelected)="select($event)" />
       </div>
 

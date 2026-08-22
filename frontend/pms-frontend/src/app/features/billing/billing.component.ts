@@ -1,4 +1,5 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -19,7 +20,7 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
 @Component({
   selector: 'app-billing',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProjectPickerComponent],
+  imports: [CommonModule, FormsModule, ProjectPickerComponent, TranslocoModule],
   styles: [`
     .act-danger { color: var(--c-danger); }
     th.th-sort { cursor:pointer; user-select:none; transition:color var(--t); }
@@ -49,12 +50,13 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
       </div>
     </div>
     <div class="page-body">
+      <div class="page-header">
+        <h1 class="page-title">{{ 'nav.billing' | transloco }}</h1>
+      </div>
       <!-- Project selector -->
       <div class="mb-4">
         <app-project-picker [selected]="selected()"
-                            featureTitle="Facturation"
                             featureIcon="bi-receipt-cutoff"
-                            featureDescription="Gérez les jalons de facturation, avenants et paiements de vos projets."
                             (projectSelected)="select($event)" />
       </div>
 
