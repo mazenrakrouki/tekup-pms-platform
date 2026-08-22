@@ -1,102 +1,110 @@
-\chapter{Release 1 --- Foundation and Security}
+\chapter{Authentication and Access Control}
 
 \section*{Introduction}
 This chapter presents the first release of the PMS platform. Its purpose is to make the application
 usable and secure before any business functionality is built on top of it. It gathers two sprints:
-Sprint~1 establishes the technical foundation and authentication, Sprint~2 delivers the dynamic
-access control together with the management of users and resources.
+Sprint~1 establishes the technical foundation and the authentication chain, Sprint~2 delivers the
+dynamic authorization model together with the management of users and resources.
 
-At the end of this release, the platform authenticates its users, applies a configurable
-authorization policy, and holds the reference data (users, resources, cost rates) that the
-operational modules of Release~2 will consume.
+At the end of this release the platform authenticates its users, applies a configurable
+authorization policy, and holds the reference data, that is users, resources and cost rates, which
+the operational modules of the next release consume.
 
 % =====================================================================
-\section{Sprint 1 --- Technical Foundation and Authentication}
+\section{Release 1 backlog}
+The first release realises the seven user stories of the product backlog
+(Table~\ref{tab:backlog}) that concern access to the platform. Because the author is the sole
+developer, each story is expanded into the technical work it required.
 
-\subsection{Sprint 1 Backlog}
-\textbf{Sprint goal.} Establish the technical skeleton of the application and deliver a complete,
-secure authentication chain. No business functionality is addressed: the objective is a running,
-testable and secured application shell on which every later sprint can build.
-
-\textbf{Duration.} Three weeks, 16 February to 6 March.
-
-\textbf{Backlog items.} This sprint realises user stories US-01 to US-03
-(Table~\ref{tab:backlog}). Because the author is the sole developer, the sprint backlog is expressed
-as technical tasks rather than as a restatement of the user stories.
-
-\begin{longtable}{|m{1.3cm}|m{8.4cm}|m{2.0cm}|m{2.1cm}|}
+\begin{longtable}{|m{1.5cm}|m{6.8cm}|m{5.2cm}|m{1.4cm}|}
 \hline
-\textbf{ID} & \textbf{Technical task} & \textbf{Story} & \textbf{Layer} \\
+\textbf{Story} & \textbf{Need} & \textbf{Technical work} & \textbf{Sprint} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-T1.1 & Initialise the Spring Boot 3.3 project and the modular package layout & --- & Backend \\
+US-01 & Sign in with an e-mail and a password & Authentication service, BCrypt verification, JWT
+issuance signed with HMAC-SHA512, refresh cookie, token rotation & 1 \\
 \hline
-T1.2 & Implement \texttt{BaseEntity}: identity, audit timestamps, logical deletion & --- & Backend \\
+US-02 & Be forced to change an imposed password on first login & \texttt{first\_login} flag,
+dedicated filter restricting the token to the password-change endpoint & 1 \\
 \hline
-T1.3 & Configure Flyway and set \texttt{ddl-auto} to \texttt{validate} & --- & Database \\
+US-03 & Revoke a user's sessions immediately & Token version persisted per user, embedded in each
+token and compared on every request & 1 \\
 \hline
-T1.4 & Write \texttt{V1\_\_schema\_auth.sql}: \texttt{users}, \texttt{roles}, \texttt{permissions},
-\texttt{role\_permissions} & --- & Database \\
+US-04 & Assign permissions to roles without redeploying & \texttt{roles}, \texttt{permissions} and
+\texttt{role\_permissions} tables, permissions carried in the token and converted into Spring
+Security authorities & 2 \\
 \hline
-T1.5 & Write \texttt{V2\_\_seed\_rbac.sql}: initial roles and permission catalogue & --- & Database \\
+US-05 & See only the menu entries the account is entitled to & Context endpoint returning the held
+permissions, navigation built from that response & 2 \\
 \hline
-T1.6 & Implement \texttt{JwtService}: HMAC-SHA512 issuance and validation & US-01 & Backend \\
+US-06 & Create, modify and deactivate user accounts & User module, creation with a temporary
+password, activation state, role assignment & 2 \\
 \hline
-T1.7 & Implement \texttt{AuthService} and \texttt{POST /api/auth/login}, password verified against a
-BCrypt hash of strength 12 & US-01 & Backend \\
+US-07 & Record resources and their yearly cost rate & Resource entity separate from the account,
+loaded cost rate stored per resource and per year & 2 \\
 \hline
-T1.8 & Issue the refresh token in an \texttt{HttpOnly} / \texttt{Secure} /
-\texttt{SameSite=Strict} cookie scoped to its own path & US-01 & Backend \\
-\hline
-T1.9 & Implement \texttt{POST /api/auth/refresh} with refresh-token rotation & US-01 & Backend \\
-\hline
-T1.10 & Implement \texttt{POST /api/auth/logout} & US-03 & Backend \\
-\hline
-T1.11 & Implement \texttt{JwtAuthenticationFilter} and the token-version cache & US-03 & Backend \\
-\hline
-T1.12 & Implement \texttt{LoginAttemptTracker}: throttling of repeated failures & --- & Backend \\
-\hline
-T1.13 & Implement \texttt{FirstLoginFilter} and \texttt{POST /api/auth/change-password} & US-02 &
-Backend \\
-\hline
-T1.14 & Build the login screen, the authentication service, the HTTP interceptor and the route guard
-& US-01, US-02 & Frontend \\
-\hline
-T1.15 & Write the authentication integration test suite & --- & Test \\
-\hline
-\caption{Sprint 1 backlog}
-\label{tab:backlog-s1}
+\caption{Backlog of release 1}
+\label{tab:backlog-r1}
 \end{longtable}
 
-\subsection{Sprint 1 Analysis and Design}
+% =====================================================================
+\section{Sprint 1 --- Authentication and technical foundation}
 
-\subsubsection{Use cases of the sprint}
-The sprint covers the three use cases that any user must traverse before reaching a business screen:
-authenticating, changing an imposed password, and terminating a session. Every other use case of the
-platform includes authentication, which is why this sprint precedes all others.
+\subsection{Sprint 1 use case diagram}
+The sprint covers the three use cases that every user must traverse before reaching a business
+screen: authenticating, changing an imposed password, and terminating a session. Every other use
+case of the platform includes authentication, which is why this sprint precedes all the others.
 
-% TODO: render docs/uml/sprint/uc_sprint1.puml and uncomment.
+% TODO: render docs/uml/sprint/uc_sprint1.puml then uncomment.
 % \begin{figure}[H]
 %   \centering
 %   \includegraphics[width=0.75\columnwidth]{img/uc_sprint1.png}
-%   \caption{Use case diagram --- Sprint 1}
+%   \caption{Use case diagram of sprint 1}
 %   \label{fig:uc-s1}
 % \end{figure}
 
-\subsubsection{Authentication sequence}
-The nominal authentication scenario involves the browser, the authentication controller, the
-authentication service, the token service and the user repository. It shows where the password is
-verified, where the two tokens are produced, and why only one of them is written to a cookie.
+\subsection{Sprint 1 analysis and design}
 
-% TODO: render docs/uml/sprint/seq_sprint1_login.puml and uncomment.
+\subsubsection{Sequence of the ``Authenticate'' use case}
+The nominal scenario involves the browser, the authentication controller, the authentication
+service, the token service and the user repository. It shows where the password is verified, where
+the two tokens are produced, and why only one of them is written to a cookie.
+
+% TODO: render docs/uml/sprint/seq_s1_login.puml then uncomment.
 % \begin{figure}[H]
 %   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/seq_sprint1_login.png}
-%   \caption{Sequence diagram --- authentication}
+%   \includegraphics[width=0.95\columnwidth]{img/seq_s1_login.png}
+%   \caption{Sequence diagram of the ``Authenticate'' use case}
 %   \label{fig:seq-s1-login}
+% \end{figure}
+
+\subsubsection{Sequence of the ``Change the password on first login'' use case}
+An account created by the administrator carries a temporary password. The scenario shows how the
+token issued at the first connection is restricted, how any business call is refused while the flag
+remains set, and how a full token is issued once the password has been changed.
+
+% TODO: render docs/uml/sprint/seq_s1_first_login.puml then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/seq_s1_first_login.png}
+%   \caption{Sequence diagram of the ``Change the password on first login'' use case}
+%   \label{fig:seq-s1-first}
+% \end{figure}
+
+\subsubsection{Sequence of the ``Revoke a session'' use case}
+Revocation is the scenario that justifies the design of the token. It shows the increment of the
+version, the invalidation of the cache entry, and the rejection of a request presenting a token
+issued before the increment.
+
+% TODO: render docs/uml/sprint/seq_s1_revoke.puml then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/seq_s1_revoke.png}
+%   \caption{Sequence diagram of the ``Revoke a session'' use case}
+%   \label{fig:seq-s1-revoke}
 % \end{figure}
 
 \subsubsection{Design decisions}
@@ -106,22 +114,22 @@ rather than in the realisation.
 \textbf{A modular monolith rather than services.} The code is organised into independent functional
 packages, each with its own Controller $\rightarrow$ Service $\rightarrow$ Repository $\rightarrow$
 Domain layering. A single deployable artefact keeps transactions local and avoids distributed
-consistency, which matters because the financial computations of Release~3 read from several modules
-within one transaction. The package boundaries preserve the option of extraction later.
+consistency, which matters because the financial computations of release~3 read from several
+modules within one transaction. The package boundaries preserve the option of extraction later.
 
 \textbf{Two tokens rather than one.} A short-lived access token held in memory is paired with a
 refresh token confined to an \texttt{HttpOnly} cookie. A single long-lived token stored in the
-browser would be readable by any injected script; splitting them means the credential that can mint
-new sessions is never reachable from JavaScript. The refresh token is additionally \emph{rotated} on
-every use, so a stolen cookie stops working as soon as the legitimate holder refreshes.
+browser would be readable by any injected script; splitting them means the credential able to mint
+new sessions is never reachable from JavaScript. The refresh token is additionally rotated on every
+use, so a stolen cookie stops working as soon as the legitimate holder refreshes.
 
-\textbf{Revocation by version rather than by blacklist.} JWTs are self-contained and cannot be
-withdrawn once issued. A server-side blacklist would reintroduce the shared state the stateless
+\textbf{Revocation by version rather than by blacklist.} A JWT is self-contained and cannot be
+withdrawn once issued. A server-side blacklist would reintroduce the shared state that the stateless
 design avoids. Storing a single integer per user and embedding it in each token achieves the same
 result: incrementing it invalidates every session of that identity at once, at the cost of one
 integer comparison per request.
 
-\subsection{Realization of Sprint 1}
+\subsection{Sprint 1 realization}
 
 \subsubsection{Modular monolith structure}
 The modules are \texttt{auth}, \texttt{user}, \texttt{project}, \texttt{team}, \texttt{workload},
@@ -143,13 +151,13 @@ corrupting data at runtime. The versioned migrations are idempotent and constitu
 documentation of the schema.
 
 \subsubsection{Token issuance and rotation}
-On \texttt{POST /api/auth/login}, the authentication service verifies the e-mail, compares the
+On \texttt{POST /api/auth/login} the authentication service verifies the e-mail, compares the
 supplied password with the BCrypt hash, checks that the account is active, then issues a short-lived
-JWT access token signed with \texttt{HMAC-SHA512} carrying the e-mail, the token version and the list
-of permission codes, together with a refresh token placed in the protected cookie.
+JWT access token signed with \texttt{HMAC-SHA512} carrying the e-mail, the token version and the
+list of permission codes, together with a refresh token placed in the protected cookie.
 
-\texttt{POST /api/auth/refresh} exchanges a valid cookie for a new access token \emph{and} a new
-refresh cookie; the previous one is rejected from that moment on.
+\texttt{POST /api/auth/refresh} exchanges a valid cookie for a new access token and a new refresh
+cookie; the previous one is rejected from that moment on.
 
 \subsubsection{Immediate revocation by token version}
 Revocation rests on a \texttt{token\_version} field persisted in the \texttt{users} table and
@@ -160,18 +168,18 @@ session of that identity instantly, which is what happens on logout and on passw
 latter also terminating sessions opened on other devices.
 
 \subsubsection{Protection against repeated failures}
-\texttt{LoginAttemptTracker} counts consecutive failures per identity and temporarily refuses further
-attempts, answering \texttt{429 Too Many Requests}. Password guessing is therefore bounded without
-locking a legitimate account permanently.
+\texttt{LoginAttemptTracker} counts consecutive failures per identity and temporarily refuses
+further attempts, answering \texttt{429 Too Many Requests}. Password guessing is therefore bounded
+without locking a legitimate account permanently.
 
 \subsubsection{Forced password change on first login}
 When an account is created the administrator sets a temporary password and \texttt{first\_login} is
-set to \texttt{true}. The token issued at the first connection carries a restricted right enforced by
-\texttt{FirstLoginFilter}: only \texttt{POST /api/\allowbreak auth/\allowbreak change-password} is
-authorised. Once the password is changed, \texttt{first\_login} becomes \texttt{false} and an
+set to \texttt{true}. The token issued at the first connection carries a restricted right enforced
+by \texttt{FirstLoginFilter}: only \texttt{POST /api/\allowbreak auth/\allowbreak change-password}
+is authorised. Once the password is changed, \texttt{first\_login} becomes \texttt{false} and an
 unrestricted token is issued.
 
-% TODO: capture as img/ui_login.png, then uncomment.
+% TODO: capture as img/ui_login.png then uncomment.
 % \begin{figure}[H]
 %   \centering
 %   \includegraphics[width=0.8\columnwidth]{img/ui_login.png}
@@ -179,130 +187,109 @@ unrestricted token is issued.
 %   \label{fig:ui-login}
 % \end{figure}
 
-\subsection{Testing and Validation}
-The authentication chain is covered by an integration test suite exercising the nominal path and each
-rejection path against a real HTTP layer.
-
-\begin{longtable}{|m{4.6cm}|m{5.2cm}|m{4.6cm}|}
-\hline
-\textbf{Test case} & \textbf{Scenario} & \textbf{Expected result} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-Valid credentials & Submit a correct e-mail and password on an active account & HTTP 200, access
-token returned and refresh cookie set \\
-\hline
-Wrong password & Submit a valid e-mail with an incorrect password & HTTP 401, no token issued \\
-\hline
-Unknown e-mail & Submit an address that matches no account & HTTP 401, identical response to a wrong
-password \\
-\hline
-Refresh with a valid cookie & Call the refresh endpoint with the cookie obtained at login & HTTP 200,
-a new access token is returned \\
-\hline
-Refresh without a cookie & Call the refresh endpoint with no cookie & HTTP 401 \\
-\hline
-Rotation & Refresh once, then replay the previous cookie & HTTP 401, the superseded cookie is
-rejected \\
-\hline
-Logout & Log out, then attempt to refresh & HTTP 401, the session is closed \\
-\hline
-Authenticated context & Call the context endpoint with a valid token & HTTP 200, identity and
-permissions returned \\
-\hline
-Missing token & Call the context endpoint with no token & HTTP 401 \\
-\hline
-\caption{Test cases --- Sprint 1}
-\label{tab:tests-s1}
-\end{longtable}
-
-\subsection{Sprint 1 Result}
-At the end of Sprint~1 the platform is a running, secured application shell. A user can sign in, is
-forced to choose a personal password, and their sessions can be cut off immediately; repeated failed
-attempts are throttled and a stolen refresh cookie is invalidated by rotation. The auditing, logical
-deletion and schema-migration mechanisms are in place and are inherited by every module built
-afterwards.
-
-The application authenticates its users but does not yet distinguish what each of them may do: the
-token carries permission codes that nothing populates. Sprint~2 builds the dynamic authorization
-model that fills this gap, together with the management of the users and resources it applies to.
+% TODO: capture as img/ui_change_password.png then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.8\columnwidth]{img/ui_change_password.png}
+%   \caption{Forced password change interface}
+%   \label{fig:ui-change-password}
+% \end{figure}
 
 % =====================================================================
-\section{Sprint 2 --- Dynamic Access Control, Users and Resources}
+\section{Sprint 2 --- Dynamic access control, users and resources}
 
-\subsection{Sprint Objective}
-Deliver the authorization model that structures the whole platform, the
-``Role $\rightarrow$ Permission $\rightarrow$ Module'' chain introduced in
-Section~\ref{sec:rbac}, and the administration screens that feed it with reference data.
+\subsection{Sprint 2 use case diagram}
+The sprint covers the administration use cases: assigning permissions to a role, managing user
+accounts, and recording resources with their yearly cost rate. All of them are reserved to the
+administrator, and all of them include the authentication delivered by sprint~1.
 
-\subsection{Functional Scope}
-This sprint covers user stories US-04 to US-07: assigning permissions to roles, adapting the
-interface to the rights held, managing user accounts, and recording resources with their yearly
-cost rate.
+% TODO: render docs/uml/sprint/uc_sprint2.puml then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint2.png}
+%   \caption{Use case diagram of sprint 2}
+%   \label{fig:uc-s2}
+% \end{figure}
 
-\subsection{Features Implemented}
-\begin{itemize}
-  \item Permission--Role--User model persisted in the database.
-  \item Propagation of permissions to Spring Security and protection of every endpoint.
-  \item Navigation menu built dynamically from the rights held.
-  \item User account management: creation, modification, activation and deactivation.
-  \item Resource management and entry of the yearly loaded cost rate (TCC).
-\end{itemize}
+\subsection{Sprint 2 analysis and design}
 
-\subsection{Technical Realisation}
+\subsubsection{Model of the authorization policy}
+The authorization model is the structuring design of the platform and deserves its own class
+diagram. A role aggregates permissions, a permission belongs to a functional module, and a user
+holds one active role. Nothing in this model is compiled into the application: the association
+between a role and its permissions is a table, so the policy is data.
 
-\subsubsection{Permission--Role--User model}
-Access control is \textbf{entirely dynamic}: permissions are not hard-coded in the application. The
-\texttt{role\_permissions} table associates a set of permissions with a role. A user holds a single
-active role, but that role can be reconfigured at any time by the administrator without
-redeployment.
+% TODO: render docs/uml/sprint/class_rbac.puml then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.85\columnwidth]{img/class_rbac.png}
+%   \caption{Class diagram of the authorization model}
+%   \label{fig:class-rbac}
+% \end{figure}
 
-A dedicated migration initialises the four default roles (Administrator, Director, Project Manager,
-Developer) with eighteen permission codes spread over seven modules (\texttt{ADMIN},
-\texttt{PROJET}, \texttt{EQUIPE}, \texttt{CHARGE}, \texttt{FACTURATION}, \texttt{KPI},
-\texttt{GOV}).
+\subsubsection{Sequence of the ``Grant a permission to a role'' use case}
+This scenario is the proof that the policy is configurable. It shows the administrator adding a
+permission to a role, the association being persisted, and the affected users obtaining the new
+right on their next token without any redeployment.
+
+% TODO: render docs/uml/sprint/seq_s2_grant_permission.puml then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.95\columnwidth]{img/seq_s2_grant_permission.png}
+%   \caption{Sequence diagram of the ``Grant a permission to a role'' use case}
+%   \label{fig:seq-s2-grant}
+% \end{figure}
+
+\subsubsection{Design decisions}
+\textbf{Permissions rather than roles in the code.} No role name is ever tested in the application.
+Only permission codes are, through annotations of the form
+\texttt{@PreAuthorize("hasAuthority('CREATE\_PROJECT')")}. Testing a role would hard-code the policy
+into the source and make every change a release; testing a permission leaves the policy in the
+database.
+
+\textbf{A resource is not an account.} A resource represents a cost-bearing capacity and may exist
+without a platform account, since the workbook records people who never connect to any system.
+Merging the two notions would have made it impossible to cost a contributor who has no login.
+
+\textbf{A cost rate per year, not per resource.} The loaded cost rate is recorded per resource
+\emph{and per year}, so that the cost of a man-day uses the rate of the year in which the effort was
+booked. This requirement comes directly from the workbook, where the 2024 and 2025 rates of the same
+person differ.
+
+\subsection{Sprint 2 realization}
+
+\subsubsection{Permission, role and user model}
+The \texttt{role\_permissions} table associates a set of permissions with a role. A user holds a
+single active role, but that role can be reconfigured at any time by the administrator without
+redeployment. A dedicated migration initialises the four default roles, Administrator, Director,
+Project Manager and Developer, with eighteen permission codes spread over seven functional modules.
 
 \subsubsection{Propagation to Spring Security}
 The \texttt{JwtAuthenticationFilter} reads the permission codes from the token and converts them
-into \texttt{SimpleGrantedAuthority} objects. Every REST entry point is then protected by an
-annotation of the form:
-
-\begin{verbatim}
-@PreAuthorize("hasAuthority('CREATE_PROJECT')")
-\end{verbatim}
-
-The absolute rule is that \textbf{no role name is ever tested in application code}: only permission
-codes are used. This is what makes the authorization policy a matter of data rather than of source
-code.
+into \texttt{SimpleGrantedAuthority} objects, after which every REST entry point is protected by its
+\texttt{@PreAuthorize} annotation.
 
 \subsubsection{Dynamic menu}
-The \texttt{GET /api/me/context} endpoint returns, for the authenticated user, the list of their
-permissions together with their profile information. The Angular frontend uses this response to
-build the navigation menu: an item is displayed only if the user holds the required permission
-code. The interface therefore reflects the authorization policy automatically, with no duplicated
-rule on the client side.
+The context endpoint returns, for the authenticated user, the list of their permissions together
+with their profile information. The Angular frontend builds the navigation menu from that response:
+an item is displayed only if the user holds the required permission code. The interface therefore
+reflects the authorization policy automatically, with no duplicated rule on the client side.
 
 \subsubsection{Users and resources}
-The \texttt{user} module manages accounts (creation by the administrator with a temporary password,
-modification, activation and deactivation, role assignment) and the human resources with their
-daily rate and loaded cost rate. The distinction between the two notions is deliberate: a resource
-represents a cost-bearing capacity, which may or may not be linked to a platform account. Object
-conversions between entities and DTOs are handled by MapStruct mappers.
+The \texttt{user} module manages accounts, that is creation by the administrator with a temporary
+password, modification, activation and deactivation, and role assignment, together with the human
+resources and their daily and loaded cost rates. Conversions between entities and data transfer
+objects are handled by MapStruct mappers.
 
-The loaded cost rate is recorded \textbf{per resource and per year}, so that the cost of a man-day
-uses the rate of the year in which the effort was booked, a requirement drawn directly from the
-Excel workbook.
-
-% --- Screenshot slots: uncomment once captured ---
+% TODO: capture as img/ui_users.png then uncomment.
 % \begin{figure}[H]
 %   \centering
 %   \includegraphics[width=0.9\columnwidth]{img/ui_users.png}
 %   \caption{User management interface}
 %   \label{fig:ui-users}
 % \end{figure}
-%
+
+% TODO: capture as img/ui_roles.png then uncomment.
 % \begin{figure}[H]
 %   \centering
 %   \includegraphics[width=0.9\columnwidth]{img/ui_roles.png}
@@ -310,50 +297,18 @@ Excel workbook.
 %   \label{fig:ui-roles}
 % \end{figure}
 
-\subsection{Tests and Validation}
-Validating this sprint means proving that authorization really is data-driven: that granting a
-permission changes behaviour without any code change.
-
-\begin{longtable}{|m{4.2cm}|m{5.4cm}|m{4.8cm}|}
-\hline
-\textbf{Test case} & \textbf{Steps} & \textbf{Expected result} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-Permission held & Call a protected endpoint with a role holding the required permission & HTTP 200,
-operation performed \\
-\hline
-Permission missing & Call the same endpoint with a role that does not hold it & HTTP 403,
-operation refused \\
-\hline
-Permission granted at runtime & Add the permission to the role, then repeat the call & HTTP 200
-without redeployment \\
-\hline
-Menu adaptation & Sign in with two different roles & Each interface exposes only the authorised
-sections \\
-\hline
-Yearly cost rate & Book effort in two different years & Each computation uses the rate of its own
-year \\
-\hline
-\caption{Test cases --- Sprint 2}
-\label{tab:tests-s2}
-\end{longtable}
-
-\subsection{Sprint Outcome}
-The platform now knows not only \emph{who} the user is but \emph{what they may do}, and the
-authorization policy can be modified by an administrator without touching the code. The reference
-data required by the business modules (users, resources, yearly cost rates) is in place.
-
-\subsection{Transition to the Next Sprint}
-Release~1 delivers a secured and administrable platform, but it manages no project yet. Release~2
-opens operational steering, starting in Sprint~3 with the central entity of the whole domain: the
-project.
+% TODO: capture as img/ui_resources.png then uncomment.
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=0.9\columnwidth]{img/ui_resources.png}
+%   \caption{Resource and yearly cost rate interface}
+%   \label{fig:ui-resources}
+% \end{figure}
 
 \section*{Conclusion}
 Release~1 established the foundations on which the entire platform rests: a modular application
 skeleton with auditing and controlled migrations, a robust authentication chain, and above all a
 dynamic authorization model that makes the security policy configurable data rather than compiled
-code. The next release exploits this foundation to deliver the operational management of projects
-and workload.
+code. The platform now knows not only who the user is but what that user may do, and it holds the
+reference data the business modules consume. The next release exploits this foundation to deliver
+the operational management of projects and workload.
