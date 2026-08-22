@@ -76,5 +76,13 @@
     "saveFailed": "Enregistrement impossible. Vérifiez les dates et réessayez.",
     "nameRequired": "Le nom du sprint est requis.",
     "titleRequired": "Le titre de l'élément est requis."
+  },
+  "unit": {
+    "days": "JH"
+  },
+  "progress": {
+    "days": "{{done}} JH sur {{total}} terminés",
+    "items": "{{done}} éléments sur {{total}} terminés",
+    "empty": "Rien de planifié dans ce sprint"
   }
 }

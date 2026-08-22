@@ -602,3 +602,69 @@ the resolution as an ADR:
 | 024 | Two-level UML: Level 1 (report, simple) vs Level 2 (engineering) | Process/UML |
 | 025 | Internationalization (Transloco, runtime FR/EN, backend language-independent) | i18n / UX |
 | 026 | Containerized deployment (Docker Compose) + CI/CD — supersedes ADR-014 | Delivery / DevOps |
+
+---
+
+## ADR-027 — Module de planification agile (sprints, backlog, tableau)
+
+**Statut :** Accepté — 2026-08-22
+**Contexte :** le sujet 6 du PFE Book ST2i exige une « planification agile (sprints, backlog) ».
+Une recherche sur l'ensemble des entités de `com.pms` a confirmé qu'aucun type sprint, backlog ou
+itération n'existait. C'était la seule exigence du sujet que la plateforme ne satisfaisait pas.
+
+### Décision
+
+Un module `agile` autonome, volontairement réduit à l'essentiel : backlog produit, sprints,
+affectation d'un élément à un sprint, tableau à trois colonnes et progression simple.
+
+### Justifications
+
+**Deux entités, pas davantage.** `Sprint` et `BacklogItem`. Pas d'epics, pas de rôles Scrum
+modélisés, pas de cérémonies. Ces objets n'apporteraient rien à un pilotage de projet dont la
+valeur réelle est financière, et alourdiraient un modèle déjà large.
+
+**Estimation en jours-homme, pas en points de story.** Toute la plateforme — plan de charge, TCC,
+indicateurs EVM, devis interne — raisonne en JH. Introduire les points créerait une seconde unité
+sans conversion possible vers le modèle de coût, et deux chiffres qu'il faudrait ensuite expliquer.
+
+**Énumérations en anglais.** `PLANNED/ACTIVE/CLOSED`, `TODO/IN_PROGRESS/DONE`,
+`LOW/MEDIUM/HIGH/CRITICAL`. Ce sont de nouvelles énumérations sans aucune ligne persistée : l'anglais
+ne coûte donc aucune migration de données. Cela suit `ProjectStatus`, déjà en anglais, et ne remet pas
+en cause le renommage des dix énumérations héritées, écarté dans `docs/ENGLISH_MIGRATION_AUDIT.md`.
+
+**Backlog en liste, sprint en tableau.** Un backlog produit est une liste ordonnée : ses éléments ne
+sont pas encore dans un flux de travail. Les présenter en colonnes serait une représentation fausse.
+Le rail bascule donc entre deux vues plutôt que d'entasser quatre colonnes sur un même écran.
+
+**Pas de graphique d'avancement (burndown), pas de vélocité.** Un burndown honnête suppose des
+relevés quotidiens du reste à faire ; sans eux, la courbe serait une reconstitution. La progression
+se limite à ce que les données permettent d'affirmer : une barre segmentée en JH et un libellé
+explicite. Le projet n'embarque par ailleurs aucune bibliothèque de graphiques.
+
+**Aucune dépendance ajoutée.** Le glisser-déposer utilise l'API HTML5 native. Le CDK Angular n'est
+pas présent et n'a pas été introduit pour un module de cette taille. Le glisser-déposer natif
+n'étant pas accessible au clavier, les boutons de déplacement restent le chemin accessible — ils ne
+sont pas un doublon de l'interaction, mais sa condition d'accessibilité.
+
+### Autorisations
+
+`MANAGE_AGILE` → `CHEF_PROJET`. `VIEW_AGILE` → `DIRECTEUR`, `CHEF_PROJET`, `DEVELOPPEUR`.
+
+**`ADMIN` n'obtient ni l'une ni l'autre.** V11 avait attribué la gouvernance à `ADMIN` ; V12 a
+ensuite vidé `role_permissions` et reconstruit la matrice cible en ramenant `ADMIN` à
+l'administration de la plateforme et au TCC. Reproduire le schéma de V11 aurait réintroduit
+exactement ce que cet audit avait corrigé.
+
+Le développeur obtient la lecture : un tableau que l'équipe ne peut pas consulter n'a pas d'objet,
+et aucune donnée financière n'y figure — BR-050 n'est donc pas concernée.
+
+### Conséquences
+
+- Migration **V27** : `sprints`, `backlog_items`, permissions, et incrément de `token_version`
+  (ADR-017) pour que les droits s'appliquent sans reconnexion manuelle.
+- `backlog_items.sprint_id` est nullable : un élément sans sprint appartient au backlog produit.
+  Supprimer un sprint y renvoie ses éléments au lieu de les perdre avec l'itération.
+- Le module hérite du cloisonnement de données (ADR-021) : `ProjectScopeInterceptor` couvre
+  `/api/projects/{id}/**`, donc l'accès exige **capacité ∧ périmètre**, sans code supplémentaire.
+- Aucun impact sur le moteur KPI, la facturation, les charges ou le devis interne : le module ne
+  lit que `project_id`.

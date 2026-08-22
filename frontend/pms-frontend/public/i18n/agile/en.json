@@ -76,5 +76,13 @@
     "saveFailed": "Could not save. Check the dates and try again.",
     "nameRequired": "A sprint name is required.",
     "titleRequired": "An item title is required."
+  },
+  "unit": {
+    "days": "d"
+  },
+  "progress": {
+    "days": "{{done}} of {{total}} man-days done",
+    "items": "{{done}} of {{total}} items done",
+    "empty": "Nothing planned in this sprint yet"
   }
 }

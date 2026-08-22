@@ -242,6 +242,19 @@
 | F.11 | Pousser la ligne de base et vérifier le pipeline (V10) | TODO | P0 | F.7 | Dépôt à 2 commits pour 277 fichiers non commités : un pipeline vert ne prouverait rien tant que la base réelle n'est pas poussée |
 | F.12 | Resynchroniser les miroirs Markdown du rapport | TODO | P2 | F.9 | `docs/report/chap_01…08.md` reflètent l'**ancienne** structure en 10 chapitres, en français. Le rapport est passé à 7 chapitres en anglais (Releases/Sprints) |
 
+## Phase G — Module de planification agile (2026-08-22)
+| # | Task | Status | Pri | Depends | Notes |
+|---|------|--------|-----|---------|-------|
+| G.1 | Backend `agile` : `Sprint`, `BacklogItem`, DTO, mappers, repositories, services | DONE | P0 | — | Calqué sur `com/pms/governance`. Estimation en **JH**, pas en points de story : une seconde unité n'aurait aucune conversion vers le modèle de coût |
+| G.2 | Migration **V27** (`sprints`, `backlog_items`, permissions, bump `token_version`) | DONE | P0 | G.1 | **Vérifiée sur PostgreSQL 17 réel** : `flyway_schema_history` → 27, succès |
+| G.3 | Autorisations `MANAGE_AGILE` / `VIEW_AGILE` | DONE | P0 | G.2 | `ADMIN` volontairement exclu — V12 avait ramené ADMIN à l'administration ; reprendre le schéma de V11 aurait annulé cette correction. Vérifié en base : 0 droit agile pour ADMIN |
+| G.4 | Frontend `features/agile` : rail, tableau 3 colonnes, liste backlog, progression | DONE | P0 | G.1 | Backlog = liste ordonnée, sprint = tableau. Glisser-déposer HTML5 natif, **aucune dépendance ajoutée** ; boutons de déplacement conservés comme chemin accessible au clavier |
+| G.5 | i18n complète (portée `agile`, 64 clés EN/FR à parité) | DONE | P1 | G.4 | Module bilingue dès l'origine, contrairement aux modules antérieurs |
+| G.6 | Tests | DONE | P0 | G.1 | **97/97** (contre 89). Couvre capacité, périmètre ADR-021, cloisonnement inter-projets, règle de dates, et conservation des éléments à la suppression d'un sprint |
+| G.7 | Vérification de bout en bout sur la pile réelle | DONE | P0 | G.2 | Sprint créé (201), éléments créés, déplacement (200), progression `3 JH sur 10` → 30 % identique en UI et via l'API ; bascule FR/EN sans clé manquante ; tableau en 1 colonne à 375 px sans débordement |
+| G.8 | ADR-027 | DONE | P1 | G.1 | Décisions de périmètre et justifications |
+| G.9 | Rapport — Sprint 5 « Agile Planning » dans la Release 2 | TODO | P1 | G.7 | Implique la renumérotation des sprints 5–9 → 6–10 (17 références, 4 chapitres) |
+
 ## Phase 17 — Testing, hardening & deployment  *(report ch.7)*
 | 17.1 | Integration/E2E tests, security review | TODO | P0 | 16.6 | |
 | 17.2 | Performance (NFR-001 ≤2s), logging strategy | TODO | P1 | 16.6 | async, structured |
