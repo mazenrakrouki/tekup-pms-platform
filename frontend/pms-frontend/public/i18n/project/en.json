@@ -1,0 +1,121 @@
+{
+  "archived": "Archived",
+  "unarchive": "Unarchive",
+  "tabs": {
+    "overview": "Overview & KPIs",
+    "team": "Team",
+    "workload": "Workload",
+    "billing": "Billing",
+    "missions": "Missions",
+    "governance": "Governance",
+    "overviewShort": "Overview"
+  },
+  "info": {
+    "title": "Project information",
+    "status": "Status",
+    "contractRef": "Contract reference",
+    "client": "Client",
+    "funder": "Funder",
+    "engagement": "Engagement",
+    "manager": "Project manager",
+    "period": "Period",
+    "createdAt": "Created",
+    "initialBudget": "Initial budget",
+    "revisedBudget": "Revised budget",
+    "effectiveBudget": "Effective budget",
+    "budgetTnd": "Budget (TND)",
+    "ppr": "PPR",
+    "soldWorkload": "Sold workload"
+  },
+  "kpi": {
+    "title": "Real-time KPIs",
+    "plannedBudget": "Planned budget",
+    "consumedBudget": "Consumed budget",
+    "margin": "Margin",
+    "consumptionRate": "Consumption rate",
+    "monthlyReview": "monthly review entry",
+    "delivery": "Delivery",
+    "deliveredPlanned": "delivered / planned",
+    "variance": "Variance",
+    "contractByEv": "TND (contract × EV)",
+    "invoiced": "invoiced: {{amount}} TND",
+    "actualVsSold": "Actual vs sold margin",
+    "sold": "sold",
+    "evProgress": "EV % (progress)",
+    "estimatedEndDate": "Estimated end date",
+    "highlights": "Highlights"
+  },
+  "team": {
+    "title": "Team members",
+    "member": "Member",
+    "role": "Role",
+    "from": "From",
+    "until": "Until",
+    "empty": "No member assigned",
+    "assignTitle": "Assign a team member",
+    "allRoles": "All roles",
+    "noMemberFound": "No member found",
+    "roleInTeam": "Role in the team",
+    "rolePlaceholder": "e.g. Developer",
+    "startDate": "Start date",
+    "removeConfirm": "Remove {{name}} from the team?"
+  },
+  "workload": {
+    "planTitle": "Workload plan",
+    "actualTitle": "Actual workload",
+    "resource": "Resource",
+    "year": "Year",
+    "month": "Month",
+    "plannedDays": "Planned days",
+    "actualDays": "Actual days",
+    "emptyPlan": "No planned workload",
+    "emptyActual": "No actual workload recorded"
+  },
+  "billing": {
+    "milestones": "Billing milestones",
+    "label": "Label",
+    "amountTnd": "Amount (TND)",
+    "dueDate": "Due date",
+    "emptyMilestones": "No milestone defined",
+    "amendments": "Amendments",
+    "number": "Number",
+    "subject": "Subject",
+    "date": "Date",
+    "percent": "%",
+    "dueDatePlanned": "Planned date"
+  },
+  "missions": {
+    "collaborator": "Collaborator",
+    "subject": "Subject",
+    "place": "Place",
+    "start": "Start",
+    "end": "End"
+  },
+  "governance": {
+    "risks": "Risks",
+    "description": "Description",
+    "probability": "Prob.",
+    "impact": "Impact",
+    "deliverables": "Deliverables",
+    "title": "Title",
+    "dueDate": "Due date",
+    "changeRequests": "Change requests",
+    "requester": "Requester",
+    "priority": "Priority"
+  },
+  "manager": {
+    "label": "Project manager",
+    "noneFound": "No manager found",
+    "required": "Select a project manager."
+  },
+  "msg": {
+    "snapshotCreated": "Snapshot created, the review indicators are frozen.",
+    "snapshotExists": "A snapshot already exists for today.",
+    "snapshotError": "Could not create the snapshot.",
+    "archiveConfirm": "Archive this completed project? It will move to archived projects.",
+    "archived": "Project archived.",
+    "unarchived": "Project unarchived.",
+    "statusUpdated": "Status updated: {{status}}.",
+    "teamFormRequired": "Member, role in the team and start date are required."
+  }
+}

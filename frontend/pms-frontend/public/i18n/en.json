@@ -170,5 +170,63 @@
   },
   "workload": {
     "matrix": "Occupancy matrix"
+  },
+  "labels": {
+    "engagement": {
+      "FORFAIT": "Fixed price",
+      "REGIE": "Time and material"
+    },
+    "businessModel": {
+      "SEUL": "Sole contractor",
+      "GROUPEMENT": "Consortium"
+    },
+    "milestone": {
+      "PREVU": "Planned",
+      "FACTURE": "Invoiced",
+      "PAYE": "Paid"
+    },
+    "workload": {
+      "VALIDEE": "Validated",
+      "SOUMISE": "Submitted"
+    },
+    "risk": {
+      "OUVERT": "Open",
+      "MITIGE": "Mitigated",
+      "FERME": "Closed"
+    },
+    "deliverable": {
+      "EN_ATTENTE": "Pending",
+      "EN_COURS": "In progress",
+      "LIVRE": "Delivered",
+      "VALIDE": "Approved"
+    },
+    "changeRequest": {
+      "EN_ATTENTE": "Pending",
+      "APPROUVE": "Approved",
+      "REJETE": "Rejected"
+    },
+    "priority": {
+      "FAIBLE": "Low",
+      "NORMALE": "Normal",
+      "ELEVEE": "High",
+      "CRITIQUE": "Critical"
+    },
+    "level": {
+      "FAIBLE": "Low",
+      "MOYEN": "Medium",
+      "ELEVE": "High"
+    },
+    "quoteSection": {
+      "HONORAIRES": "Fees",
+      "FRAIS": "Expenses",
+      "AUTRES_FRAIS": "Other expenses (taxes, provisions)"
+    },
+    "missionItem": {
+      "PERDIEM": "Per diem",
+      "BILLET": "Ticket",
+      "TIMBRE": "Stamp duty",
+      "TRANSPORT": "Transport",
+      "SEJOUR": "Accommodation"
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { TranslocoModule, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -14,6 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ProjectsListStateService } from '../projects-list-state.service';
+import { LanguageService } from '../../../core/i18n/language.service';
 import { Project, ProjectStatus, PROJECT_STATUS_LABELS } from '../../../core/models/project.model';
 import { KpiResponse } from '../../../core/models/kpi.model';
 import { TeamAssignment } from '../../../core/models/team.model';
@@ -28,7 +30,8 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
 @Component({
   selector: 'app-project-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, PaginationComponent],
+  providers: [provideTranslocoScope('project')],
+  imports: [CommonModule, FormsModule, RouterLink, PaginationComponent, TranslocoModule],
   styles: [`
     .act-danger { color: var(--c-danger); }
     /* Interactive status control (Jira/Linear style) */
@@ -80,7 +83,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
         <span class="bc-sep">›</span>
         <span class="bc-curr">{{ project()?.code ?? '—' }}</span>
         @if (project()?.archived) {
-          <span class="badge-draft" style="margin-left:.5rem"><i class="bi bi-archive me-1"></i>Archivé</span>
+          <span class="badge-draft" style="margin-left:.5rem"><i class="bi bi-archive me-1"></i>{{ 'project.archived' | transloco }}</span>
         }
       </div>
       <div class="tb-right">
@@ -101,7 +104,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
             }
           } @else {
             <button class="btn btn-outline-secondary btn-sm" (click)="unarchiveProject()">
-              <i class="bi bi-arrow-counterclockwise"></i>Désarchiver
+              <i class="bi bi-arrow-counterclockwise"></i>{{ 'project.unarchive' | transloco }}
             </button>
           }
         }
@@ -119,7 +122,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                 <span class="status-ctl">
                   <button class="status-btn" (click)="statusMenuOpen.set(!statusMenuOpen())"
                           [attr.aria-expanded]="statusMenuOpen()" aria-haspopup="menu" title="Changer le statut">
-                    <span [class]="badge(p.status)">{{ statusLabel(p.status) }}</span>
+                    <span [class]="badge(p.status)">{{ 'status.' + p.status | transloco }}</span>
                     <i class="bi bi-chevron-down"></i>
                   </button>
                   @if (statusMenuOpen()) {
@@ -128,45 +131,45 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       <div class="status-menu-label">Changer le statut</div>
                       @for (s of allowedTransitions(p.status); track s) {
                         <button class="status-menu-item" role="menuitem" (click)="changeStatus(s)">
-                          <span [class]="badge(s)">{{ statusLabel(s) }}</span>
+                          <span [class]="badge(s)">{{ 'status.' + s | transloco }}</span>
                         </button>
                       }
                     </div>
                   }
                 </span>
               } @else {
-                <span [class]="badge(p.status)">{{ statusLabel(p.status) }}</span>
+                <span [class]="badge(p.status)">{{ 'status.' + p.status | transloco }}</span>
               }
             </div>
           }
         </div>
         <div class="pms-tabs">
           <button class="tab-item" [class.active]="tab()==='info'" (click)="setTab('info')">
-            <i class="bi bi-info-circle me-1"></i>{{ auth.hasPermission('VIEW_KPI') ? 'Infos & KPI' : 'Infos' }}
+            <i class="bi bi-info-circle me-1"></i>{{ (auth.hasPermission('VIEW_KPI') ? 'project.tabs.overview' : 'project.tabs.overviewShort') | transloco }}
           </button>
           @if (auth.hasPermission('VIEW_TEAM')) {
             <button class="tab-item" [class.active]="tab()==='equipe'" (click)="setTab('equipe')">
-              <i class="bi bi-people me-1"></i>Équipe
+              <i class="bi bi-people me-1"></i>{{ 'project.tabs.team' | transloco }}
             </button>
           }
           @if (auth.hasPermission('VIEW_WORKLOAD')) {
             <button class="tab-item" [class.active]="tab()==='charges'" (click)="setTab('charges')">
-              <i class="bi bi-calendar3 me-1"></i>Charges
+              <i class="bi bi-calendar3 me-1"></i>{{ 'project.tabs.workload' | transloco }}
             </button>
           }
           @if (auth.hasPermission('VIEW_BILLING')) {
             <button class="tab-item" [class.active]="tab()==='facturation'" (click)="setTab('facturation')">
-              <i class="bi bi-receipt me-1"></i>Facturation
+              <i class="bi bi-receipt me-1"></i>{{ 'project.tabs.billing' | transloco }}
             </button>
           }
           @if (auth.hasPermission('VIEW_MISSION')) {
             <button class="tab-item" [class.active]="tab()==='missions'" (click)="setTab('missions')">
-              <i class="bi bi-airplane me-1"></i>Missions
+              <i class="bi bi-airplane me-1"></i>{{ 'project.tabs.missions' | transloco }}
             </button>
           }
           @if (auth.hasPermission('VIEW_GOVERNANCE')) {
             <button class="tab-item" [class.active]="tab()==='gouvernance'" (click)="setTab('gouvernance')">
-              <i class="bi bi-shield-check me-1"></i>Gouvernance
+              <i class="bi bi-shield-check me-1"></i>{{ 'project.tabs.governance' | transloco }}
             </button>
           }
         </div>
@@ -177,34 +180,34 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
         <div class="row g-4">
           <div class="col-lg-5">
             <div class="card h-100">
-              <div class="card-header">Informations du projet</div>
+              <div class="card-header">{{ 'project.info.title' | transloco }}</div>
               <div class="card-body">
                 <dl class="row small mb-0">
                   <dt class="col-5 text-muted">Code</dt>
                   <dd class="col-7 fw-semibold">{{ p.code }}</dd>
-                  <dt class="col-5 text-muted">Statut</dt>
-                  <dd class="col-7"><span [class]="badge(p.status)">{{ statusLabel(p.status) }}</span></dd>
+                  <dt class="col-5 text-muted">{{ 'project.info.status' | transloco }}</dt>
+                  <dd class="col-7"><span [class]="badge(p.status)">{{ 'status.' + p.status | transloco }}</span></dd>
                   @if (p.contractId) {
-                    <dt class="col-5 text-muted">Réf. contrat</dt>
+                    <dt class="col-5 text-muted">{{ 'project.info.contractRef' | transloco }}</dt>
                     <dd class="col-7">{{ p.contractId }}</dd>
                   }
                   @if (p.client) {
-                    <dt class="col-5 text-muted">Client</dt>
+                    <dt class="col-5 text-muted">{{ 'project.info.client' | transloco }}</dt>
                     <dd class="col-7">{{ p.client }}</dd>
                   }
                   @if (p.funder) {
-                    <dt class="col-5 text-muted">Bailleur</dt>
+                    <dt class="col-5 text-muted">{{ 'project.info.funder' | transloco }}</dt>
                     <dd class="col-7">{{ p.funder }}</dd>
                   }
                   @if (p.businessModel || p.engagementType) {
-                    <dt class="col-5 text-muted">Engagement</dt>
+                    <dt class="col-5 text-muted">{{ 'project.info.engagement' | transloco }}</dt>
                     <dd class="col-7">
                       {{ p.businessModel === 'GROUPEMENT' ? 'Groupement' : (p.businessModel === 'SEUL' ? 'Seul' : '') }}
                       @if (p.businessModel && p.engagementType) { · }
-                      {{ p.engagementType === 'FORFAIT' ? 'Forfait' : (p.engagementType === 'REGIE' ? 'Régie' : '') }}
+                      {{ p.engagementType ? ('labels.engagement.' + p.engagementType | transloco) : '' }}
                     </dd>
                   }
-                  <dt class="col-5 text-muted">Chef de projet</dt>
+                  <dt class="col-5 text-muted">{{ 'project.info.manager' | transloco }}</dt>
                   <dd class="col-7">
                     {{ p.chefProjetName ?? '—' }}
                     @if (auth.hasPermission('ASSIGN_CHEF_PROJET')) {
@@ -213,27 +216,27 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       </button>
                     }
                   </dd>
-                  <dt class="col-5 text-muted">Période</dt>
+                  <dt class="col-5 text-muted">{{ 'project.info.period' | transloco }}</dt>
                   <dd class="col-7">
                     {{ p.startDate ?? '—' }} → {{ p.endDate ?? '—' }}
                     @if (p.durationDays) { <span class="text-muted">({{ p.durationDays }} j)</span> }
                   </dd>
                   @if (p.createdAt) {
-                    <dt class="col-5 text-muted">Date de création</dt>
-                    <dd class="col-7">{{ p.createdAt | date:'dd/MM/yyyy' }} à {{ p.createdAt | date:'HH:mm' }}</dd>
+                    <dt class="col-5 text-muted">{{ 'project.info.createdAt' | transloco }}</dt>
+                    <dd class="col-7">{{ p.createdAt | date:'mediumDate':undefined:locale() }}, {{ p.createdAt | date:'shortTime':undefined:locale() }}</dd>
                   }
                   <!-- Données financières : BR-050 — masquées sans VIEW_KPI (ex. développeur) -->
                   @if (auth.hasPermission('VIEW_KPI')) {
-                    <dt class="col-5 text-muted">Budget initial</dt>
+                    <dt class="col-5 text-muted">{{ 'project.info.initialBudget' | transloco }}</dt>
                     <dd class="col-7">{{ (p.initialBudget ?? 0) | number:'1.0-0' }} {{ p.currency ?? 'TND' }}</dd>
                     @if (p.revisedBudget) {
-                      <dt class="col-5 text-muted">Budget révisé</dt>
+                      <dt class="col-5 text-muted">{{ 'project.info.revisedBudget' | transloco }}</dt>
                       <dd class="col-7">{{ p.revisedBudget | number:'1.0-0' }} {{ p.currency ?? 'TND' }}</dd>
                     }
-                    <dt class="col-5 text-muted">Budget effectif</dt>
+                    <dt class="col-5 text-muted">{{ 'project.info.effectiveBudget' | transloco }}</dt>
                     <dd class="col-7 fw-bold text-primary">{{ (p.effectiveBudget ?? 0) | number:'1.0-0' }} {{ p.currency ?? 'TND' }}</dd>
                     @if (p.currency && p.currency !== 'TND' && p.budgetTnd) {
-                      <dt class="col-5 text-muted">Budget (TND)</dt>
+                      <dt class="col-5 text-muted">{{ 'project.info.budgetTnd' | transloco }}</dt>
                       <dd class="col-7">{{ p.budgetTnd | number:'1.0-0' }} TND</dd>
                     }
                     @if (p.pprTnd) {
@@ -255,19 +258,19 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           @if (auth.hasPermission('VIEW_KPI') && kpi()) {
             <div class="col-lg-7">
               <div class="card h-100">
-                <div class="card-header">KPI temps réel</div>
+                <div class="card-header">{{ 'project.kpi.title' | transloco }}</div>
                 <div class="card-body">
                   <div class="row g-3">
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile kpi-tile--brand">
-                        <div class="small text-muted">Budget planifié</div>
+                        <div class="small text-muted">{{ 'project.kpi.plannedBudget' | transloco }}</div>
                         <div class="fs-5 fw-bold text-primary">{{ kpi()!.budgetPlanifie | number:'1.0-0' }}</div>
                         <div class="small text-muted">TND</div>
                       </div>
                     </div>
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile kpi-tile--warning">
-                        <div class="small text-muted">Budget consommé</div>
+                        <div class="small text-muted">{{ 'project.kpi.consumedBudget' | transloco }}</div>
                         <div class="fs-5 fw-bold text-warning">{{ kpi()!.budgetConsome | number:'1.0-0' }}</div>
                         <div class="small text-muted">TND</div>
                       </div>
@@ -282,7 +285,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile"
                            [style.background]="kpi()!.marge >= 0 ? 'var(--c-success-dim)' : 'var(--c-danger-dim)'">
-                        <div class="small text-muted">Marge</div>
+                        <div class="small text-muted">{{ 'project.kpi.margin' | transloco }}</div>
                         <div class="fs-5 fw-bold" [class]="kpi()!.marge >= 0 ? 'text-success' : 'text-danger'">
                           {{ kpi()!.marge | number:'1.0-0' }}
                         </div>
@@ -317,13 +320,13 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                         <div class="fs-5 fw-bold text-success">
                           {{ kpi()!.deliveryPct != null ? (kpi()!.deliveryPct | number:'1.0-1') + ' %' : '—' }}
                         </div>
-                        <div class="small text-muted">livrés / planifiés</div>
+                        <div class="small text-muted">{{ 'project.kpi.deliveredPlanned' | transloco }}</div>
                       </div>
                     </div>
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile"
                            [style.background]="(kpi()!.deriveJh ?? 0) < 0 ? 'var(--c-danger-dim)' : 'var(--c-brand-dim)'">
-                        <div class="small text-muted">Dérive</div>
+                        <div class="small text-muted">{{ 'project.kpi.variance' | transloco }}</div>
                         <div class="fs-5 fw-bold" [class.text-danger]="(kpi()!.deriveJh ?? 0) < 0">
                           {{ kpi()!.deriveJh != null ? (kpi()!.deriveJh | number:'1.0-1') + ' JH' : '—' }}
                         </div>
@@ -338,7 +341,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                         <div class="fs-5 fw-bold text-info">
                           {{ kpi()!.caProduction != null ? (kpi()!.caProduction | number:'1.0-0') : '—' }}
                         </div>
-                        <div class="small text-muted">TND (contrat × EV)</div>
+                        <div class="small text-muted">{{ 'project.kpi.contractByEv' | transloco }}</div>
                       </div>
                     </div>
                     <div class="col-6 col-md-4 text-center">
@@ -347,13 +350,13 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                         <div class="fs-5 fw-bold text-warning">
                           {{ kpi()!.fae != null ? (kpi()!.fae | number:'1.0-0') : '—' }}
                         </div>
-                        <div class="small text-muted">facturé : {{ kpi()!.totalFacture | number:'1.0-0' }} TND</div>
+                        <div class="small text-muted">{{ 'project.kpi.invoiced' | transloco: { amount: (kpi()!.totalFacture | number:'1.0-0') } }}</div>
                       </div>
                     </div>
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile"
                            [style.background]="(kpi()!.margeActuellePct ?? 0) >= (kpi()!.margeVenduePct ?? 0) ? 'var(--c-success-dim)' : 'var(--c-danger-dim)'">
-                        <div class="small text-muted">Marge actuelle vs vendue</div>
+                        <div class="small text-muted">{{ 'project.kpi.actualVsSold' | transloco }}</div>
                         <div class="fs-5 fw-bold">
                           {{ kpi()!.margeActuellePct != null ? ((kpi()!.margeActuellePct! * 100) | number:'1.1-1') + ' %' : '—' }}
                         </div>
@@ -385,7 +388,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                                [(ngModel)]="snapEvPct" placeholder="ex. 75">
                       </div>
                       <div class="col-sm-3">
-                        <label class="form-label small fw-semibold mb-1">Date fin estimée</label>
+                        <label class="form-label small fw-semibold mb-1">{{ 'project.kpi.estimatedEndDate' | transloco }}</label>
                         <input type="date" class="form-control form-control-sm" [(ngModel)]="snapDateFin">
                       </div>
                       <div class="col-sm-4">
@@ -416,7 +419,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
       @if (tab() === 'equipe') {
         <div class="card">
           <div class="card-header d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-people me-2"></i>Membres de l'équipe</span>
+            <span><i class="bi bi-people me-2"></i>{{ 'project.team.title' | transloco }}</span>
             <div class="d-flex align-items-center gap-2">
               <span class="badge-draft">{{ team().length }} membres</span>
               @if (auth.hasPermission('ASSIGN_DEVELOPER')) {
@@ -429,8 +432,8 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
               <thead>
-                <tr><th>Membre</th><th>Rôle</th><th>Depuis</th><th>Jusqu'au</th>
-                  @if (auth.hasPermission('ASSIGN_DEVELOPER')) { <th class="text-end">Actions</th> }
+                <tr><th>{{ 'project.team.member' | transloco }}</th><th>{{ 'project.team.role' | transloco }}</th><th>{{ 'project.team.from' | transloco }}</th><th>{{ 'project.team.until' | transloco }}</th>
+                  @if (auth.hasPermission('ASSIGN_DEVELOPER')) { <th class="text-end">{{ 'common.actions' | transloco }}</th> }
                 </tr>
               </thead>
               <tbody>
@@ -453,7 +456,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                   <tr><td colspan="5">
                     <div class="empty-state">
                       <div class="es-icon"><i class="bi bi-people"></i></div>
-                      <div class="es-title">Aucun membre affecté</div>
+                      <div class="es-title">{{ 'project.team.empty' | transloco }}</div>
                     </div>
                   </td></tr>
                 }
@@ -474,7 +477,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                   <thead>
-                    <tr><th>Ressource</th><th>Année</th><th>Mois</th><th class="text-end">Jours prévus</th></tr>
+                    <tr><th>{{ 'project.workload.resource' | transloco }}</th><th>{{ 'project.workload.year' | transloco }}</th><th>{{ 'project.workload.month' | transloco }}</th><th class="text-end">{{ 'project.workload.plannedDays' | transloco }}</th></tr>
                   </thead>
                   <tbody>
                     @for (c of pagedPlanCharges(); track c.id) {
@@ -489,7 +492,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       <tr><td colspan="4">
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-calendar3"></i></div>
-                          <div class="es-title">Aucune charge planifiée</div>
+                          <div class="es-title">{{ 'project.workload.emptyPlan' | transloco }}</div>
                         </div>
                       </td></tr>
                     }
@@ -507,12 +510,12 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           <div class="col-12">
             <div class="card">
               <div class="card-header">
-                <i class="bi bi-clock-history me-2"></i>Charges réelles
+                <i class="bi bi-clock-history me-2"></i>{{ 'project.workload.actualTitle' | transloco }}
               </div>
               <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                   <thead>
-                    <tr><th>Ressource</th><th>Année</th><th>Mois</th><th class="text-end">Jours réels</th><th>Statut</th></tr>
+                    <tr><th>{{ 'project.workload.resource' | transloco }}</th><th>{{ 'project.workload.year' | transloco }}</th><th>{{ 'project.workload.month' | transloco }}</th><th class="text-end">{{ 'project.workload.actualDays' | transloco }}</th><th>{{ 'project.info.status' | transloco }}</th></tr>
                   </thead>
                   <tbody>
                     @for (c of pagedChargesReelles(); track c.id) {
@@ -523,7 +526,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                         <td class="text-end fw-semibold">{{ c.actualDays }}</td>
                         <td>
                           @if (c.validatedAt) {
-                            <span class="badge-active">Validée</span>
+                            <span class="badge-active">{{ 'labels.workload.VALIDEE' | transloco }}</span>
                           } @else {
                             <span class="badge-on-hold">Soumise</span>
                           }
@@ -534,7 +537,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       <tr><td colspan="5">
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-clock-history"></i></div>
-                          <div class="es-title">Aucune charge réelle saisie</div>
+                          <div class="es-title">{{ 'project.workload.emptyActual' | transloco }}</div>
                         </div>
                       </td></tr>
                     }
@@ -564,7 +567,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                   <thead>
-                    <tr><th>Libellé</th><th class="text-end">%</th><th class="text-end">Montant (TND)</th><th>Date prévue</th><th>Statut</th></tr>
+                    <tr><th>{{ 'project.billing.label' | transloco }}</th><th class="text-end">%</th><th class="text-end">{{ 'project.billing.amountTnd' | transloco }}</th><th>{{ 'project.billing.dueDatePlanned' | transloco }}</th><th>{{ 'project.info.status' | transloco }}</th></tr>
                   </thead>
                   <tbody>
                     @for (j of jalons(); track j.id) {
@@ -575,11 +578,11 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                         <td>{{ j.datePrevue ?? '—' }}</td>
                         <td>
                           @if (j.statut === 'PAYE') {
-                            <span class="badge-active">Payé</span>
+                            <span class="badge-active">{{ 'labels.milestone.PAYE' | transloco }}</span>
                           } @else if (j.statut === 'FACTURE') {
-                            <span class="badge-completed">Facturé</span>
+                            <span class="badge-completed">{{ 'labels.milestone.FACTURE' | transloco }}</span>
                           } @else {
-                            <span class="badge-draft">Prévu</span>
+                            <span class="badge-draft">{{ 'labels.milestone.PREVU' | transloco }}</span>
                           }
                         </td>
                       </tr>
@@ -588,7 +591,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       <tr><td colspan="5">
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-list-check"></i></div>
-                          <div class="es-title">Aucun jalon défini</div>
+                          <div class="es-title">{{ 'project.billing.emptyMilestones' | transloco }}</div>
                         </div>
                       </td></tr>
                     }
@@ -606,7 +609,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
                   <thead>
-                    <tr><th>Numéro</th><th>Objet</th><th class="text-end">Montant (TND)</th><th>Date</th></tr>
+                    <tr><th>{{ 'project.billing.number' | transloco }}</th><th>{{ 'project.billing.subject' | transloco }}</th><th class="text-end">{{ 'project.billing.amountTnd' | transloco }}</th><th>{{ 'project.billing.date' | transloco }}</th></tr>
                   </thead>
                   <tbody>
                     @for (a of avenants(); track a.id) {
@@ -644,7 +647,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
               <thead>
-                <tr><th>Collaborateur</th><th>Objet</th><th>Lieu</th><th>Début</th><th>Fin</th></tr>
+                <tr><th>{{ 'project.missions.collaborator' | transloco }}</th><th>{{ 'project.missions.subject' | transloco }}</th><th>{{ 'project.missions.place' | transloco }}</th><th>{{ 'project.missions.start' | transloco }}</th><th>{{ 'project.missions.end' | transloco }}</th></tr>
               </thead>
               <tbody>
                 @for (m of missions(); track m.id) {
@@ -682,7 +685,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               <div class="table-responsive">
                 <table class="table table-sm mb-0 align-middle">
                   <thead>
-                    <tr><th>Description</th><th>Prob.</th><th>Impact</th><th>Statut</th></tr>
+                    <tr><th>{{ 'project.governance.description' | transloco }}</th><th>{{ 'project.governance.probability' | transloco }}</th><th>{{ 'project.governance.impact' | transloco }}</th><th>{{ 'project.info.status' | transloco }}</th></tr>
                   </thead>
                   <tbody>
                     @for (r of risks(); track r.id) {
@@ -692,9 +695,9 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                         <td><span [class]="niveauBadge(r.impact)">{{ r.impact }}</span></td>
                         <td>
                           @if (r.statut === 'FERME') {
-                            <span class="badge-active">Fermé</span>
+                            <span class="badge-active">{{ 'labels.risk.FERME' | transloco }}</span>
                           } @else if (r.statut === 'MITIGE') {
-                            <span class="badge-on-hold">Mitigé</span>
+                            <span class="badge-on-hold">{{ 'labels.risk.MITIGE' | transloco }}</span>
                           } @else {
                             <span class="badge-cancelled">Ouvert</span>
                           }
@@ -719,7 +722,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               <div class="table-responsive">
                 <table class="table table-sm mb-0 align-middle">
                   <thead>
-                    <tr><th>Titre</th><th>Échéance</th><th>Statut</th></tr>
+                    <tr><th>{{ 'project.governance.title' | transloco }}</th><th>{{ 'project.governance.dueDate' | transloco }}</th><th>{{ 'project.info.status' | transloco }}</th></tr>
                   </thead>
                   <tbody>
                     @for (l of livrables(); track l.id) {
@@ -747,7 +750,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               <div class="table-responsive">
                 <table class="table table-sm mb-0 align-middle">
                   <thead>
-                    <tr><th>Titre</th><th>Demandeur</th><th>Priorité</th><th>Date</th><th>Statut</th></tr>
+                    <tr><th>{{ 'project.governance.title' | transloco }}</th><th>{{ 'project.governance.requester' | transloco }}</th><th>{{ 'project.governance.priority' | transloco }}</th><th>{{ 'project.billing.date' | transloco }}</th><th>{{ 'project.info.status' | transloco }}</th></tr>
                   </thead>
                   <tbody>
                     @for (dc of changes(); track dc.id) {
@@ -758,9 +761,9 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                         <td class="small">{{ dc.dateDemande ?? '—' }}</td>
                         <td>
                           @if (dc.statut === 'APPROUVE') {
-                            <span class="badge-active">Approuvé</span>
+                            <span class="badge-active">{{ 'labels.changeRequest.APPROUVE' | transloco }}</span>
                           } @else if (dc.statut === 'REJETE') {
-                            <span class="badge-cancelled">Rejeté</span>
+                            <span class="badge-cancelled">{{ 'labels.changeRequest.REJETE' | transloco }}</span>
                           } @else {
                             <span class="badge-on-hold">En attente</span>
                           }
@@ -792,7 +795,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Chef de projet <span class="text-danger">*</span></label>
+                <label class="form-label fw-semibold">{{ 'project.manager.label' | transloco }} <span class="text-danger">*</span></label>
                 <div class="input-wrap mb-2">
                   <i class="bi bi-search input-icon"></i>
                   <input type="search" class="form-control form-control-sm"
@@ -808,7 +811,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       @if (chefUserId === u.id) { <i class="bi bi-check-lg" style="color:var(--c-brand)"></i> }
                     </button>
                   } @empty {
-                    <div class="picker-empty">Aucun chef trouvé</div>
+                    <div class="picker-empty">{{ 'project.manager.noneFound' | transloco }}</div>
                   }
                 </div>
                 <div class="picker-count">{{ filteredChefs().length }} candidat{{ filteredChefs().length !== 1 ? 's' : '' }}</div>
@@ -834,7 +837,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Affecter un membre à l'équipe</h5>
+              <h5 class="modal-title">{{ 'project.team.assignTitle' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showTeamModal.set(false)"></button>
             </div>
             <div class="modal-body">
@@ -850,7 +853,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                   </div>
                   <select class="form-select form-select-sm" style="max-width:170px"
                           [ngModel]="memberRoleFilter()" (ngModelChange)="memberRoleFilter.set($event)">
-                    <option value="">Tous les rôles</option>
+                    <option value="">{{ 'project.team.allRoles' | transloco }}</option>
                     @for (r of memberRoles(); track r) { <option [value]="r">{{ r }}</option> }
                   </select>
                 </div>
@@ -864,17 +867,17 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       @if (teamForm.userId === u.id) { <i class="bi bi-check-lg" style="color:var(--c-brand)"></i> }
                     </button>
                   } @empty {
-                    <div class="picker-empty">Aucun membre trouvé</div>
+                    <div class="picker-empty">{{ 'project.team.noMemberFound' | transloco }}</div>
                   }
                 </div>
                 <div class="picker-count">{{ filteredMembers().length }} membre{{ filteredMembers().length !== 1 ? 's' : '' }} disponible{{ filteredMembers().length !== 1 ? 's' : '' }}</div>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Rôle dans l'équipe <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" maxlength="50" [(ngModel)]="teamForm.roleInTeam" placeholder="Ex: Développeur, Analyste...">
+                <label class="form-label fw-semibold">{{ 'project.team.roleInTeam' | transloco }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" maxlength="50" [(ngModel)]="teamForm.roleInTeam" [placeholder]="'project.team.rolePlaceholder' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Date de début <span class="text-danger">*</span></label>
+                <label class="form-label fw-semibold">{{ 'project.team.startDate' | transloco }} <span class="text-danger">*</span></label>
                 <input type="date" class="form-control" [(ngModel)]="teamForm.startDate">
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
@@ -894,6 +897,10 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
 })
 export class ProjectDetailComponent implements OnInit {
   readonly auth = inject(AuthService);
+  private readonly t = inject(TranslocoService);
+  private readonly lang = inject(LanguageService);
+  /** Locale réactive : les pipes date/number suivent le changement de langue sans rechargement. */
+  readonly locale = computed(() => this.lang.current() === 'en' ? 'en-US' : 'fr');
   private readonly svc        = inject(ProjectService);
   private readonly http       = inject(HttpClient);
   private readonly teamSvc    = inject(TeamService);
@@ -1031,23 +1038,23 @@ export class ProjectDetailComponent implements OnInit {
       next: () => {
         this.snapshotLoading.set(false);
         this.snapshotError.set(false);
-        this.snapshotMsg.set('Snapshot créé — les indicateurs de la revue sont figés.');
+        this.snapshotMsg.set(this.t.translate('project.msg.snapshotCreated'));
         this.svc.getLiveKpi(this.projectId).subscribe(k => this.kpi.set(k));
       },
       error: (e: { status: number; error?: { detail?: string } }) => {
         this.snapshotLoading.set(false);
         this.snapshotError.set(true);
         this.snapshotMsg.set(e.status === 409
-          ? 'Un snapshot existe déjà pour aujourd\'hui.'
-          : (e.error?.detail ?? 'Erreur lors de la création du snapshot.'));
+          ? this.t.translate('project.msg.snapshotExists')
+          : (e.error?.detail ?? this.t.translate('project.msg.snapshotError')));
       }
     });
   }
 
   async archiveProject(): Promise<void> {
-    if (!await this.confirm.ask('Archiver ce projet terminé ? Il sera déplacé dans les projets archivés.')) return;
+    if (!await this.confirm.ask(this.t.translate('project.msg.archiveConfirm'))) return;
     this.svc.archive(this.projectId).subscribe({
-      next: p => { this.project.set(p); this.toast.success('Projet archivé.'); },
+      next: p => { this.project.set(p); this.toast.success(this.t.translate('project.msg.archived')); },
       error: e => this.toast.error(e.error?.detail ?? 'Erreur lors de l\'archivage.')
     });
   }
@@ -1055,7 +1062,7 @@ export class ProjectDetailComponent implements OnInit {
   unarchiveProject(): void {
     this.svc.unarchive(this.projectId).subscribe(p => {
       this.project.set(p);
-      this.toast.success('Projet désarchivé.');
+      this.toast.success(this.t.translate('project.msg.unarchived'));
     });
   }
 
@@ -1066,10 +1073,10 @@ export class ProjectDetailComponent implements OnInit {
 
   async changeStatus(target: ProjectStatus): Promise<void> {
     this.statusMenuOpen.set(false);
-    const label = this.statusLabel(target);
+    const label = this.t.translate('status.' + target);
     if (!await this.confirm.ask(`Changer le statut du projet vers « ${label} » ?`, 'Changer le statut')) return;
     this.svc.changeStatus(this.projectId, target).subscribe({
-      next: p => { this.project.set(p); this.toast.success(`Statut mis à jour : ${label}.`); },
+      next: p => { this.project.set(p); this.toast.success(this.t.translate('project.msg.statusUpdated', { status: label })); },
       error: e => this.toast.error(e.error?.detail ?? e.error?.message ?? 'Erreur lors du changement de statut.')
     });
   }
@@ -1113,7 +1120,9 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   monthLabel(m: number): string {
-    return ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][m - 1] ?? String(m);
+    // Intl fournit le mois dans la langue courante : un tableau figé resterait français.
+    if (m < 1 || m > 12) return String(m);
+    return new Intl.DateTimeFormat(this.locale(), { month: 'short' }).format(new Date(2000, m - 1, 1));
   }
 
   statusLabel(s: string): string {
@@ -1169,7 +1178,7 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   saveChef(): void {
-    if (!this.chefUserId) { this.modalError.set('Sélectionnez un chef de projet.'); return; }
+    if (!this.chefUserId) { this.modalError.set(this.t.translate('project.manager.required')); return; }
     this.saving.set(true);
     this.svc.assignChef(this.projectId, this.chefUserId).subscribe({
       next: (p) => { this.project.set(p); this.showChefModal.set(false); this.saving.set(false); },
@@ -1189,7 +1198,7 @@ export class ProjectDetailComponent implements OnInit {
 
   saveTeamMember(): void {
     if (!this.teamForm.userId || !this.teamForm.roleInTeam.trim() || !this.teamForm.startDate) {
-      this.modalError.set('Membre, rôle dans l\'équipe et date de début sont requis.');
+      this.modalError.set(this.t.translate('project.msg.teamFormRequired'));
       return;
     }
     this.saving.set(true);
@@ -1203,7 +1212,7 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   async removeMember(m: TeamAssignment): Promise<void> {
-    if (!await this.confirm.ask(`Retirer ${m.userFullName} de l'équipe ?`)) return;
+    if (!await this.confirm.ask(this.t.translate('project.team.removeConfirm', { name: m.userFullName }))) return;
     this.teamSvc.remove(this.projectId, m.id).subscribe(() =>
       this.teamSvc.list(this.projectId).subscribe(d => this.team.set(d))
     );

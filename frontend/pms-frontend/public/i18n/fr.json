@@ -170,5 +170,63 @@
   },
   "workload": {
     "matrix": "Matrice d'occupation"
+  },
+  "labels": {
+    "engagement": {
+      "FORFAIT": "Forfait",
+      "REGIE": "Régie"
+    },
+    "businessModel": {
+      "SEUL": "Seul",
+      "GROUPEMENT": "Groupement"
+    },
+    "milestone": {
+      "PREVU": "Prévu",
+      "FACTURE": "Facturé",
+      "PAYE": "Payé"
+    },
+    "workload": {
+      "VALIDEE": "Validée",
+      "SOUMISE": "Soumise"
+    },
+    "risk": {
+      "OUVERT": "Ouvert",
+      "MITIGE": "Mitigé",
+      "FERME": "Fermé"
+    },
+    "deliverable": {
+      "EN_ATTENTE": "En attente",
+      "EN_COURS": "En cours",
+      "LIVRE": "Livré",
+      "VALIDE": "Validé"
+    },
+    "changeRequest": {
+      "EN_ATTENTE": "En attente",
+      "APPROUVE": "Approuvé",
+      "REJETE": "Rejeté"
+    },
+    "priority": {
+      "FAIBLE": "Faible",
+      "NORMALE": "Normale",
+      "ELEVEE": "Élevée",
+      "CRITIQUE": "Critique"
+    },
+    "level": {
+      "FAIBLE": "Faible",
+      "MOYEN": "Moyen",
+      "ELEVE": "Élevé"
+    },
+    "quoteSection": {
+      "HONORAIRES": "Honoraires",
+      "FRAIS": "Frais",
+      "AUTRES_FRAIS": "Autres frais (taxes, provisions)"
+    },
+    "missionItem": {
+      "PERDIEM": "Per diem",
+      "BILLET": "Billet",
+      "TIMBRE": "Timbre",
+      "TRANSPORT": "Transport",
+      "SEJOUR": "Séjour"
+    }
   }
 }

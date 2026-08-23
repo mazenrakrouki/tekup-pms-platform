@@ -1,0 +1,121 @@
+{
+  "archived": "Archivé",
+  "unarchive": "Désarchiver",
+  "tabs": {
+    "overview": "Infos & KPI",
+    "team": "Équipe",
+    "workload": "Charges",
+    "billing": "Facturation",
+    "missions": "Missions",
+    "governance": "Gouvernance",
+    "overviewShort": "Infos"
+  },
+  "info": {
+    "title": "Informations du projet",
+    "status": "Statut",
+    "contractRef": "Réf. contrat",
+    "client": "Client",
+    "funder": "Bailleur",
+    "engagement": "Engagement",
+    "manager": "Chef de projet",
+    "period": "Période",
+    "createdAt": "Date de création",
+    "initialBudget": "Budget initial",
+    "revisedBudget": "Budget révisé",
+    "effectiveBudget": "Budget effectif",
+    "budgetTnd": "Budget (TND)",
+    "ppr": "PPR",
+    "soldWorkload": "Workload vendu"
+  },
+  "kpi": {
+    "title": "KPI temps réel",
+    "plannedBudget": "Budget planifié",
+    "consumedBudget": "Budget consommé",
+    "margin": "Marge",
+    "consumptionRate": "Taux conso.",
+    "monthlyReview": "saisie revue mensuelle",
+    "delivery": "Delivery",
+    "deliveredPlanned": "livrés / planifiés",
+    "variance": "Dérive",
+    "contractByEv": "TND (contrat × EV)",
+    "invoiced": "facturé : {{amount}} TND",
+    "actualVsSold": "Marge actuelle vs vendue",
+    "sold": "vendue",
+    "evProgress": "EV % (avancement)",
+    "estimatedEndDate": "Date fin estimée",
+    "highlights": "Faits marquants"
+  },
+  "team": {
+    "title": "Membres de l'équipe",
+    "member": "Membre",
+    "role": "Rôle",
+    "from": "Depuis",
+    "until": "Jusqu'au",
+    "empty": "Aucun membre affecté",
+    "assignTitle": "Affecter un membre à l'équipe",
+    "allRoles": "Tous les rôles",
+    "noMemberFound": "Aucun membre trouvé",
+    "roleInTeam": "Rôle dans l'équipe",
+    "rolePlaceholder": "Ex : Développeur",
+    "startDate": "Date de début",
+    "removeConfirm": "Retirer {{name}} de l'équipe ?"
+  },
+  "workload": {
+    "planTitle": "Plan de charge",
+    "actualTitle": "Charges réelles",
+    "resource": "Ressource",
+    "year": "Année",
+    "month": "Mois",
+    "plannedDays": "Jours prévus",
+    "actualDays": "Jours réels",
+    "emptyPlan": "Aucune charge planifiée",
+    "emptyActual": "Aucune charge réelle saisie"
+  },
+  "billing": {
+    "milestones": "Jalons de facturation",
+    "label": "Libellé",
+    "amountTnd": "Montant (TND)",
+    "dueDate": "Date prévue",
+    "emptyMilestones": "Aucun jalon défini",
+    "amendments": "Avenants",
+    "number": "Numéro",
+    "subject": "Objet",
+    "date": "Date",
+    "percent": "%",
+    "dueDatePlanned": "Date prévue"
+  },
+  "missions": {
+    "collaborator": "Collaborateur",
+    "subject": "Objet",
+    "place": "Lieu",
+    "start": "Début",
+    "end": "Fin"
+  },
+  "governance": {
+    "risks": "Risques",
+    "description": "Description",
+    "probability": "Prob.",
+    "impact": "Impact",
+    "deliverables": "Livrables",
+    "title": "Titre",
+    "dueDate": "Échéance",
+    "changeRequests": "Demandes de changement",
+    "requester": "Demandeur",
+    "priority": "Priorité"
+  },
+  "manager": {
+    "label": "Chef de projet",
+    "noneFound": "Aucun chef trouvé",
+    "required": "Sélectionnez un chef de projet."
+  },
+  "msg": {
+    "snapshotCreated": "Snapshot créé, les indicateurs de la revue sont figés.",
+    "snapshotExists": "Un snapshot existe déjà pour aujourd'hui.",
+    "snapshotError": "Erreur lors de la création du snapshot.",
+    "archiveConfirm": "Archiver ce projet terminé ? Il sera déplacé dans les projets archivés.",
+    "archived": "Projet archivé.",
+    "unarchived": "Projet désarchivé.",
+    "statusUpdated": "Statut mis à jour : {{status}}.",
+    "teamFormRequired": "Membre, rôle dans l'équipe et date de début sont requis."
+  }
+}
