@@ -1,13 +1,13 @@
-@startuml class_kpi
-title Classes — Workload and KPI Engine (EVM)
+@startuml class_agile
+title Classes — Agile Planning (product backlog and sprints)
 
 top to bottom direction
 
 skinparam shadowing false
 skinparam classAttributeIconSize 0
 skinparam linetype ortho
-skinparam nodesep 55
-skinparam ranksep 65
+skinparam nodesep 90
+skinparam ranksep 80
 skinparam class {
   BackgroundColor       #FFFFFF
   BorderColor           #6B2FA0
@@ -51,62 +51,60 @@ hide empty methods
 
 class Project {
   - code : String
-  - soldWorkloadDays : BigDecimal
+  - name : String
 }
 
-class User {
-  - email : String
+class Sprint {
+  - name : String
+  - goal : String
+  - startDate : LocalDate
+  - endDate : LocalDate
+  - status : SprintStatus
 }
 
-class Resource {
-  - dailyRate : BigDecimal
-  - tccRate : BigDecimal
+class BacklogItem {
+  - title : String
+  - description : String
+  - priority : BacklogPriority
+  - estimateDays : BigDecimal
+  - status : BacklogItemStatus
 }
 
-class AnnualTcc {
-  - year : int
-  - dailyRate : BigDecimal
-  - tccRate : BigDecimal
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  CLOSED
 }
 
-class WorkloadPlan {
-  - period : LocalDate
-  - plannedDays : BigDecimal
+enum BacklogPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
-class ActualWorkload {
-  - period : LocalDate
-  - actualDays : BigDecimal
-  - submittedAt : LocalDateTime
-  - validatedAt : LocalDateTime
+enum BacklogItemStatus {
+  TODO
+  IN_PROGRESS
+  DONE
 }
 
-class KpiSnapshot {
-  - snapshotDate : LocalDate
-  - evPct : BigDecimal
-  - deliveryPct : BigDecimal
-  - driftDays : BigDecimal
-  - productionRevenue : BigDecimal
-  - unbilledRevenue : BigDecimal
-  - eac : BigDecimal
-  - margin : BigDecimal
-  - highlights : String
-}
+Project "1" *-- "0..*" Sprint      : plans >
+Project "1" *-- "0..*" BacklogItem : owns >
+Sprint  "0..1" o-- "0..*" BacklogItem : commits >
 
-Resource "0..1" --> "1" User : cost of >
-Resource "1" *-- "*" AnnualTcc : rate per year >
-Project "1" *-- "*" WorkloadPlan
-WorkloadPlan "*" --> "1" User : for >
-Project "1" *-- "*" ActualWorkload
-ActualWorkload "*" --> "1" User : for >
-Project "1" *-- "*" KpiSnapshot : monthly reviews >
+Sprint      .right.> SprintStatus
+BacklogItem .right.> BacklogItemStatus
+BacklogItem .down.>  BacklogPriority
 
-note right of AnnualTcc
-  The daily cost uses the TCC rate for the year of the reported period.
+note bottom of BacklogItem
+  A null sprint means the item is
+  still in the product backlog.
 end note
 
-note right of KpiSnapshot
-  The snapshot freezes the state of the monthly review (EV % entered by the PM).
+note top of Sprint
+  Aggregation: deleting a sprint
+  returns its items to the backlog.
 end note
 
 @enduml

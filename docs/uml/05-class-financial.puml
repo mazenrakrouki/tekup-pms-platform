@@ -4,15 +4,48 @@ title Classes — Financial Management (billing, amendments, Internal Quote)
 top to bottom direction
 
 skinparam shadowing false
-skinparam classBackgroundColor #FFFFFF
-skinparam classBorderColor #2C5F8A
-skinparam classHeaderBackgroundColor #D6E4F0
-skinparam defaultFontName Helvetica
-skinparam defaultFontSize 12
-skinparam ArrowColor #444444
-skinparam ArrowThickness 1.5
-skinparam noteBorderColor #999999
-skinparam noteBackgroundColor #FFFDE7
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 55
+skinparam ranksep 65
+skinparam class {
+  BackgroundColor       #FFFFFF
+  BorderColor           #6B2FA0
+  BorderThickness       1.4
+  HeaderBackgroundColor #6B2FA0
+  FontColor             #FFFFFF
+  FontName              Courier
+  FontSize              15
+  FontStyle             plain
+  AttributeFontColor    #1A1A1A
+  AttributeFontName     Courier
+  AttributeFontSize     13
+}
+skinparam enum {
+  BackgroundColor       #FFFFFF
+  BorderColor           #6B2FA0
+  BorderThickness       1.4
+  HeaderBackgroundColor #6B2FA0
+  FontColor             #FFFFFF
+  FontName              Courier
+  FontSize              15
+  AttributeFontColor    #1A1A1A
+  AttributeFontName     Courier
+  AttributeFontSize     13
+}
+skinparam ArrowColor      #1A1A1A
+skinparam ArrowThickness  1.4
+skinparam ArrowFontColor  #4A5BBF
+skinparam ArrowFontStyle  italic
+skinparam ArrowFontName   Courier
+skinparam ArrowFontSize   12
+skinparam TitleFontName   Courier
+skinparam TitleFontSize   16
+skinparam TitleFontColor  #1A1A1A
+skinparam noteBorderColor     #B9A0D4
+skinparam noteBackgroundColor #F6F1FB
+skinparam noteFontName        Courier
+skinparam noteFontSize        11
 hide circle
 hide empty methods
 
