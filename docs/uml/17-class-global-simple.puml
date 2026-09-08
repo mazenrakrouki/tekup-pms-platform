@@ -36,110 +36,110 @@ hide circle
 hide empty methods
 
 class User {
-  id : int
-  lastName : string
-  firstName : string
-  email : string
-  active : boolean
+  - id : int
+  - lastName : string
+  - firstName : string
+  - email : string
+  - active : boolean
 }
 
 class Role {
-  id : int
-  name : string
-  description : string
+  - id : int
+  - name : string
+  - description : string
 }
 
 class Permission {
-  id : int
-  code : string
-  module : string
+  - id : int
+  - code : string
+  - module : string
 }
 
 class Resource {
-  id : int
-  dailyRate : decimal
-  tccRate : decimal
+  - id : int
+  - dailyRate : decimal
+  - tccRate : decimal
 }
 
 class Project {
-  id : int
-  code : string
-  client : string
-  status : string
-  initialBudget : decimal
-  currency : string
+  - id : int
+  - code : string
+  - client : string
+  - status : string
+  - initialBudget : decimal
+  - currency : string
 }
 
 class TeamAssignment {
-  id : int
-  roleInTeam : string
-  startDate : date
-  endDate : date
+  - id : int
+  - roleInTeam : string
+  - startDate : date
+  - endDate : date
 }
 
 class WorkloadPlan {
-  id : int
-  period : date
-  plannedDays : decimal
+  - id : int
+  - period : date
+  - plannedDays : decimal
 }
 
 class ActualWorkload {
-  id : int
-  period : date
-  actualDays : decimal
-  validatedAt : date
+  - id : int
+  - period : date
+  - actualDays : decimal
+  - validatedAt : date
 }
 
 class BillingMilestone {
-  id : int
-  label : string
-  percentage : decimal
-  amount : decimal
-  status : string
+  - id : int
+  - label : string
+  - percentage : decimal
+  - amount : decimal
+  - status : string
 }
 
 class Mission {
-  id : int
-  subject : string
-  startDate : date
-  endDate : date
+  - id : int
+  - subject : string
+  - startDate : date
+  - endDate : date
 }
 
 class Sprint {
-  id : int
-  name : string
-  startDate : date
-  endDate : date
-  status : string
+  - id : int
+  - name : string
+  - startDate : date
+  - endDate : date
+  - status : string
 }
 
 class BacklogItem {
-  id : int
-  title : string
-  priority : string
-  estimateDays : decimal
-  status : string
+  - id : int
+  - title : string
+  - priority : string
+  - estimateDays : decimal
+  - status : string
 }
 
 class Deliverable {
-  id : int
-  title : string
-  dueDate : date
-  status : string
+  - id : int
+  - title : string
+  - dueDate : date
+  - status : string
 }
 
 class Risk {
-  id : int
-  description : string
-  probability : string
-  impact : string
+  - id : int
+  - description : string
+  - probability : string
+  - impact : string
 }
 
 class KpiSnapshot {
-  id : int
-  snapshotDate : date
-  eac : decimal
-  margin : decimal
+  - id : int
+  - snapshotDate : date
+  - eac : decimal
+  - margin : decimal
 }
 
 User "1..*" -- "1" Role          : holds

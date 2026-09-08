@@ -4,14 +4,14 @@ title Deployment — 3-Tier Architecture
 skinparam shadowing false
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
-skinparam nodeBackgroundColor #EAF2FF
-skinparam nodeBorderColor #1F4E79
+skinparam nodeBackgroundColor #FAFAFA
+skinparam nodeBorderColor #808080
 skinparam artifactBackgroundColor #FFFFFF
-skinparam artifactBorderColor #2C5F8A
+skinparam artifactBorderColor #808080
 skinparam databaseBackgroundColor #FFFFFF
-skinparam ArrowColor #444444
-skinparam noteBorderColor #999999
-skinparam noteBackgroundColor #FFFDE7
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
 
 node "Client machine" as client {
   artifact "Browser\nAngular 21 SPA\n(static build)" as spa

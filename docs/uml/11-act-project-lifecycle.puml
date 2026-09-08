@@ -5,10 +5,10 @@ skinparam shadowing false
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
 skinparam activityBackgroundColor #FFFFFF
-skinparam activityBorderColor #2C5F8A
-skinparam ArrowColor #444444
-skinparam noteBorderColor #999999
-skinparam noteBackgroundColor #FFFDE7
+skinparam activityBorderColor #808080
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
 
 |Administrator|
 start

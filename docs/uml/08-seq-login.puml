@@ -5,11 +5,11 @@ skinparam shadowing false
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
 skinparam sequenceParticipantBackgroundColor #FFFFFF
-skinparam sequenceParticipantBorderColor #2C5F8A
-skinparam sequenceLifeLineBorderColor #999999
-skinparam ArrowColor #444444
-skinparam noteBorderColor #999999
-skinparam noteBackgroundColor #FFFDE7
+skinparam sequenceParticipantBorderColor #808080
+skinparam sequenceLifeLineBorderColor #AAAAAA
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
 autonumber
 
 actor "User" as U

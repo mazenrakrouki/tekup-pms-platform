@@ -3,13 +3,13 @@ title Modular Architecture — The 10 Real Backend Packages (com.pms.*)
 
 skinparam shadowing false
 skinparam packageStyle rectangle
-skinparam packageBackgroundColor #EAF2FF
-skinparam packageBorderColor #1F4E79
-skinparam packageFontColor #1F4E79
+skinparam packageBackgroundColor #FAFAFA
+skinparam packageBorderColor #808080
+skinparam packageFontColor #808080
 skinparam packageFontSize 13
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
-skinparam ArrowColor #555555
+skinparam ArrowColor #333333
 skinparam ArrowThickness 1.5
 
 package "auth\nJWT, RBAC, sessions"                    as AUTH

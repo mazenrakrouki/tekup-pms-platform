@@ -7,13 +7,13 @@ skinparam shadowing false
 skinparam packageStyle rectangle
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 11
-skinparam actorBorderColor #2C5F8A
-skinparam actorBackgroundColor #D6E4F0
-skinparam usecaseBorderColor #2C5F8A
+skinparam actorBorderColor #808080
+skinparam actorBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #808080
 skinparam usecaseBackgroundColor #FFFFFF
-skinparam ArrowColor #555555
-skinparam noteBorderColor #999999
-skinparam noteBackgroundColor #FFFDE7
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
 
 actor "Administrator\n(ADMIN)"        as Admin
 actor "Director\n(DIRECTEUR)"         as Dir
