@@ -1,5 +1,5 @@
 @startuml package_diagram
-title Modular Architecture — The 10 Real Backend Packages (com.pms.*)
+title Modular Architecture — The 11 Real Backend Packages (com.pms.*)
 
 skinparam shadowing false
 skinparam packageStyle rectangle
@@ -20,6 +20,7 @@ package "workload\nworkload plan,\nactual workload"     as WORK
 package "billing\nmilestones, payments,\namendments"    as BILL
 package "mission\nmissions and expenses"                as MISS
 package "governance\nrisks, deliverables,\nchanges"     as GOV
+package "agile\nsprints and\nproduct backlog"          as AGILE
 package "kpi\nEVM engine:\nlive calc + snapshots"       as KPI
 package "shared\nconfig, web security,\nexceptions"     as SHARED
 
@@ -31,6 +32,7 @@ WORK ..> TEAM : depends on
 BILL ..> PROJ : depends on
 MISS ..> PROJ : depends on
 GOV  ..> PROJ : depends on
+AGILE ..> PROJ : depends on
 
 KPI <.. WORK : feeds
 KPI <.. BILL : feeds
