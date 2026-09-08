@@ -1,0 +1,88 @@
+@startuml class_global_simple
+title Global class diagram --- essential structure
+
+left to right direction
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam nodesep 22
+skinparam ranksep 90
+skinparam class {
+  BackgroundColor       #FFFFFF
+  BorderColor           #6B2FA0
+  BorderThickness       1.4
+  HeaderBackgroundColor #6B2FA0
+  FontColor             #FFFFFF
+  FontName              Courier
+  FontSize              14
+  FontStyle             plain
+  AttributeFontColor    #1A1A1A
+  AttributeFontName     Courier
+  AttributeFontSize     12
+}
+skinparam ArrowColor      #1A1A1A
+skinparam ArrowThickness  1.4
+skinparam ArrowFontColor  #4A5BBF
+skinparam ArrowFontStyle  italic
+skinparam ArrowFontName   Courier
+skinparam ArrowFontSize   11
+skinparam TitleFontName   Courier
+skinparam TitleFontSize   16
+skinparam TitleFontColor  #1A1A1A
+skinparam noteBorderColor     #B9A0D4
+skinparam noteBackgroundColor #F6F1FB
+skinparam noteFontName        Courier
+skinparam noteFontSize        11
+hide circle
+hide members
+
+class User
+class Role
+class Permission
+
+class Project
+class TeamAssignment
+
+class WorkloadPlan
+class ActualWorkload
+
+class BillingMilestone
+class Mission
+
+class Sprint
+class BacklogItem
+
+class KpiSnapshot
+
+' --- Access control: a role is data, not a subtype -------------------
+User "*"  --> "1" Role       : holds >
+Role "*"  --  "*" Permission : grants >
+
+' --- The project is the aggregation root -----------------------------
+Project "*" --> "1"    User : director >
+Project "*" --> "0..1" User : project manager >
+
+Project "1" *-- "*" TeamAssignment
+TeamAssignment "*" --> "1" User : member >
+
+Project "1" *-- "*" WorkloadPlan
+Project "1" *-- "*" ActualWorkload
+Project "1" *-- "*" BillingMilestone
+Project "1" *-- "*" Mission
+Project "1" *-- "*" Sprint
+Project "1" *-- "*" BacklogItem
+Project "1" *-- "*" KpiSnapshot
+
+Sprint "0..1" o-- "*" BacklogItem : commits >
+
+note right of Role
+  The four roles are rows, not
+  subclasses: the policy is data.
+end note
+
+note bottom of Project
+  Governance registers are composed the same
+  way and appear in their own diagram.
+end note
+
+@enduml
