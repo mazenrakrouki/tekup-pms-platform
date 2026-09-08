@@ -4,7 +4,6 @@ title Global class diagram --- PMS
 left to right direction
 
 skinparam shadowing false
-skinparam linetype ortho
 skinparam nodesep 45
 skinparam ranksep 70
 skinparam class {
@@ -151,16 +150,16 @@ Project "1..*" -- "1" User    : directed by
 Project "1..*" -- "0..1" User : managed by
 TeamAssignment "1..*" -- "1" User : member
 
-Project "1" -- "1..*" TeamAssignment
-Project "1" -- "1..*" WorkloadPlan
-Project "1" -- "1..*" ActualWorkload
-Project "1" -- "1..*" BillingMilestone
-Project "1" -- "1..*" Mission
-Project "1" -- "1..*" Sprint
-Project "1" -- "1..*" BacklogItem
-Project "1" -- "1..*" Deliverable
-Project "1" -- "1..*" Risk
-Project "1" -- "1..*" KpiSnapshot
+Project "1" -- "1..*" TeamAssignment : staffed by
+Project "1" -- "1..*" WorkloadPlan : forecasts
+Project "1" -- "1..*" ActualWorkload : consumes
+Project "1" -- "1..*" BillingMilestone : invoiced by
+Project "1" -- "1..*" Mission : incurs
+Project "1" -- "1..*" Sprint : organised into
+Project "1" -- "1..*" BacklogItem : owns
+Project "1" -- "1..*" Deliverable : produces
+Project "1" -- "1..*" Risk : tracks
+Project "1" -- "1..*" KpiSnapshot : measured by
 
 Sprint "0..1" -- "1..*" BacklogItem : contains
 
