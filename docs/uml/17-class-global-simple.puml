@@ -1,12 +1,12 @@
 @startuml class_global_simple
-title Global class diagram --- essential structure
+title Global class diagram --- PMS domain model
 
 left to right direction
 
 skinparam shadowing false
 skinparam classAttributeIconSize 0
-skinparam nodesep 22
-skinparam ranksep 90
+skinparam nodesep 25
+skinparam ranksep 75
 skinparam class {
   BackgroundColor       #FFFFFF
   BorderColor           #6B2FA0
@@ -20,6 +20,12 @@ skinparam class {
   AttributeFontName     Courier
   AttributeFontSize     12
 }
+skinparam packageStyle           rectangle
+skinparam packageBackgroundColor #FBF9FE
+skinparam packageBorderColor     #6B2FA0
+skinparam packageFontColor       #4B1E77
+skinparam packageFontName        Courier
+skinparam packageFontSize        13
 skinparam ArrowColor      #1A1A1A
 skinparam ArrowThickness  1.4
 skinparam ArrowFontColor  #4A5BBF
@@ -34,55 +40,136 @@ skinparam noteBackgroundColor #F6F1FB
 skinparam noteFontName        Courier
 skinparam noteFontSize        11
 hide circle
-hide members
+hide empty methods
 
-class User
-class Role
-class Permission
+package "Access control" {
+  class User {
+    - firstName : String
+    - lastName : String
+    - email : String
+  }
+  class Role {
+    - name : String
+    - description : String
+  }
+  class Permission {
+    - code : String
+    - module : String
+  }
+}
 
-class Project
-class TeamAssignment
+package "Reference data" {
+  class Resource {
+    - dailyRate : BigDecimal
+    - tccRate : BigDecimal
+  }
+}
 
-class WorkloadPlan
-class ActualWorkload
+package "Project core" {
+  class Project {
+    - code : String
+    - client : String
+    - status : ProjectStatus
+    - initialBudget : BigDecimal
+    - currency : String
+    --
+    + getEffectiveBudget() : BigDecimal
+  }
+  class TeamAssignment {
+    - roleInTeam : String
+    - startDate : LocalDate
+    - endDate : LocalDate
+  }
+}
 
-class BillingMilestone
-class Mission
+package "Workload" {
+  class WorkloadPlan {
+    - period : LocalDate
+    - plannedDays : BigDecimal
+  }
+  class ActualWorkload {
+    - period : LocalDate
+    - actualDays : BigDecimal
+    - validatedAt : LocalDateTime
+  }
+}
 
-class Sprint
-class BacklogItem
+package "Finance" {
+  class BillingMilestone {
+    - label : String
+    - percentage : BigDecimal
+    - amount : BigDecimal
+    - status : MilestoneStatus
+  }
+  class Mission {
+    - subject : String
+    - startDate : LocalDate
+    - endDate : LocalDate
+  }
+}
 
-class KpiSnapshot
+package "Agile" {
+  class Sprint {
+    - name : String
+    - startDate : LocalDate
+    - endDate : LocalDate
+    - status : SprintStatus
+  }
+  class BacklogItem {
+    - title : String
+    - priority : BacklogPriority
+    - estimateDays : BigDecimal
+    - status : BacklogItemStatus
+  }
+}
 
-' --- Access control: a role is data, not a subtype -------------------
-User "*"  --> "1" Role       : holds >
-Role "*"  --  "*" Permission : grants >
+package "Governance" {
+  class Deliverable {
+    - title : String
+    - dueDate : LocalDate
+    - status : DeliverableStatus
+  }
+  class Risk {
+    - description : String
+    - probability : RiskLevel
+    - impact : RiskLevel
+  }
+}
 
-' --- The project is the aggregation root -----------------------------
+package "Steering" {
+  class KpiSnapshot {
+    - snapshotDate : LocalDate
+    - eac : BigDecimal
+    - margin : BigDecimal
+  }
+}
+
+' --- Access control: a role is data, never a subtype -----------------
+User "*" --> "1" Role       : holds >
+Role "*" --  "*" Permission : grants >
+Resource "0..1" --> "1" User : cost of >
+
+' --- Project is the aggregation root ---------------------------------
 Project "*" --> "1"    User : director >
 Project "*" --> "0..1" User : project manager >
-
-Project "1" *-- "*" TeamAssignment
 TeamAssignment "*" --> "1" User : member >
 
+Project "1" *-- "*" TeamAssignment
 Project "1" *-- "*" WorkloadPlan
 Project "1" *-- "*" ActualWorkload
 Project "1" *-- "*" BillingMilestone
 Project "1" *-- "*" Mission
 Project "1" *-- "*" Sprint
 Project "1" *-- "*" BacklogItem
+Project "1" *-- "*" Deliverable
+Project "1" *-- "*" Risk
 Project "1" *-- "*" KpiSnapshot
 
 Sprint "0..1" o-- "*" BacklogItem : commits >
 
-note right of Role
+note bottom of Permission
   The four roles are rows, not
   subclasses: the policy is data.
-end note
-
-note bottom of Project
-  Governance registers are composed the same
-  way and appear in their own diagram.
 end note
 
 @enduml
