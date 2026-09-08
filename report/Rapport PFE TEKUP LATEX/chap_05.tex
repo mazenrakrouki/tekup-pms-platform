@@ -102,6 +102,24 @@ return to draft, and a cancelled project is terminal.
   \label{fig:state}
 \end{figure}
 
+\subsubsection{Sequence of the ``Create a project'' use case}
+Creating a project is the operation that opens the whole domain, and its scenario shows both who
+may perform it and what the platform verifies before accepting it: the caller must hold the
+	exttt{CREATE\_PROJECT} permission, the project code is normalised and checked for uniqueness,
+and the status defaults to 	exttt{DRAFT} when none is supplied.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/seq_create_project.png}
+  \caption{Sequence diagram of the ``Create a project'' use case}
+  \label{fig:seq-create-project}
+\end{figure}
+
+The authorship of a project is recorded but is deliberately not an association. The
+	exttt{createdBy} field stores the caller's e-mail as text, stamped by the auditing layer, rather
+than a foreign key to 	exttt{User}. Modelling it as a link would suggest a navigable relation the
+schema does not have, which is why no ``created by'' association appears in the class diagrams.
+
 \subsubsection{Design decisions}
 \textbf{The lifecycle rule belongs to the domain, not to the controller.} The legal successors of a
 state are carried by the enumeration itself, through a \texttt{canTransitionTo} operation that each

@@ -1,0 +1,66 @@
+@startuml seq_create_project
+title Sequence --- Create a project
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #808080
+skinparam sequenceActorBackgroundColor     #FFFFFF
+skinparam sequenceActorBorderColor         #808080
+skinparam sequenceLifeLineBorderColor      #AAAAAA
+skinparam sequenceArrowColor               #333333
+skinparam sequenceGroupBorderColor         #AAAAAA
+skinparam sequenceGroupBackgroundColor     #FAFAFA
+skinparam ArrowFontColor  #333333
+skinparam noteBorderColor     #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam noteFontSize        10
+skinparam TitleFontSize 13
+skinparam TitleFontColor #333333
+autonumber
+
+actor       "Director"          as U
+participant "Frontend"          as SPA
+participant "ProjectController" as PC
+participant "ProjectService"    as PS
+participant "JPA auditing"      as AUD
+database    "PostgreSQL"        as DB
+
+U   -> SPA : fill in the project form
+SPA -> PC  : POST /api/projects
+PC  -> PS  : create(request)
+
+PS -> PS : permission CREATE_PROJECT\n(@PreAuthorize)
+
+alt permission missing
+  PS --> SPA : 403 Forbidden
+else authorized
+  PS -> PS : normalise the code\nto upper case
+  PS -> DB : does this code already exist?
+
+  alt code already used
+    PS --> SPA : 422 Unprocessable Entity
+  else code available
+    PS -> PS : status defaults to DRAFT\nwhen not supplied
+    PS -> AUD : persist
+    AUD -> AUD : stamp createdBy\nand createdAt
+    AUD -> DB : INSERT projects
+    PS --> SPA : 201 Created
+  end
+end
+
+note over PS
+  Authorization sits on the service, not the
+  controller: no future entry point can reach
+  an unprotected method.
+end note
+
+note over AUD
+  createdBy stores the caller's e-mail as text,
+  not a foreign key to User. It is audit data,
+  which is why the class diagram shows no
+  "created by" association.
+end note
+
+@enduml
