@@ -1,175 +1,172 @@
 @startuml class_global_simple
-title Global class diagram --- PMS domain model
+title Global class diagram --- PMS
 
 left to right direction
 
 skinparam shadowing false
-skinparam classAttributeIconSize 0
-skinparam nodesep 25
-skinparam ranksep 75
+skinparam linetype ortho
+skinparam nodesep 45
+skinparam ranksep 70
 skinparam class {
   BackgroundColor       #FFFFFF
-  BorderColor           #6B2FA0
-  BorderThickness       1.4
-  HeaderBackgroundColor #6B2FA0
-  FontColor             #FFFFFF
-  FontName              Courier
-  FontSize              14
+  BorderColor           #808080
+  BorderThickness       1
+  HeaderBackgroundColor #FFFFFF
+  FontColor             #333333
+  FontName              Helvetica
+  FontSize              11
   FontStyle             plain
-  AttributeFontColor    #1A1A1A
-  AttributeFontName     Courier
-  AttributeFontSize     12
+  AttributeFontColor    #333333
+  AttributeFontName     Helvetica
+  AttributeFontSize     10
 }
-skinparam packageStyle           rectangle
-skinparam packageBackgroundColor #FBF9FE
-skinparam packageBorderColor     #6B2FA0
-skinparam packageFontColor       #4B1E77
-skinparam packageFontName        Courier
-skinparam packageFontSize        13
-skinparam ArrowColor      #1A1A1A
-skinparam ArrowThickness  1.4
-skinparam ArrowFontColor  #4A5BBF
-skinparam ArrowFontStyle  italic
-skinparam ArrowFontName   Courier
-skinparam ArrowFontSize   11
-skinparam TitleFontName   Courier
-skinparam TitleFontSize   16
-skinparam TitleFontColor  #1A1A1A
-skinparam noteBorderColor     #B9A0D4
-skinparam noteBackgroundColor #F6F1FB
-skinparam noteFontName        Courier
-skinparam noteFontSize        11
+skinparam ArrowColor      #333333
+skinparam ArrowThickness  1
+skinparam ArrowFontColor  #000000
+skinparam ArrowFontStyle  plain
+skinparam ArrowFontName   Helvetica
+skinparam ArrowFontSize   10
+skinparam TitleFontName   Helvetica
+skinparam TitleFontSize   13
+skinparam TitleFontColor  #333333
+skinparam noteBorderColor     #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam noteFontName        Helvetica
+skinparam noteFontSize        9
 hide circle
 hide empty methods
 
-package "Access control" {
-  class User {
-    - firstName : String
-    - lastName : String
-    - email : String
-  }
-  class Role {
-    - name : String
-    - description : String
-  }
-  class Permission {
-    - code : String
-    - module : String
-  }
+class User {
+  id : int
+  lastName : string
+  firstName : string
+  email : string
+  active : boolean
 }
 
-package "Reference data" {
-  class Resource {
-    - dailyRate : BigDecimal
-    - tccRate : BigDecimal
-  }
+class Role {
+  id : int
+  name : string
+  description : string
 }
 
-package "Project core" {
-  class Project {
-    - code : String
-    - client : String
-    - status : ProjectStatus
-    - initialBudget : BigDecimal
-    - currency : String
-    --
-    + getEffectiveBudget() : BigDecimal
-  }
-  class TeamAssignment {
-    - roleInTeam : String
-    - startDate : LocalDate
-    - endDate : LocalDate
-  }
+class Permission {
+  id : int
+  code : string
+  module : string
 }
 
-package "Workload" {
-  class WorkloadPlan {
-    - period : LocalDate
-    - plannedDays : BigDecimal
-  }
-  class ActualWorkload {
-    - period : LocalDate
-    - actualDays : BigDecimal
-    - validatedAt : LocalDateTime
-  }
+class Resource {
+  id : int
+  dailyRate : decimal
+  tccRate : decimal
 }
 
-package "Finance" {
-  class BillingMilestone {
-    - label : String
-    - percentage : BigDecimal
-    - amount : BigDecimal
-    - status : MilestoneStatus
-  }
-  class Mission {
-    - subject : String
-    - startDate : LocalDate
-    - endDate : LocalDate
-  }
+class Project {
+  id : int
+  code : string
+  client : string
+  status : string
+  initialBudget : decimal
+  currency : string
 }
 
-package "Agile" {
-  class Sprint {
-    - name : String
-    - startDate : LocalDate
-    - endDate : LocalDate
-    - status : SprintStatus
-  }
-  class BacklogItem {
-    - title : String
-    - priority : BacklogPriority
-    - estimateDays : BigDecimal
-    - status : BacklogItemStatus
-  }
+class TeamAssignment {
+  id : int
+  roleInTeam : string
+  startDate : date
+  endDate : date
 }
 
-package "Governance" {
-  class Deliverable {
-    - title : String
-    - dueDate : LocalDate
-    - status : DeliverableStatus
-  }
-  class Risk {
-    - description : String
-    - probability : RiskLevel
-    - impact : RiskLevel
-  }
+class WorkloadPlan {
+  id : int
+  period : date
+  plannedDays : decimal
 }
 
-package "Steering" {
-  class KpiSnapshot {
-    - snapshotDate : LocalDate
-    - eac : BigDecimal
-    - margin : BigDecimal
-  }
+class ActualWorkload {
+  id : int
+  period : date
+  actualDays : decimal
+  validatedAt : date
 }
 
-' --- Access control: a role is data, never a subtype -----------------
-User "*" --> "1" Role       : holds >
-Role "*" --  "*" Permission : grants >
-Resource "0..1" --> "1" User : cost of >
+class BillingMilestone {
+  id : int
+  label : string
+  percentage : decimal
+  amount : decimal
+  status : string
+}
 
-' --- Project is the aggregation root ---------------------------------
-Project "*" --> "1"    User : director >
-Project "*" --> "0..1" User : project manager >
-TeamAssignment "*" --> "1" User : member >
+class Mission {
+  id : int
+  subject : string
+  startDate : date
+  endDate : date
+}
 
-Project "1" *-- "*" TeamAssignment
-Project "1" *-- "*" WorkloadPlan
-Project "1" *-- "*" ActualWorkload
-Project "1" *-- "*" BillingMilestone
-Project "1" *-- "*" Mission
-Project "1" *-- "*" Sprint
-Project "1" *-- "*" BacklogItem
-Project "1" *-- "*" Deliverable
-Project "1" *-- "*" Risk
-Project "1" *-- "*" KpiSnapshot
+class Sprint {
+  id : int
+  name : string
+  startDate : date
+  endDate : date
+  status : string
+}
 
-Sprint "0..1" o-- "*" BacklogItem : commits >
+class BacklogItem {
+  id : int
+  title : string
+  priority : string
+  estimateDays : decimal
+  status : string
+}
+
+class Deliverable {
+  id : int
+  title : string
+  dueDate : date
+  status : string
+}
+
+class Risk {
+  id : int
+  description : string
+  probability : string
+  impact : string
+}
+
+class KpiSnapshot {
+  id : int
+  snapshotDate : date
+  eac : decimal
+  margin : decimal
+}
+
+User "1..*" -- "1" Role          : holds
+Role        "1..*" -- "1..*" Permission : grants
+Resource   "0..1" -- "1" User   : cost of
+
+Project "1..*" -- "1" User    : directed by
+Project "1..*" -- "0..1" User : managed by
+TeamAssignment "1..*" -- "1" User : member
+
+Project "1" -- "1..*" TeamAssignment
+Project "1" -- "1..*" WorkloadPlan
+Project "1" -- "1..*" ActualWorkload
+Project "1" -- "1..*" BillingMilestone
+Project "1" -- "1..*" Mission
+Project "1" -- "1..*" Sprint
+Project "1" -- "1..*" BacklogItem
+Project "1" -- "1..*" Deliverable
+Project "1" -- "1..*" Risk
+Project "1" -- "1..*" KpiSnapshot
+
+Sprint "0..1" -- "1..*" BacklogItem : contains
 
 note bottom of Permission
-  The four roles are rows, not
-  subclasses: the policy is data.
+  The four roles are rows in the database,
+  not subclasses: the policy is data.
 end note
 
 @enduml
