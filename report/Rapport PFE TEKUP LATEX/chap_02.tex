@@ -159,10 +159,19 @@ associated with the business use cases falling within their perimeter, in strict
 the boundaries stated in Table~\ref{tab:acteurs}: the administrator holds no project use case, and
 the developer holds no financial use case.
 
+The diagram is deliberately drawn at the level of the functional domain rather than the individual
+operation. ``Manage projects'' covers creation, configuration, the assignment of a project manager,
+closure and archiving; ``Manage project execution'' covers the team, the workload plan and its
+validation, and the iterations. Decomposing each of these into its elementary operations would
+produce a diagram of some forty ellipses that no longer shows what the system does, only how it is
+implemented. The detailed operations appear in the use case diagram of the sprint that delivers
+them, in Chapters~4 to~7.
+
 Any functionality requiring a prior identification points to the ``Authenticate'' use case through
 an \textit{include} relation, which avoids repeating the same association on each actor. The
-``Archive the project'' use case, optional after closure, extends ``Close the project'' through an
-\textit{extend} relation.
+``Freeze the monthly review'' use case extends ``Monitor performance indicators'' through an
+\textit{extend} relation: consulting the indicators is the nominal behaviour, and freezing them
+into a snapshot happens only at the monthly review.
 
 \begin{figure}[H]
   \centering
