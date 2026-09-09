@@ -68,13 +68,12 @@ creating and configuring a project, changing its status, assigning its manager, 
 once completed. All of them are reserved to the director, except archiving which the project
 manager may also perform.
 
-% TODO: render docs/uml/sprint/uc_sprint3.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint3.png}
-%   \caption{Use case diagram of sprint 3}
-%   \label{fig:uc-s3}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/uc_sprint3.png}
+  \caption{Use case diagram of sprint 3}
+  \label{fig:uc-s3}
+\end{figure}
 
 \subsection{Sprint 3 analysis and design}
 
@@ -152,6 +151,13 @@ index guarantees that only one assignment is active.
   \label{fig:ui-projects}
 \end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/ui_project_detail.png}
+  \caption{Project detail: identity, contractual baseline and live indicators on one screen}
+  \label{fig:ui-project-detail}
+\end{figure}
+
 % =====================================================================
 \section{Sprint 4 --- Team assignment and workload}
 
@@ -161,13 +167,12 @@ planning the monthly workload, submitting the effort actually consumed, and vali
 developer appears here as an actor for the first time, since submitting one's own workload is the
 only write operation that role performs.
 
-% TODO: render docs/uml/sprint/uc_sprint4.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint4.png}
-%   \caption{Use case diagram of sprint 4}
-%   \label{fig:uc-s4}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/uc_sprint4.png}
+  \caption{Use case diagram of sprint 4}
+  \label{fig:uc-s4}
+\end{figure}
 
 \subsection{Sprint 4 analysis and design}
 
@@ -221,6 +226,16 @@ validates it.
   \label{fig:ui-workload}
 \end{figure}
 
+The same screen seen by a developer is deliberately narrower: the matrix shows only the projects
+they are assigned to, and the only row they may write is their own.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/ui_dev_workload.png}
+  \caption{Workload seen by a developer: the one write operation the role performs}
+  \label{fig:ui-dev-workload}
+\end{figure}
+
 % =====================================================================
 \section{Sprint 5 --- Agile planning}
 
@@ -229,13 +244,12 @@ The sprint covers the planning of the work itself: creating an iteration, mainta
 product backlog, committing items to an iteration, and following their progress on a board.
 Maintaining the plan is reserved to the project manager; the director and the developer read it.
 
-% TODO: render docs/uml/sprint/uc_sprint5.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint5.png}
-%   \caption{Use case diagram of sprint 5}
-%   \label{fig:uc-s5}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/uc_sprint5.png}
+  \caption{Use case diagram of sprint 5}
+  \label{fig:uc-s5}
+\end{figure}
 
 \subsection{Sprint 5 analysis and design}
 
@@ -299,6 +313,17 @@ gesture: dragging a card from the backlog into the current sprint changes both a
   \includegraphics[width=0.95\columnwidth]{img/ui_agile_board.png}
   \caption{Agile planning board}
   \label{fig:ui-agile}
+\end{figure}
+
+Figure~\ref{fig:ui-agile-backlog} shows the same screen on the product backlog tab: the items
+that carry no iteration. Keeping them in the same view as the sprints is what makes committing an
+item a single gesture rather than a form.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/ui_agile_backlog.png}
+  \caption{Product backlog: the items not yet committed to an iteration}
+  \label{fig:ui-agile-backlog}
 \end{figure}
 
 \section*{Conclusion}

@@ -1,0 +1,48 @@
+@startuml uc_sprint6
+title Sprint 6 — Billing and missions
+
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam actorBorderColor #808080
+skinparam actorBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #808080
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam TitleFontSize 13
+skinparam TitleFontColor #333333
+
+actor "Director\n(DIRECTEUR)"          as Dir
+actor "Project Manager\n(CHEF_PROJET)" as PM
+
+rectangle "PMS Platform" {
+  usecase "Define a billing\nmilestone" as UC1
+  usecase "Invoice a milestone" as UC2
+  usecase "Record a payment" as UC3
+  usecase "Record a contractual\namendment" as UC4
+  usecase "Record a mission\nand its expenses" as UC5
+  usecase "Authenticate" as UC0
+}
+
+PM --> UC1
+PM --> UC2
+PM --> UC3
+PM --> UC5
+Dir --> UC4
+UC1 ..> UC0 : <<include>>
+UC2 ..> UC0 : <<include>>
+UC3 ..> UC0 : <<include>>
+UC4 ..> UC0 : <<include>>
+UC5 ..> UC0 : <<include>>
+
+note bottom of UC4
+  Reserved to the director: an amendment
+  changes the contract, not its execution.
+end note
+
+@enduml

@@ -1,0 +1,79 @@
+@startuml class_rbac
+title Class diagram — dynamic authorization model
+
+skinparam shadowing false
+skinparam nodesep 45
+skinparam ranksep 60
+skinparam class {
+  BackgroundColor       #FFFFFF
+  BorderColor           #808080
+  BorderThickness       1
+  HeaderBackgroundColor #FFFFFF
+  FontColor             #333333
+  FontName              Helvetica
+  FontSize              11
+  FontStyle             plain
+  AttributeFontColor    #333333
+  AttributeFontName     Helvetica
+  AttributeFontSize     10
+}
+skinparam ArrowColor      #333333
+skinparam ArrowFontColor  #000000
+skinparam ArrowFontName   Helvetica
+skinparam ArrowFontSize   10
+skinparam TitleFontName   Helvetica
+skinparam TitleFontSize   13
+skinparam TitleFontColor  #333333
+skinparam noteBorderColor     #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam noteFontName        Helvetica
+skinparam noteFontSize        9
+hide circle
+hide empty methods
+
+class User {
+  - id : int
+  - lastName : string
+  - firstName : string
+  - email : string
+  - passwordHash : string
+  - active : boolean
+  - firstLogin : boolean
+  - tokenVersion : int
+}
+
+class Role {
+  - id : int
+  - name : string
+  - description : string
+  - system : boolean
+}
+
+class Permission {
+  - id : int
+  - code : string
+  - description : string
+}
+
+class Module {
+  - id : int
+  - name : string
+}
+
+User "1..*" -- "1" Role : holds
+Role "1..*" -- "1..*" Permission : grants
+Permission "1..*" -- "1" Module : belongs to
+
+note bottom of Role
+  The four roles are rows, not subclasses.
+  ADMIN, DIRECTEUR, CHEF_PROJET and DEVELOPPEUR
+  are seeded data; no role name appears in the code.
+end note
+
+note right of Permission
+  Endpoints are annotated with a permission code,
+  so the policy is edited in the database rather
+  than compiled into the application.
+end note
+
+@enduml

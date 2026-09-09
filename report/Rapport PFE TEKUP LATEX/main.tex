@@ -33,6 +33,14 @@
 \makeindex
 
 \begin{document}
+    % The report is written in English, so babel's generated strings must be too:
+    % "Chapter" rather than "Chapitre", "Contents", "List of Figures", and English
+    % punctuation spacing. The class lists french last in its babel options, which
+    % makes it the main language, and a \selectlanguage in the preamble does not
+    % survive \begin{document} — so the switch belongs here. The French Résumé and
+    % the Arabic back cover select their own language locally and are unaffected.
+    \selectlanguage{english}
+
     \input{global_config}
     
     \frontmatter

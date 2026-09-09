@@ -1,0 +1,46 @@
+@startuml uc_sprint3
+title Sprint 3 — Project lifecycle
+
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam actorBorderColor #808080
+skinparam actorBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #808080
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam TitleFontSize 13
+skinparam TitleFontColor #333333
+
+actor "Director\n(DIRECTEUR)"          as Dir
+actor "Project Manager\n(CHEF_PROJET)" as PM
+
+rectangle "PMS Platform" {
+  usecase "Create and configure\na project" as UC1
+  usecase "Change the project\nstatus" as UC2
+  usecase "Assign the\nproject manager" as UC3
+  usecase "Archive a\ncompleted project" as UC4
+  usecase "Authenticate" as UC0
+}
+
+Dir --> UC1
+Dir --> UC2
+Dir --> UC3
+Dir --> UC4
+PM --> UC4
+UC1 ..> UC0 : <<include>>
+UC2 ..> UC0 : <<include>>
+UC3 ..> UC0 : <<include>>
+UC4 ..> UC0 : <<include>>
+
+note bottom of UC4
+  Only a completed project may be archived,
+  and archiving is reversible.
+end note
+
+@enduml

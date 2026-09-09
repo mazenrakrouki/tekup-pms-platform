@@ -29,6 +29,8 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
 
     boolean existsByCodeAndDeletedFalse(String code);
 
+    Optional<Project> findByCodeAndDeletedFalse(String code);
+
     @Query("SELECT p FROM Project p LEFT JOIN FETCH p.director LEFT JOIN FETCH p.chefProjet WHERE p.status = :status AND p.deleted = false")
     List<Project> findActiveByStatus(ProjectStatus status);
 

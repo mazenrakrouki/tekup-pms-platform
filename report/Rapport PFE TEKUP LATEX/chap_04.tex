@@ -58,13 +58,12 @@ The sprint covers the three use cases that every user must traverse before reach
 screen: authenticating, changing an imposed password, and terminating a session. Every other use
 case of the platform includes authentication, which is why this sprint precedes all the others.
 
-% TODO: render docs/uml/sprint/uc_sprint1.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint1.png}
-%   \caption{Use case diagram of sprint 1}
-%   \label{fig:uc-s1}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/uc_sprint1.png}
+  \caption{Use case diagram of sprint 1}
+  \label{fig:uc-s1}
+\end{figure}
 
 \subsection{Sprint 1 analysis and design}
 
@@ -73,39 +72,36 @@ The nominal scenario involves the browser, the authentication controller, the au
 service, the token service and the user repository. It shows where the password is verified, where
 the two tokens are produced, and why only one of them is written to a cookie.
 
-% TODO: render docs/uml/sprint/seq_s1_login.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/seq_s1_login.png}
-%   \caption{Sequence diagram of the ``Authenticate'' use case}
-%   \label{fig:seq-s1-login}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/seq_s1_login.png}
+  \caption{Sequence diagram of the ``Authenticate'' use case}
+  \label{fig:seq-s1-login}
+\end{figure}
 
 \subsubsection{Sequence of the ``Change the password on first login'' use case}
 An account created by the administrator carries a temporary password. The scenario shows how the
 token issued at the first connection is restricted, how any business call is refused while the flag
 remains set, and how a full token is issued once the password has been changed.
 
-% TODO: render docs/uml/sprint/seq_s1_first_login.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/seq_s1_first_login.png}
-%   \caption{Sequence diagram of the ``Change the password on first login'' use case}
-%   \label{fig:seq-s1-first}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/seq_s1_first_login.png}
+  \caption{Sequence diagram of the ``Change the password on first login'' use case}
+  \label{fig:seq-s1-first}
+\end{figure}
 
 \subsubsection{Sequence of the ``Revoke a session'' use case}
 Revocation is the scenario that justifies the design of the token. It shows the increment of the
 version, the invalidation of the cache entry, and the rejection of a request presenting a token
 issued before the increment.
 
-% TODO: render docs/uml/sprint/seq_s1_revoke.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/seq_s1_revoke.png}
-%   \caption{Sequence diagram of the ``Revoke a session'' use case}
-%   \label{fig:seq-s1-revoke}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/seq_s1_revoke.png}
+  \caption{Sequence diagram of the ``Revoke a session'' use case}
+  \label{fig:seq-s1-revoke}
+\end{figure}
 
 \subsubsection{Design decisions}
 Three decisions taken in this sprint constrain the whole platform and are therefore justified here
@@ -191,13 +187,12 @@ ones was captured against a demonstration dataset generated for the purpose. The
 client names, staff names and amounts they show are fictitious and correspond to no real engagement
 of the host organization. No production data appears in this document.}
 
-% TODO: capture as img/ui_change_password.png then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.8\columnwidth]{img/ui_change_password.png}
-%   \caption{Forced password change interface}
-%   \label{fig:ui-change-password}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\columnwidth]{img/ui_change_password.png}
+  \caption{Forced password change interface}
+  \label{fig:ui-change-password}
+\end{figure}
 
 % =====================================================================
 \section{Sprint 2 --- Dynamic access control, users and resources}
@@ -207,13 +202,12 @@ The sprint covers the administration use cases: assigning permissions to a role,
 accounts, and recording resources with their yearly cost rate. All of them are reserved to the
 administrator, and all of them include the authentication delivered by sprint~1.
 
-% TODO: render docs/uml/sprint/uc_sprint2.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint2.png}
-%   \caption{Use case diagram of sprint 2}
-%   \label{fig:uc-s2}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/uc_sprint2.png}
+  \caption{Use case diagram of sprint 2}
+  \label{fig:uc-s2}
+\end{figure}
 
 \subsection{Sprint 2 analysis and design}
 
@@ -223,26 +217,24 @@ diagram. A role aggregates permissions, a permission belongs to a functional mod
 holds one active role. Nothing in this model is compiled into the application: the association
 between a role and its permissions is a table, so the policy is data.
 
-% TODO: render docs/uml/sprint/class_rbac.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.85\columnwidth]{img/class_rbac.png}
-%   \caption{Class diagram of the authorization model}
-%   \label{fig:class-rbac}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\columnwidth]{img/class_rbac.png}
+  \caption{Class diagram of the authorization model}
+  \label{fig:class-rbac}
+\end{figure}
 
 \subsubsection{Sequence of the ``Grant a permission to a role'' use case}
 This scenario is the proof that the policy is configurable. It shows the administrator adding a
 permission to a role, the association being persisted, and the affected users obtaining the new
 right on their next token without any redeployment.
 
-% TODO: render docs/uml/sprint/seq_s2_grant_permission.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/seq_s2_grant_permission.png}
-%   \caption{Sequence diagram of the ``Grant a permission to a role'' use case}
-%   \label{fig:seq-s2-grant}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/seq_s2_grant_permission.png}
+  \caption{Sequence diagram of the ``Grant a permission to a role'' use case}
+  \label{fig:seq-s2-grant}
+\end{figure}
 
 \subsubsection{Design decisions}
 \textbf{Permissions rather than roles in the code.} No role name is ever tested in the application.
@@ -278,6 +270,41 @@ The context endpoint returns, for the authenticated user, the list of their perm
 with their profile information. The Angular frontend builds the navigation menu from that response:
 an item is displayed only if the user holds the required permission code. The interface therefore
 reflects the authorization policy automatically, with no duplicated rule on the client side.
+
+Figures~\ref{fig:ui-perm-catalogue} to~\ref{fig:ui-dev-dashboard} show the effect on the same
+build of the application, signed in as three different roles. The permission catalogue states the
+policy; the two dashboards show what it produces.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\columnwidth]{img/ui_permissions.png}
+  \caption{Permission catalogue: the policy as the administrator reads it, grouped by functional
+           module, with the roles that hold each code}
+  \label{fig:ui-perm-catalogue}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\columnwidth]{img/ui_pm_dashboard.png}
+  \caption{Project manager view: the menu carries the finance and governance sections, and the
+           workspace is limited to the projects the user manages}
+  \label{fig:ui-pm-dashboard}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\columnwidth]{img/ui_dev_dashboard.png}
+  \caption{Developer view of the same application: no cost rates, no indicators, no billing and no
+           governance, because the role holds none of those permission codes}
+  \label{fig:ui-dev-dashboard}
+\end{figure}
+
+The comparison is the point of the sprint. Nothing distinguishes these two sessions except the
+row that links their account to a role, and the rows that link that role to permissions. No branch
+in the code names a role, and no menu is hidden by a hard-coded condition: removing
+\texttt{VIEW\_KPI} from the developer role removes the entry, and granting it back restores it, in
+both cases without recompiling anything. The requirement that a developer must never see the margin
+of the project they work on is met by the absence of a row, not by an \texttt{if}.
 
 \subsubsection{Users and resources}
 The \texttt{user} module manages accounts, that is creation by the administrator with a temporary

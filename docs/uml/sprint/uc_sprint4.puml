@@ -1,0 +1,46 @@
+@startuml uc_sprint4
+title Sprint 4 — Team and workload
+
+left to right direction
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam actorBorderColor #808080
+skinparam actorBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #808080
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam TitleFontSize 13
+skinparam TitleFontColor #333333
+
+actor "Director\n(DIRECTEUR)"          as Dir
+actor "Project Manager\n(CHEF_PROJET)" as PM
+actor "Developer\n(DEVELOPPEUR)"       as Dev
+
+rectangle "PMS Platform" {
+  usecase "Build the\nproject team" as UC1
+  usecase "Plan the monthly\nworkload" as UC2
+  usecase "Submit own\nconsumed workload" as UC3
+  usecase "Validate the\nteam workload" as UC4
+  usecase "Authenticate" as UC0
+}
+
+Dir --> UC1
+PM --> UC1
+PM --> UC2
+PM --> UC4
+Dev --> UC3
+UC1 ..> UC0 : <<include>>
+UC2 ..> UC0 : <<include>>
+UC3 ..> UC0 : <<include>>
+UC4 ..> UC0 : <<include>>
+
+note bottom of UC3
+  The only write operation the developer role performs.
+end note
+
+@enduml

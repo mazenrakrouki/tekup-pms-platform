@@ -66,13 +66,12 @@ billing milestone, invoicing it, recording a payment against it, recording a con
 and recording a mission with its expenses. All are reserved to the project manager, except the
 amendment, which the director records because it changes the contract.
 
-% TODO: render docs/uml/sprint/uc_sprint6.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint6.png}
-%   \caption{Use case diagram of sprint 6}
-%   \label{fig:uc-s6}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/uc_sprint6.png}
+  \caption{Use case diagram of sprint 6}
+  \label{fig:uc-s6}
+\end{figure}
 
 \subsection{Sprint 6 analysis and design}
 
@@ -125,6 +124,16 @@ financial history coherent.
   \label{fig:ui-billing}
 \end{figure}
 
+Missions are recorded on their own screen, each one decomposed into the typed cost components
+the workbook already used: per diem, ticket, transport, accommodation and stamp duty.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/ui_missions.png}
+  \caption{Missions interface, with the cost components of a mission expanded}
+  \label{fig:ui-missions}
+\end{figure}
+
 % =====================================================================
 \section{Sprint 7 --- Project governance}
 
@@ -133,13 +142,12 @@ The sprint covers the four registers that document the qualitative life of a pro
 deliverables, stakeholders and change requests. The project manager maintains them; the director
 consults them.
 
-% TODO: render docs/uml/sprint/uc_sprint7.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint7.png}
-%   \caption{Use case diagram of sprint 7}
-%   \label{fig:uc-s7}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/uc_sprint7.png}
+  \caption{Use case diagram of sprint 7}
+  \label{fig:uc-s7}
+\end{figure}
 
 \subsection{Sprint 7 analysis and design}
 
@@ -187,13 +195,12 @@ The sprint covers the use cases that produce the figures the platform exists for
 internal quote, consulting the computed indicators, freezing a monthly review, and consulting the
 portfolio dashboard. The internal quote is reserved to the director alone.
 
-% TODO: render docs/uml/sprint/uc_sprint8.puml then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.75\columnwidth]{img/uc_sprint8.png}
-%   \caption{Use case diagram of sprint 8}
-%   \label{fig:uc-s8}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.75\columnwidth]{img/uc_sprint8.png}
+  \caption{Use case diagram of sprint 8}
+  \label{fig:uc-s8}
+\end{figure}
 
 \subsection{Sprint 8 analysis and design}
 
@@ -268,6 +275,18 @@ On each read the engine recomputes, from live data, the indicators of the refere
   \includegraphics[width=0.95\columnwidth]{img/ui_kpi.png}
   \caption{KPI dashboard interface}
   \label{fig:ui-kpi}
+\end{figure}
+
+The same engine feeds the portfolio view of the director, which ranks every project by margin and
+summarises the health of the whole portfolio in one bar. This is the screen that replaces the
+manual consolidation the company had no way to automate: one workbook per project could be read
+one at a time, never together.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/ui_dashboard.png}
+  \caption{Portfolio dashboard of the director}
+  \label{fig:ui-portfolio}
 \end{figure}
 
 \section*{Conclusion}

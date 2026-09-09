@@ -1,0 +1,48 @@
+@startuml scrum_cycle
+title The Scrum cycle
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam ArrowColor #333333
+skinparam TitleFontSize 13
+skinparam TitleFontColor #333333
+skinparam activity {
+  BackgroundColor        #FFFFFF
+  BorderColor            #808080
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor     #808080
+  FontName Helvetica
+  FontSize 11
+}
+skinparam noteBorderColor     #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam noteFontSize        10
+
+start
+:Product backlog
+(prioritised requirements);
+
+repeat
+  :Sprint planning
+— select the items of the iteration;
+  :Sprint backlog;
+  :Daily work
+(daily scrum, development, testing);
+  :Increment
+(potentially shippable);
+  :Sprint review
+— demonstrate the increment;
+  :Sprint retrospective
+— adapt the way of working;
+repeat while (items left in the product backlog?) is (yes) not (no)
+
+stop
+
+note right
+  Iterations of a fixed length. Each one starts from the
+  product backlog and ends with an increment that can be
+  shown; adaptation happens between iterations, not inside.
+end note
+
+@enduml

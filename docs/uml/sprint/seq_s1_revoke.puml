@@ -1,0 +1,57 @@
+@startuml seq_s1_revoke
+title Sequence — Instant session revocation by token version
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam actorBackgroundColor #FFFFFF
+skinparam actorBorderColor #808080
+skinparam participantBackgroundColor #FFFFFF
+skinparam participantBorderColor #808080
+skinparam databaseBackgroundColor #FFFFFF
+skinparam databaseBorderColor #808080
+skinparam sequenceGroupBackgroundColor #FFFFFF
+skinparam sequenceGroupBorderColor #808080
+skinparam sequenceReferenceBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #808080
+skinparam sequenceLifeLineBorderColor #AAAAAA
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam TitleFontSize 13
+skinparam TitleFontColor #333333
+autonumber
+
+actor "Administrator" as Admin
+actor "Target user" as U
+participant "Angular SPA" as SPA
+participant "JwtAuthenticationFilter" as JWT
+participant "UserService" as US
+participant "TokenVersionCache\n(Caffeine)" as C
+database "PostgreSQL" as DB
+
+Admin -> US : deactivate the account
+US -> DB : tokenVersion + 1
+DB --> US : ok
+US -> C : evict(userId)
+
+== the user still holds a valid, unexpired token ==
+
+U -> SPA : open a business screen
+SPA -> JWT : GET /api/projects\nAuthorization: Bearer <token>
+JWT -> JWT : signature and expiry: valid
+JWT -> C : version(userId)
+C -> DB : read tokenVersion (cache miss)
+DB --> C : version = n + 1
+C --> JWT : n + 1
+JWT -> JWT : token carries n, stored is n + 1
+JWT --> SPA : 401 Unauthorized
+SPA --> U : signed out
+
+note over JWT, C
+  No blacklist to keep: a counter comparison
+  revokes every token issued before the change.
+end note
+
+@enduml

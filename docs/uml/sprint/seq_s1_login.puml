@@ -1,0 +1,66 @@
+@startuml seq_s1_login
+title Sequence — Sign-in and token issuance
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam actorBackgroundColor #FFFFFF
+skinparam actorBorderColor #808080
+skinparam participantBackgroundColor #FFFFFF
+skinparam participantBorderColor #808080
+skinparam databaseBackgroundColor #FFFFFF
+skinparam databaseBorderColor #808080
+skinparam sequenceGroupBackgroundColor #FFFFFF
+skinparam sequenceGroupBorderColor #808080
+skinparam sequenceReferenceBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #808080
+skinparam sequenceLifeLineBorderColor #AAAAAA
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam TitleFontSize 13
+skinparam TitleFontColor #333333
+autonumber
+
+actor "User" as U
+participant "Angular SPA" as SPA
+participant "AuthController" as AC
+participant "LoginAttemptTracker" as LAT
+participant "AuthService" as AS
+database "PostgreSQL" as DB
+
+U -> SPA : email + password
+SPA -> AC : POST /api/auth/login
+AC -> LAT : isBlocked(email)
+
+alt too many failed attempts
+  LAT --> AC : blocked
+  AC --> SPA : 429 Too Many Requests
+  SPA --> U : retry later
+else within the allowance
+  LAT --> AC : allowed
+  AC -> AS : login(credentials)
+  AS -> DB : active user + role + permissions
+  DB --> AS : user
+
+  alt credentials rejected
+    AS -> LAT : recordFailure(email)
+    AS --> AC : AuthenticationException
+    AC --> SPA : 401 Unauthorized
+  else credentials accepted
+    AS -> LAT : reset(email)
+    AS -> AS : sign JWT\n(sub, role, tokenVersion)
+    AS -> AS : issue refresh token
+    AS --> AC : access token + refresh token
+    AC --> SPA : 200 + access token\nSet-Cookie refresh (HttpOnly, SameSite=Strict)
+    SPA --> U : dashboard for the role
+  end
+end
+
+note over LAT
+  Failures are counted per account, not per IP:
+  the throttle protects the account it names.
+end note
+
+@enduml

@@ -1,0 +1,63 @@
+@startuml seq_s2_grant_permission
+title Sequence — Granting a permission to a role
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam actorBackgroundColor #FFFFFF
+skinparam actorBorderColor #808080
+skinparam participantBackgroundColor #FFFFFF
+skinparam participantBorderColor #808080
+skinparam databaseBackgroundColor #FFFFFF
+skinparam databaseBorderColor #808080
+skinparam sequenceGroupBackgroundColor #FFFFFF
+skinparam sequenceGroupBorderColor #808080
+skinparam sequenceReferenceBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #808080
+skinparam sequenceLifeLineBorderColor #AAAAAA
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam TitleFontSize 13
+skinparam TitleFontColor #333333
+autonumber
+
+actor "Administrator" as Admin
+participant "Angular SPA" as SPA
+participant "RoleController" as RC
+participant "RoleService" as RS
+participant "UserService" as US
+database "PostgreSQL" as DB
+actor "Holder of the role" as U
+
+Admin -> SPA : tick a permission on a role
+SPA -> RC : PUT /api/roles/{id}/permissions
+RC -> RS : updatePermissions(roleId, codes)
+note right of RC
+  @PreAuthorize("hasAuthority('MANAGE_ROLES')")
+  The check names the permission, never the role.
+end note
+
+RS -> DB : replace the role_permissions rows
+DB --> RS : ok
+RS -> US : bump tokenVersion of every holder
+US -> DB : UPDATE users SET token_version = token_version + 1
+DB --> US : ok
+RS --> RC : updated role
+RC --> SPA : 200
+SPA --> Admin : new matrix displayed
+
+== next request from a holder of the role ==
+
+U -> SPA : open a screen
+SPA -> RC : any authenticated call
+RC --> SPA : 401 Unauthorized
+SPA --> U : sign in again, new rights applied
+
+note over RS, DB
+  The policy is a table. Granting a right changes data,
+  never code, and takes effect without redeployment.
+end note
+
+@enduml

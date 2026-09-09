@@ -5,6 +5,15 @@ skinparam shadowing false
 skinparam defaultFontName Helvetica
 skinparam defaultFontSize 12
 skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam actorBackgroundColor #FFFFFF
+skinparam actorBorderColor #808080
+skinparam participantBackgroundColor #FFFFFF
+skinparam participantBorderColor #808080
+skinparam databaseBackgroundColor #FFFFFF
+skinparam databaseBorderColor #808080
+skinparam sequenceGroupBackgroundColor #FFFFFF
+skinparam sequenceGroupBorderColor #808080
+skinparam sequenceReferenceBackgroundColor #FFFFFF
 skinparam sequenceParticipantBorderColor #808080
 skinparam sequenceLifeLineBorderColor #AAAAAA
 skinparam ArrowColor #333333

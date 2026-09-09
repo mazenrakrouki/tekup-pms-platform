@@ -1,0 +1,62 @@
+@startuml seq_s1_first_login
+title Sequence — Forced password change on first login
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 12
+skinparam sequenceParticipantBackgroundColor #FFFFFF
+skinparam actorBackgroundColor #FFFFFF
+skinparam actorBorderColor #808080
+skinparam participantBackgroundColor #FFFFFF
+skinparam participantBorderColor #808080
+skinparam databaseBackgroundColor #FFFFFF
+skinparam databaseBorderColor #808080
+skinparam sequenceGroupBackgroundColor #FFFFFF
+skinparam sequenceGroupBorderColor #808080
+skinparam sequenceReferenceBackgroundColor #FFFFFF
+skinparam sequenceParticipantBorderColor #808080
+skinparam sequenceLifeLineBorderColor #AAAAAA
+skinparam ArrowColor #333333
+skinparam noteBorderColor #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam TitleFontSize 13
+skinparam TitleFontColor #333333
+autonumber
+
+actor "New user" as U
+participant "Angular SPA" as SPA
+participant "FirstLoginFilter" as FLF
+participant "AuthController" as AC
+participant "AuthService" as AS
+database "PostgreSQL" as DB
+
+U -> SPA : sign in with the temporary password
+SPA -> AC : POST /api/auth/login
+AC -> AS : login(credentials)
+AS -> DB : user (firstLogin = true)
+DB --> AS : user
+AS --> AC : restricted access token
+AC --> SPA : 200 + token (firstLogin = true)
+SPA --> U : change-password screen
+
+group any other call while firstLogin is true
+  SPA -> FLF : GET /api/projects
+  FLF --> SPA : 403 Forbidden
+end
+
+U -> SPA : current + new password
+SPA -> AC : POST /api/auth/change-password
+AC -> AS : changePassword(...)
+AS -> AS : validate policy\n(8+ chars, one uppercase, one digit)
+AS -> DB : store BCrypt hash,\nfirstLogin = false, tokenVersion + 1
+DB --> AS : ok
+AS --> AC : new unrestricted token
+AC --> SPA : 200 + token
+SPA --> U : full application
+
+note over FLF
+  The restriction is enforced server-side by a filter,
+  not by hiding a link in the interface.
+end note
+
+@enduml
