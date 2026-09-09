@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 46 1150 406">
+  <style>
+    text { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
+    .n    { font-weight:700; fill:#1F4E79; font-size:21px; }
+    .m    { fill:#5C6B7A; font-size:16px; }
+    .lbl  { font-weight:700; fill:#8592A0; font-size:15px; letter-spacing:1.6px; }
+    .src  { fill:#FFFFFF; stroke:#AEBCC9; stroke-width:1.5; }
+    .card { fill:#FFFFFF; stroke:#AEBCC9; stroke-width:1.6; }
+    .flow { fill:none; stroke:#1F4E79; stroke-width:2.6; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+
+  <!-- ============================== live data ============================== -->
+  <text class="lbl" x="60" y="78">LIVE DATA</text>
+  <rect class="src" x="60" y="94" width="220" height="44" rx="6"/>
+  <text x="80" y="122" style="font-size:17px;">Workload</text>
+  <rect class="src" x="60" y="150" width="220" height="44" rx="6"/>
+  <text x="80" y="178" style="font-size:17px;">Billing</text>
+  <rect class="src" x="60" y="206" width="220" height="44" rx="6"/>
+  <text x="80" y="234" style="font-size:17px;">Cost rates (TCC)</text>
+  <rect class="src" x="60" y="262" width="220" height="44" rx="6"/>
+  <text x="80" y="290" style="font-size:17px;">Internal quote (DI)</text>
+
+  <path d="M280 116 H 320 M280 172 H 320 M280 228 H 320 M280 284 H 320 M320 116 V 284"
+        fill="none" stroke="#1F4E79" stroke-width="2"/>
+  <path class="flow" d="M320 200 H 394" marker-end="url(#a)"/>
+
+  <!-- ============================== the engine ============================= -->
+  <rect x="400" y="146" width="250" height="110" rx="8" fill="#1F4E79"/>
+  <text x="525" y="192" text-anchor="middle" style="font-size:22px; font-weight:700; fill:#FFFFFF;">Indicator engine</text>
+  <text x="525" y="220" text-anchor="middle" style="font-size:16px; fill:#B9D0E4; font-family:Consolas,'Courier New',monospace;">EV &#183; CPI &#183; SPI &#183; EAC</text>
+
+  <!-- ============================== dashboard ============================== -->
+  <path class="flow" d="M650 178 C 700 178 700 140 744 140" marker-end="url(#a)"/>
+  <rect class="card" x="754" y="92" width="362" height="96" rx="7"/>
+  <text class="n" x="778" y="130">Dashboard</text>
+  <text class="m" x="778" y="158">recomputed on read &#8212; never a stale figure</text>
+
+  <!-- ============================ monthly snapshot ========================= -->
+  <path class="flow" d="M650 224 C 700 224 700 296 744 296" marker-end="url(#a)"/>
+  <rect class="card" x="754" y="248" width="362" height="158" rx="7"/>
+  <text class="n" x="778" y="286">Monthly snapshot</text>
+  <text class="m" x="778" y="312">the official state of each review, frozen</text>
+  <line x1="778" y1="366" x2="1092" y2="366" stroke="#DCE7F1" stroke-width="1.5"/>
+  <rect x="782" y="344" width="34" height="22" fill="#CBDCEA"/>
+  <rect x="828" y="336" width="34" height="30" fill="#A8C4DC"/>
+  <rect x="874" y="344" width="34" height="22" fill="#7BA5C8"/>
+  <rect x="920" y="326" width="34" height="40" fill="#4A7FAE"/>
+  <rect x="966" y="334" width="34" height="32" fill="#2C6294"/>
+  <rect x="1012" y="320" width="34" height="46" fill="#1F4E79"/>
+  <text class="m" x="1092" y="390" text-anchor="end" style="font-size:14px;">one column per month</text>
+
+  <!-- =============================== caveat ================================ -->
+  <line x1="60" y1="418" x2="60" y2="442" stroke="#C4212A" stroke-width="3"/>
+  <text x="80" y="437" style="font-size:17px; fill:#C4212A;">No computed amount is ever persisted.</text>
+</svg>

@@ -152,7 +152,15 @@ The model retained therefore inserts an intermediate level:
 A role holds a set of permissions; each permission authorises a precise operation on a module. The
 role--permission matrix lives in the database, not in the source code: granting a new right becomes
 a data change, applied without redeployment. This principle governs the whole platform and is
-verified in Sprint~2 (Chapter~4).
+verified in Sprint~2 (Chapter~4). Figure~\ref{fig:rbac-model} contrasts the two models on one
+concrete right: the one that lets a project manager edit a project.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/rbac_chain.png}
+  \caption{Binding a role to a module, and the permission level that replaces it}
+  \label{fig:rbac-model}
+\end{figure}
 
 \section{Global Use Case Diagram}
 Figure~\ref{fig:uc} presents the global use case diagram of the platform. The four actors are

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 46 1150 410">
+  <style>
+    text { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
+    .cap { font-size:18px; font-weight:700; }
+    .n   { font-weight:700; fill:#1F4E79; font-size:23px; }
+    .e   { fill:#5C6B7A; font-size:16px; font-family:Consolas,"Courier New",monospace; }
+    .m   { fill:#5C6B7A; font-size:16.5px; }
+    .card{ fill:#FFFFFF; stroke:#AEBCC9; stroke-width:1.6; }
+    .flow{ fill:none; stroke:#1F4E79; stroke-width:2.6; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#1F4E79"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#9AA7B4"/>
+    </marker>
+  </defs>
+
+  <!-- ===================== rejected: role bound to module ==================== -->
+  <text class="cap" x="60" y="76" fill="#C4212A">Rejected &#8212; a role bound directly to a module</text>
+
+  <rect x="300" y="98" width="190" height="64" rx="7" fill="#FFFFFF" stroke="#C9D3DD" stroke-width="1.6"/>
+  <text x="395" y="137" text-anchor="middle" style="font-size:23px; font-weight:700; fill:#8592A0;">Role</text>
+  <path d="M490 130 H 632" fill="none" stroke="#9AA7B4" stroke-width="2.6" marker-end="url(#ag)"/>
+  <rect x="640" y="98" width="190" height="64" rx="7" fill="#FFFFFF" stroke="#C9D3DD" stroke-width="1.6"/>
+  <text x="735" y="137" text-anchor="middle" style="font-size:23px; font-weight:700; fill:#8592A0;">Module</text>
+  <line x1="551" y1="116" x2="577" y2="144" stroke="#C4212A" stroke-width="3.6" stroke-linecap="round"/>
+  <line x1="577" y1="116" x2="551" y2="144" stroke="#C4212A" stroke-width="3.6" stroke-linecap="round"/>
+  <text class="m" x="860" y="124">every change of policy is a</text>
+  <text class="m" x="860" y="148">change of code, and a redeployment</text>
+
+  <line x1="60" y1="205" x2="1116" y2="205" stroke="#DCE7F1" stroke-width="1.6"/>
+
+  <!-- ===================== retained: permission in between =================== -->
+  <text class="cap" x="60" y="252" fill="#1F4E79">Retained &#8212; a permission level between the two</text>
+
+  <rect class="card" x="60" y="278" width="215" height="86" rx="7"/>
+  <text class="n" x="167" y="314" text-anchor="middle">User</text>
+  <text class="e" x="167" y="341" text-anchor="middle">an account</text>
+
+  <path class="flow" d="M275 321 H 337" marker-end="url(#a)"/>
+
+  <rect class="card" x="343" y="278" width="215" height="86" rx="7"/>
+  <text class="n" x="450" y="314" text-anchor="middle">Role</text>
+  <text class="e" x="450" y="341" text-anchor="middle">CHEF_PROJET</text>
+
+  <path class="flow" d="M558 321 H 620" marker-end="url(#a)"/>
+
+  <rect class="card" x="626" y="278" width="215" height="86" rx="7"/>
+  <text class="n" x="733" y="314" text-anchor="middle">Permission</text>
+  <text class="e" x="733" y="341" text-anchor="middle">EDIT_PROJECT</text>
+
+  <path class="flow" d="M841 321 H 903" marker-end="url(#a)"/>
+
+  <rect class="card" x="909" y="278" width="215" height="86" rx="7"/>
+  <text class="n" x="1016" y="314" text-anchor="middle">Module</text>
+  <text class="e" x="1016" y="341" text-anchor="middle">PROJET</text>
+
+  <!-- the pair that lives in the database, not in the code -->
+  <path d="M343 384 V 400 H 841 V 384" fill="none" stroke="#C4212A" stroke-width="1.8"/>
+  <text x="592" y="428" text-anchor="middle" style="font-size:17px; fill:#C4212A;">held in the database: granting a right is a data change, not a release</text>
+</svg>

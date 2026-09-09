@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 100 1157 396">
+  <style>
+    text { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
+    .h  { font-weight:700; fill:#1F4E79; font-size:21px; }
+    .s  { fill:#5C6B7A; font-size:16.5px; }
+    .card { fill:#FFFFFF; stroke:#AEBCC9; stroke-width:1.6; }
+    .flow { fill:none; stroke:#1F4E79; stroke-width:2.6; }
+    .loop { fill:none; stroke:#C4212A; stroke-width:2.2; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#1F4E79"/>
+    </marker>
+    <marker id="ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#C4212A"/>
+    </marker>
+    <marker id="am" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="8" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#34719F"/>
+    </marker>
+  </defs>
+
+  <!-- ============ product backlog ============ -->
+  <rect class="card" x="40" y="128" width="180" height="224" rx="7"/>
+  <text class="h" x="130" y="158" text-anchor="middle">Product backlog</text>
+  <text class="s" x="130" y="180" text-anchor="middle">ordered by value</text>
+  <rect x="58" y="196" width="144" height="18" rx="3" fill="#1F4E79"/>
+  <rect x="58" y="219" width="144" height="18" rx="3" fill="#2C6294"/>
+  <rect x="58" y="242" width="144" height="18" rx="3" fill="#4A7FAE"/>
+  <rect x="58" y="265" width="144" height="18" rx="3" fill="#7BA5C8"/>
+  <rect x="58" y="288" width="144" height="18" rx="3" fill="#A8C4DC"/>
+  <rect x="58" y="311" width="144" height="18" rx="3" fill="#CBDCEA"/>
+
+  <path class="flow" d="M220 241 H 256" marker-end="url(#a)"/>
+
+  <!-- ============ sprint planning ============ -->
+  <rect class="card" x="262" y="202" width="170" height="78" rx="7"/>
+  <text class="h" x="347" y="236" text-anchor="middle">Sprint planning</text>
+  <text class="s" x="347" y="258" text-anchor="middle">select and commit</text>
+
+  <path class="flow" d="M432 241 H 466" marker-end="url(#a)"/>
+
+  <!-- ============ sprint backlog ============ -->
+  <rect class="card" x="472" y="158" width="168" height="164" rx="7"/>
+  <text class="h" x="556" y="188" text-anchor="middle">Sprint backlog</text>
+  <text class="s" x="556" y="210" text-anchor="middle">committed items</text>
+  <rect x="490" y="226" width="132" height="18" rx="3" fill="#1F4E79"/>
+  <rect x="490" y="249" width="132" height="18" rx="3" fill="#4A7FAE"/>
+  <rect x="490" y="272" width="132" height="18" rx="3" fill="#7BA5C8"/>
+  <rect x="490" y="295" width="132" height="18" rx="3" fill="#A8C4DC"/>
+
+  <path class="flow" d="M640 241 H 672" marker-end="url(#a)"/>
+
+  <!-- ============ the sprint ============ -->
+  <circle cx="800" cy="240" r="122" fill="#F4F8FB" stroke="none"/>
+  <path class="flow" d="M878.4 146.6 A 122 122 0 1 1 721.6 146.6" marker-end="url(#a)"/>
+  <text class="h" x="800" y="188" text-anchor="middle" style="font-size:30px; letter-spacing:3px;">SPRINT</text>
+  <text class="s" x="800" y="212" text-anchor="middle" style="font-size:17px;">three weeks</text>
+  <circle cx="800" cy="292" r="50" fill="#FFFFFF" stroke="none"/>
+  <path d="M832.1 253.7 A 50 50 0 1 1 767.9 253.7" fill="none" stroke="#34719F" stroke-width="2.2" marker-end="url(#am)"/>
+  <text x="800" y="288" text-anchor="middle" style="font-size:17px; font-weight:700; fill:#34719F;">Daily</text>
+  <text x="800" y="307" text-anchor="middle" style="font-size:17px; font-weight:700; fill:#34719F;">scrum</text>
+
+  <path class="flow" d="M922 241 H 956" marker-end="url(#a)"/>
+
+  <!-- ============ increment ============ -->
+  <rect class="card" x="962" y="198" width="195" height="86" rx="7"/>
+  <text class="h" x="1059" y="234" text-anchor="middle">Increment</text>
+  <text class="s" x="1059" y="256" text-anchor="middle">demonstrable software</text>
+
+  <path class="flow" d="M1059 284 V 388" marker-end="url(#a)"/>
+
+  <!-- ============ review ============ -->
+  <rect class="card" x="962" y="394" width="195" height="78" rx="7"/>
+  <text class="h" x="1059" y="428" text-anchor="middle">Sprint review</text>
+  <text class="s" x="1059" y="450" text-anchor="middle">increment shown</text>
+
+  <path class="flow" d="M962 433 H 918" marker-end="url(#a)"/>
+
+  <!-- ============ retrospective ============ -->
+  <rect class="card" x="680" y="394" width="232" height="78" rx="7"/>
+  <text class="h" x="796" y="428" text-anchor="middle">Sprint retrospective</text>
+  <text class="s" x="796" y="450" text-anchor="middle">the process itself</text>
+
+  <!-- ============ adaptation loop ============ -->
+  <path class="loop" d="M680 433 H 150 Q 130 433 130 413 V 360" marker-end="url(#ar)"/>
+  <text x="405" y="419" text-anchor="middle" style="font-size:16.5px; fill:#C4212A;">adaptation happens between iterations, not inside one</text>
+</svg>

@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 40 1150 388">
+  <defs>
+    <marker id="asm" viewBox="0 0 10 8" refX="8" refY="4" markerWidth="5" markerHeight="4" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
+    .n  { font-weight:700; fill:#1F4E79; font-size:23px; }
+    .m  { fill:#5C6B7A; font-size:16.5px; }
+    .b  { fill:#16212B; font-size:17px; }
+    .card { fill:#FFFFFF; stroke:#AEBCC9; stroke-width:1.6; }
+  </style>
+
+  <!-- ============================ Product Owner ============================ -->
+  <rect class="card" x="40" y="60" width="348" height="264" rx="8"/>
+  <circle cx="92" cy="112" r="27" fill="#E8F0F7"/>
+  <rect x="78" y="99" width="28" height="6" rx="2" fill="#1F4E79"/>
+  <rect x="78" y="109" width="22" height="6" rx="2" fill="#1F4E79"/>
+  <rect x="78" y="119" width="15" height="6" rx="2" fill="#1F4E79"/>
+  <text class="n" x="134" y="107">Product Owner</text>
+  <text class="m" x="134" y="130">accountable for the value</text>
+  <line x1="64" y1="158" x2="364" y2="158" stroke="#DCE7F1" stroke-width="1.6"/>
+  <circle cx="70" cy="188" r="3.5" fill="#34719F"/>
+  <text class="b" x="86" y="194">orders the product backlog</text>
+  <circle cx="70" cy="232" r="3.5" fill="#34719F"/>
+  <text class="b" x="86" y="238">arbitrates priorities</text>
+  <circle cx="70" cy="276" r="3.5" fill="#34719F"/>
+  <text class="b" x="86" y="282">accepts or rejects the</text>
+  <text class="b" x="86" y="306">increment</text>
+
+  <!-- ============================ Scrum Master ============================= -->
+  <rect class="card" x="404" y="60" width="348" height="264" rx="8"/>
+  <circle cx="456" cy="112" r="27" fill="#E8F0F7"/>
+  <path d="M465.4 103.4 A 13 13 0 1 1 446.6 103.4" fill="none" stroke="#1F4E79" stroke-width="3.4" marker-end="url(#asm)"/>
+  <text class="n" x="498" y="107">Scrum Master</text>
+  <text class="m" x="498" y="130">accountable for the process</text>
+  <line x1="428" y1="158" x2="728" y2="158" stroke="#DCE7F1" stroke-width="1.6"/>
+  <circle cx="434" cy="188" r="3.5" fill="#34719F"/>
+  <text class="b" x="450" y="194">ensures the framework is</text>
+  <text class="b" x="450" y="218">understood and applied</text>
+  <circle cx="434" cy="256" r="3.5" fill="#34719F"/>
+  <text class="b" x="450" y="262">removes the impediments</text>
+  <text class="b" x="450" y="286">that slow the work</text>
+
+  <!-- ========================== Development Team =========================== -->
+  <rect class="card" x="768" y="60" width="348" height="264" rx="8"/>
+  <circle cx="820" cy="112" r="27" fill="#E8F0F7"/>
+  <text x="820" y="121" text-anchor="middle" style="font-family:Consolas,'Courier New',monospace; font-size:25px; font-weight:700; fill:#1F4E79;">&lt;/&gt;</text>
+  <text class="n" x="862" y="107">Development Team</text>
+  <text class="m" x="862" y="130">accountable for the increment</text>
+  <line x1="792" y1="158" x2="1092" y2="158" stroke="#DCE7F1" stroke-width="1.6"/>
+  <circle cx="798" cy="188" r="3.5" fill="#34719F"/>
+  <text class="b" x="814" y="194">builds the increment</text>
+  <circle cx="798" cy="232" r="3.5" fill="#34719F"/>
+  <text class="b" x="814" y="238">self-organising: decides how</text>
+  <text class="b" x="814" y="262">an item becomes working</text>
+  <text class="b" x="814" y="286">software</text>
+
+  <!-- ============================== footer ================================= -->
+  <rect x="40" y="352" width="1076" height="56" rx="6" fill="#FBF3F3" stroke="#E7C3C5" stroke-width="1.4"/>
+  <text x="64" y="386" style="font-size:17px; fill:#C4212A;">Applied here in reduced form: the industrial supervisor acted as Product Owner and the author held the development role.</text>
+</svg>

@@ -13,7 +13,15 @@ Chapters~4 to~7.
 \subsection{A Three-Tier Modular Monolith}
 The platform follows a classical \textbf{three-tier} organisation (presentation, application,
 data), deployed as a \textbf{modular monolith}: a single deployable artefact whose code is
-partitioned into independent functional modules.
+partitioned into independent functional modules. Figure~\ref{fig:three-tier} shows the three
+tiers, the technology that occupies each of them, and the protocol that separates them.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/three_tier.png}
+  \caption{Three-tier organisation of the platform, deployed as a single artefact}
+  \label{fig:three-tier}
+\end{figure}
 
 This choice deserves justification, since a microservice architecture is often the default
 expectation for a management platform. Three arguments led to the monolith:
@@ -54,7 +62,16 @@ Each module exposes the same internal layering:
 \end{itemize}
 
 Conversions between entities and data transfer objects are handled by generated mappers, so that
-persistence structures are never exposed directly by the API.
+persistence structures are never exposed directly by the API. Figure~\ref{fig:layers} follows a
+request through the four layers of the \texttt{project} module and shows where that conversion
+happens.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.82\columnwidth]{img/layered_architecture.png}
+  \caption{The four layers of a module, and the boundary at which a DTO becomes an entity}
+  \label{fig:layers}
+\end{figure}
 
 \section{Cross-Cutting Design Decisions}
 
@@ -85,6 +102,14 @@ retained is \textbf{hybrid}:
 This mirrors the reference workbook, where the dashboard reads live values while the statistics
 sheet keeps one column per month. Amounts derived from the internal quote are always computed at
 read time and never stored, so that no commercially sensitive value is duplicated in the database.
+Figure~\ref{fig:kpi-engine} summarises the two paths.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/indicator_engine.png}
+  \caption{The hybrid indicator engine: recomputed on read, frozen once a month}
+  \label{fig:kpi-engine}
+\end{figure}
 
 \subsection{Multi-Currency Handling}
 Projects may be contracted in a currency different from the reporting currency. Every amount

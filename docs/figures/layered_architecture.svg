@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="216 30 934 512">
+  <style>
+    text { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
+    .n   { font-weight:700; fill:#1F4E79; font-size:24px; }
+    .m   { fill:#5C6B7A; font-size:16.5px; }
+    .ex  { fill:#8592A0; font-size:16px; font-family:Consolas,"Courier New",monospace; }
+    .br  { font-weight:700; fill:#34719F; font-size:18px; }
+    .card{ fill:#FFFFFF; stroke:#AEBCC9; stroke-width:1.6; }
+    .flow{ fill:none; stroke:#1F4E79; stroke-width:2.6; }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+
+  <!-- incoming request -->
+  <path class="flow" d="M610 34 V 74" marker-end="url(#a)"/>
+  <text class="m" x="628" y="60">HTTP request &#183; JSON</text>
+
+  <!-- ============================== controller ============================= -->
+  <rect class="card" x="380" y="80" width="460" height="82" rx="7"/>
+  <text class="n" x="610" y="120" text-anchor="middle">Controller</text>
+  <text class="ex" x="610" y="145" text-anchor="middle">ProjectController</text>
+  <text class="m" x="860" y="116">REST entry point, validation,</text>
+  <text class="m" x="860" y="140">and the permission required</text>
+
+  <path class="flow" d="M610 162 V 214" marker-end="url(#a)"/>
+  <text x="592" y="196" text-anchor="end" style="font-size:17px; fill:#C4212A;">ProjectMapper &#8212; DTO &#8646; entity</text>
+
+  <!-- ================================ service ============================== -->
+  <rect class="card" x="380" y="218" width="460" height="82" rx="7"/>
+  <text class="n" x="610" y="258" text-anchor="middle">Service</text>
+  <text class="ex" x="610" y="283" text-anchor="middle">ProjectService</text>
+  <text class="m" x="860" y="254">business logic, rule enforcement,</text>
+  <text class="m" x="860" y="278">transaction boundary</text>
+
+  <path class="flow" d="M610 300 V 324" marker-end="url(#a)"/>
+
+  <!-- ============================== repository ============================= -->
+  <rect class="card" x="380" y="328" width="460" height="82" rx="7"/>
+  <text class="n" x="610" y="368" text-anchor="middle">Repository</text>
+  <text class="ex" x="610" y="393" text-anchor="middle">ProjectRepository</text>
+  <text class="m" x="860" y="364">persistence access; logically</text>
+  <text class="m" x="860" y="388">deleted rows filtered out</text>
+
+  <path class="flow" d="M610 410 V 434" marker-end="url(#a)"/>
+
+  <!-- ================================ domain =============================== -->
+  <rect class="card" x="380" y="438" width="460" height="82" rx="7"/>
+  <text class="n" x="610" y="478" text-anchor="middle">Domain</text>
+  <text class="ex" x="610" y="503" text-anchor="middle">Project</text>
+  <text class="m" x="860" y="474">entities and enumerations that</text>
+  <text class="m" x="860" y="498">carry the business invariants</text>
+
+  <!-- ================= what the data looks like at each level =============== -->
+  <path d="M312 80 H 300 V 162 H 312" fill="none" stroke="#34719F" stroke-width="1.8"/>
+  <text class="br" x="288" y="127" text-anchor="end">DTO</text>
+  <path d="M312 218 H 300 V 520 H 312" fill="none" stroke="#34719F" stroke-width="1.8"/>
+  <text class="br" x="288" y="375" text-anchor="end">Entity</text>
+</svg>
