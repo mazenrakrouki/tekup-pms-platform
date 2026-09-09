@@ -1,0 +1,66 @@
+@startuml st2i_organigramme
+title Functional organisation of ST2i
+
+' Organisation by activity line, as the company presents it publicly. The chart
+' deliberately stops at the department level: ST2i staffs its technical teams
+' per project from a shared pool of geomatics experts, developers and
+' technicians, so below this level there is no fixed hierarchy to draw.
+
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam defaultFontSize 11
+skinparam ArrowColor #333333
+skinparam ArrowThickness 1
+skinparam TitleFontName  Helvetica
+skinparam TitleFontSize  13
+skinparam TitleFontColor #333333
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor     #808080
+  BorderThickness 1
+  FontColor       #333333
+  FontName        Helvetica
+  FontSize        11
+}
+skinparam noteBorderColor     #AAAAAA
+skinparam noteBackgroundColor #FAFAFA
+skinparam noteFontName        Helvetica
+skinparam noteFontSize        9
+
+rectangle "STUDI Group" as GROUP #F7F7F7
+rectangle "ST2i\nGeneral management" as DG
+
+rectangle "Studies\nand consulting" as ETU
+rectangle "Development and\nintegration of solutions" as DEV
+rectangle "Geomatics" as GEO
+rectangle "Project-owner\nassistance" as AMO
+rectangle "Distribution of\ntechnical software" as DIS
+
+rectangle "Multidisciplinary technical teams\n(geomatics experts, developers, technicians)" as TEAMS #F7F7F7
+
+GROUP -- DG
+
+DG -- ETU
+DG -- DEV
+DG -- GEO
+DG -- AMO
+DG -- DIS
+
+ETU .. TEAMS
+DEV .. TEAMS
+GEO .. TEAMS
+AMO .. TEAMS
+DIS .. TEAMS
+
+note bottom of TEAMS
+  Teams are assembled per project across the activity lines.
+  Steering the workload of one person across several simultaneous
+  projects is exactly the problem this platform addresses.
+end note
+
+note right of DEV
+  The activity line this project belongs to,
+  and whose economics the platform steers.
+end note
+
+@enduml
