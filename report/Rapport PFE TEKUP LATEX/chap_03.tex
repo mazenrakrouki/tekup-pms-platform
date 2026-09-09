@@ -104,10 +104,17 @@ roles, permissions and resources form an independent reference core.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.92\columnwidth]{img/class_global_simple.png}
+  \includegraphics[width=\columnwidth]{img/class_global.png}
   \caption{Domain model --- principal classes and their associations}
   \label{fig:class-global}
 \end{figure}
+
+One reading of the diagram deserves to be made explicit, because it is easy to expect the
+opposite. The four roles of the platform are not subclasses of \texttt{User}: they are rows of
+the \texttt{Role} class. A user holds a role, and a role grants permissions, so the authorization
+policy is data that an administrator edits rather than a hierarchy compiled into the application.
+Modelling the roles as types would have contradicted that, and would have made every change of
+policy a new version of the software.
 
 The diagram stays at the level of the principal classes and their key attributes. Each sub-domain
 is detailed by its own class diagram, presented in the sprint that builds it: security in
