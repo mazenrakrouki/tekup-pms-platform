@@ -27,6 +27,12 @@
   \DeclareMathSymbol{\times}{\mathbin}{symbols}{"02}%
 }
 
+% The class hard-codes the table caption label as "Tableau", so switching babel
+% to English leaves it French — invisible for figures, whose label is spelt the
+% same in both languages, but not for tables. Override it here rather than in
+% the class file.
+\captionsetup[table]{name=Table}
+
 % @author: Stoufa
 % the command `\makeindex` is mandatory to create the index file main.idx
 % https://tex.stackexchange.com/questions/9913/input-index-file-not-found
