@@ -227,6 +227,8 @@ import { LanguageSwitcherComponent } from '../../../layout/language-switcher/lan
             <div class="d-flex align-items-center gap-2">
               <app-language-switcher></app-language-switcher>
               <button (click)="theme.toggle()"
+                      [title]="(theme.current() === 'dark' ? 'theme.light' : 'theme.dark') | transloco"
+                      [attr.aria-label]="(theme.current() === 'dark' ? 'theme.light' : 'theme.dark') | transloco"
                       style="width:30px;height:30px;border:1px solid var(--border);border-radius:6px;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-2)">
                 <i class="bi fs-13" [class.bi-sun]="theme.current() === 'dark'" [class.bi-moon]="theme.current() === 'light'"></i>
               </button>
