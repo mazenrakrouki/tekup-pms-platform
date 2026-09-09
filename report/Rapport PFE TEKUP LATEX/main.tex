@@ -33,6 +33,31 @@
 % the class file.
 \captionsetup[table]{name=Table}
 
+% Same root cause as above. arabi redefines the table of contents as
+%   {\select@language{\main@Arabi@language}\SAV@tableofcontents}
+% so the main table of contents is typeset with babel's *main* language forced
+% back on, whatever \selectlanguage is in effect. Its title therefore came out
+% as "Table des matieres", while the list of figures and the list of tables,
+% which arabi does not patch, were correctly English. arabi's own interface for
+% this is \TOCLanguage; it also governs the \select@language lines arabi writes
+% into the .toc file. arabi resets it at the start of the document from babel's
+% main language, so the call must be deferred past that hook, not made in the
+% preamble.
+\AtBeginDocument{\TOCLanguage{english}}
+
+% babel's English \contentsname is "Contents"; the school's reference reports
+% head that page "Table of Contents". Adding it to the English caption list,
+% rather than redefining it directly, makes it survive arabi's language switches.
+\addto\captionsenglish{\renewcommand{\contentsname}{Table of Contents}}
+
+% The class loads minitoc with the `french' option. minitoc supplies the titles of
+% the per-chapter mini tables of contents, which babel does not touch; the class
+% then sets that title to "Plan". Give them English names too.
+\AtBeginDocument{%
+  \def\mtctitle{Outline}%
+  \def\mlftitle{Figures}%
+  \def\mlttitle{Tables}%
+}
 % @author: Stoufa
 % the command `\makeindex` is mandatory to create the index file main.idx
 % https://tex.stackexchange.com/questions/9913/input-index-file-not-found
@@ -63,7 +88,7 @@
         \setcounter{secnumdepth}{3}
         \setcounter{tocdepth}{2}
         \dominitoc
-        \tableofcontents
+                \tableofcontents
         \adjustmtc
         \thispagestyle{frontmatter}
         
@@ -112,7 +137,7 @@
 %          \input{webo}
 %         \clearpage
         
-        \printbibliography[title={Webographie},heading=bibintoc]
+        \printbibliography[title={Bibliography},heading=bibintoc]
         
        
         

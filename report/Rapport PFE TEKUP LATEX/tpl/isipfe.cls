@@ -301,7 +301,7 @@
   \fancyhf{}
   \renewcommand{\footrulewidth}{0pt}
   \renewcommand{\headrulewidth}{0pt}
-  \fancyfoot[C]{{\noindent\makebox[\textwidth][c]{Année Universitaire \@collegeYear}}}
+  \fancyfoot[C]{{\noindent\makebox[\textwidth][c]{Academic Year \@collegeYear}}}
 }
 
 \fancypagestyle{backcover}{
