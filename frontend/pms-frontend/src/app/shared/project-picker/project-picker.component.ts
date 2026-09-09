@@ -173,7 +173,7 @@ const RECENT_MAX = 6;
                       <td class="text-center">
                         <button type="button" class="pp-star" [class.pp-star-on]="isFav(p.id)"
                                 (click)="toggleFav(p, $event)"
-                                [attr.aria-label]="isFav(p.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'">
+                                [attr.aria-label]="(isFav(p.id) ? 'picker.removeFavorite' : 'picker.addFavorite') | transloco">
                           <i class="bi" [class.bi-star-fill]="isFav(p.id)" [class.bi-star]="!isFav(p.id)"></i>
                         </button>
                       </td>
@@ -195,7 +195,7 @@ const RECENT_MAX = 6;
                     <tr><td colspan="8">
                       <div class="empty-state">
                         <div class="es-icon"><i class="bi bi-search"></i></div>
-                        <div class="es-title">Aucun projet ne correspond</div>
+                        <div class="es-title">{{ 'picker.noMatch' | transloco }}</div>
                       </div>
                     </td></tr>
                   }
@@ -210,7 +210,7 @@ const RECENT_MAX = 6;
 
             <div class="modal-footer">
               <span class="pp-hint">{{ 'picker.hint' | transloco }}</span>
-              <button class="btn btn-secondary" (click)="close()">Annuler</button>
+              <button class="btn btn-secondary" (click)="close()">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" [disabled]="!pending()" (click)="confirm(pending()!)">
                 <i class="bi bi-check-lg me-1"></i>{{ 'picker.select' | transloco }}
               </button>
@@ -327,7 +327,6 @@ export class ProjectPickerComponent {
   private readonly auth = inject(AuthService);
 
   selected = input<Project | null>(null);
-  emptyHint = input<string>('Choisissez un projet pour continuer.');
   featureIcon = input<string>('bi-folder2-open');
   projectSelected = output<Project>();
 

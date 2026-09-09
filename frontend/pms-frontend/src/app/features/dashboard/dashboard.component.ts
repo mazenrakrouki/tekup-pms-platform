@@ -467,7 +467,9 @@ import { environment } from '../../../environments/environment';
                     <td><span [class]="statusBadge(p.status)">{{ ('status.' + p.status) | transloco }}</span></td>
                     <td class="text-end" style="font-weight:600">{{ (p.effectiveBudget ?? 0) | number:'1.0-0' }}</td>
                     <td class="text-end">
-                      <a [routerLink]="['/projects', p.id]" class="btn btn-ghost btn-icon btn-sm" title="Voir le projet" [attr.aria-label]="'Voir le projet ' + p.code">
+                      <a [routerLink]="['/projects', p.id]" class="btn btn-ghost btn-icon btn-sm"
+                         [title]="'common.viewProject' | transloco"
+                         [attr.aria-label]="'common.viewProjectAria' | transloco: { code: p.code }">
                         <i class="bi bi-arrow-right"></i>
                       </a>
                     </td>

@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { TranslocoModule, provideTranslocoScope } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RbacService } from '../../../core/services/rbac.service';
@@ -62,7 +62,7 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
                     @for (p of g.permissions; track p.id) {
                       <tr>
                         <td><span class="perm-code">{{ p.code }}</span></td>
-                        <td class="cell-desc">{{ p.description || '—' }}</td>
+                        <td class="cell-desc">{{ describe(p) }}</td>
                         <td>
                           @if (p.roleNames.length) {
                             <div class="d-flex flex-wrap gap-1">
@@ -112,6 +112,19 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
 export class PermissionListComponent implements OnInit {
   private readonly rbac = inject(RbacService);
   private readonly toast = inject(ToastService);
+  private readonly tr = inject(TranslocoService);
+
+  /**
+   * Permission descriptions are seeded in French by the migrations. The catalogue
+   * carries a translation per permission code; the stored text stays the fallback
+   * so a permission added later still shows something.
+   */
+  describe(p: PermissionWithRoles): string {
+    const key = 'admin.permissionDesc.' + p.code;
+    const translated = this.tr.translate(key);
+    if (translated && translated !== key) return translated;
+    return p.description || '—';
+  }
 
   permissions = signal<PermissionWithRoles[]>([]);
   loading = signal(true);
@@ -122,7 +135,7 @@ export class PermissionListComponent implements OnInit {
     const list = s
       ? this.permissions().filter(p =>
           p.code.toLowerCase().includes(s) ||
-          (p.description ?? '').toLowerCase().includes(s) ||
+          this.describe(p).toLowerCase().includes(s) ||
           p.module.toLowerCase().includes(s) ||
           p.roleNames.some(rn => rn.toLowerCase().includes(s)))
       : this.permissions();

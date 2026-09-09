@@ -25,7 +25,8 @@
     "effectiveBudget": "Budget effectif",
     "budgetTnd": "Budget (TND)",
     "ppr": "PPR",
-    "soldWorkload": "Workload vendu"
+    "soldWorkload": "Workload vendu",
+    "warranty": "garantie"
   },
   "kpi": {
     "title": "KPI temps réel",
@@ -43,7 +44,9 @@
     "sold": "vendue",
     "evProgress": "EV % (avancement)",
     "estimatedEndDate": "Date fin estimée",
-    "highlights": "Faits marquants"
+    "highlights": "Faits marquants",
+    "consumedShort": "conso.",
+    "remainingShort": "RAF"
   },
   "team": {
     "title": "Membres de l'équipe",
@@ -58,7 +61,8 @@
     "roleInTeam": "Rôle dans l'équipe",
     "rolePlaceholder": "Ex : Développeur",
     "startDate": "Date de début",
-    "removeConfirm": "Retirer {{name}} de l'équipe ?"
+    "removeConfirm": "Retirer {{name}} de l'équipe ?",
+    "assign": "Affecter"
   },
   "workload": {
     "planTitle": "Plan de charge",
@@ -82,14 +86,16 @@
     "subject": "Objet",
     "date": "Date",
     "percent": "%",
-    "dueDatePlanned": "Date prévue"
+    "dueDatePlanned": "Date prévue",
+    "emptyAmendments": "Aucun avenant"
   },
   "missions": {
     "collaborator": "Collaborateur",
     "subject": "Objet",
     "place": "Lieu",
     "start": "Début",
-    "end": "Fin"
+    "end": "Fin",
+    "empty": "Aucune mission"
   },
   "governance": {
     "risks": "Risques",
@@ -101,7 +107,10 @@
     "dueDate": "Échéance",
     "changeRequests": "Demandes de changement",
     "requester": "Demandeur",
-    "priority": "Priorité"
+    "priority": "Priorité",
+    "emptyRisks": "Aucun risque",
+    "emptyDeliverables": "Aucun livrable",
+    "emptyChangeRequests": "Aucune demande de changement"
   },
   "manager": {
     "label": "Chef de projet",
@@ -116,6 +125,63 @@
     "archived": "Projet archivé.",
     "unarchived": "Projet désarchivé.",
     "statusUpdated": "Statut mis à jour : {{status}}.",
-    "teamFormRequired": "Membre, rôle dans l'équipe et date de début sont requis."
+    "teamFormRequired": "Membre, rôle dans l'équipe et date de début sont requis.",
+    "statusChangeConfirm": "Changer le statut du projet vers « {{status}} » ?",
+    "statusChangeTitle": "Changer le statut",
+    "statusChangeError": "Erreur lors du changement de statut."
+  },
+  "form": {
+    "edit": "Modifier",
+    "new": "Nouveau projet",
+    "draftFound": "Brouillon sauvegardé",
+    "draftFoundDesc": "Un brouillon de ce formulaire a été trouvé. Souhaitez-vous le restaurer ?",
+    "restore": "Restaurer",
+    "discard": "Ignorer",
+    "loading": "Chargement du projet…",
+    "sectionIdentification": "Identification",
+    "code": "Code projet",
+    "codePh": "EX-2024-001",
+    "codeLocked": "Non modifiable après création",
+    "name": "Nom du projet",
+    "namePh": "Intitulé complet du projet",
+    "descriptionPh": "Contexte, objectifs, périmètre…",
+    "contractRef": "Référence contrat",
+    "contractRefPh": "Ex : CT-2024-0042",
+    "funder": "Bailleur de fonds",
+    "funderPh": "Ex : Banque Mondiale (IDA)",
+    "businessModel": "Modèle business",
+    "engagementType": "Type d'engagement",
+    "unassigned": "— Non assigné —",
+    "sectionPlanning": "Planification",
+    "startDate": "Date de début",
+    "endDate": "Date de fin prévue",
+    "dateOrder": "La date de fin doit être postérieure ou égale à la date de début.",
+    "contractDuration": "Durée du contrat",
+    "days": "jours",
+    "sectionFinancial": "Financier",
+    "currency": "Devise",
+    "currencyTnd": "TND — Dinar Tunisien",
+    "currencyEur": "EUR — Euro",
+    "currencyUsd": "USD — Dollar US",
+    "currencyFcfa": "FCFA — Franc CFA",
+    "initialBudget": "Budget initial ({{currency}})",
+    "exchangeRate": "Taux de change → TND",
+    "notApplicable": "(N/A)",
+    "convertedBudget": "Budget initial converti (TND)",
+    "pprLabel": "PPR — Provision pour risques (5%)",
+    "revisedBudget": "Budget révisé ({{currency}}) :",
+    "revisedBudgetVia": "— Géré via",
+    "billingAmendments": "Facturation → Avenants",
+    "licenseBudget": "Budget licences & sous-traitance (TND)",
+    "penaltyProvision": "Provision pénalités (PPP, TND)",
+    "sectionSoldWorkload": "Charge vendue",
+    "soldWorkloadDays": "Workload vendu (JH)",
+    "warrantyWorkloadDays": "Workload garantie (JH)",
+    "saveChanges": "Enregistrer les modifications",
+    "createProject": "Créer le projet",
+    "unsavedChanges": "Modifications non enregistrées",
+    "okSaved": "Projet enregistré.",
+    "okCreated": "Projet créé.",
+    "genericError": "Une erreur est survenue."
   }
 }

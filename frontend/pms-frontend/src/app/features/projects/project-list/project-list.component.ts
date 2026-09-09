@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule, DecimalPipe, DatePipe } from '@angular/common';
 import { RouterLink, Router, ActivatedRoute, Params } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslocoModule } from '@jsverse/transloco';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Project, PROJECT_STATUS_LABELS } from '../../../core/models/project.model';
@@ -14,7 +15,7 @@ type SortDir = 'asc' | 'desc';
 @Component({
   selector: 'app-project-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, DecimalPipe, DatePipe, PaginationComponent],
+  imports: [CommonModule, RouterLink, FormsModule, DecimalPipe, DatePipe, PaginationComponent, TranslocoModule],
   styles: [`
     .toolbar { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;
       padding:.75rem 1rem; border-bottom:1px solid var(--border); }
@@ -48,12 +49,12 @@ type SortDir = 'asc' | 'desc';
       <div class="tb-breadcrumb">
         <i class="bi bi-folder2-open" style="font-size:13px;color:var(--text-3)"></i>
         <span class="bc-sep">›</span>
-        <span class="bc-curr">Projets</span>
+        <span class="bc-curr">{{ 'projects.title' | transloco }}</span>
       </div>
       <div class="tb-right">
         @if (auth.hasPermission('CREATE_PROJECT')) {
           <a routerLink="/projects/new" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg"></i>Nouveau projet
+            <i class="bi bi-plus-lg"></i>{{ 'projects.new' | transloco }}
           </a>
         }
       </div>
@@ -63,14 +64,14 @@ type SortDir = 'asc' | 'desc';
       <!-- Page header -->
       <div class="page-header d-flex align-items-start justify-content-between flex-wrap gap-2">
         <div>
-          <h1 class="page-title">Projets</h1>
+          <h1 class="page-title">{{ 'projects.title' | transloco }}</h1>
         </div>
         <div class="pms-tabs">
           <button class="tab-item" [class.active]="mode() === 'active'" (click)="setMode('active')">
-            <i class="bi bi-folder2-open me-1"></i>Actifs
+            <i class="bi bi-folder2-open me-1"></i>{{ 'projects.tabActive' | transloco }}
           </button>
           <button class="tab-item" [class.active]="mode() === 'archived'" (click)="setMode('archived')">
-            <i class="bi bi-archive me-1"></i>Archivés
+            <i class="bi bi-archive me-1"></i>{{ 'projects.tabArchived' | transloco }}
           </button>
         </div>
       </div>
@@ -82,29 +83,30 @@ type SortDir = 'asc' | 'desc';
           <div class="input-wrap" style="flex:1;min-width:200px;max-width:320px">
             <i class="bi bi-search input-icon"></i>
             <input type="search" class="form-control form-control-sm"
-                   placeholder="Rechercher code, nom, client, chef…"
+                   [placeholder]="'projects.searchPlaceholder' | transloco"
                    [ngModel]="search()" (ngModelChange)="onSearch($event)"
-                   aria-label="Rechercher un projet">
+                   [attr.aria-label]="'projects.searchAria' | transloco">
           </div>
 
           <select class="form-select form-select-sm" style="width:auto"
                   [ngModel]="statusFilter()" (ngModelChange)="onStatus($event)"
-                  aria-label="Filtrer par statut">
-            <option value="">Tous les statuts</option>
-            <option value="ACTIVE">Actif</option>
-            <option value="DRAFT">Brouillon</option>
-            <option value="ON_HOLD">En pause</option>
-            <option value="COMPLETED">Terminé</option>
-            <option value="CANCELLED">Annulé</option>
+                  [attr.aria-label]="'projects.filterStatusAria' | transloco">
+            <option value="">{{ 'projects.allStatuses' | transloco }}</option>
+            <option value="ACTIVE">{{ 'status.ACTIVE' | transloco }}</option>
+            <option value="DRAFT">{{ 'status.DRAFT' | transloco }}</option>
+            <option value="ON_HOLD">{{ 'status.ON_HOLD' | transloco }}</option>
+            <option value="COMPLETED">{{ 'status.COMPLETED' | transloco }}</option>
+            <option value="CANCELLED">{{ 'status.CANCELLED' | transloco }}</option>
           </select>
 
           @if (search() || statusFilter()) {
             <button class="btn btn-ghost btn-sm" (click)="clearFilters()">
-              <i class="bi bi-x-lg me-1"></i>Réinitialiser
+              <i class="bi bi-x-lg me-1"></i>{{ 'common.reset' | transloco }}
             </button>
           }
 
-          <span class="count">{{ filtered().length }} résultat{{ filtered().length !== 1 ? 's' : '' }}</span>
+          <span class="count">{{ filtered().length }}
+            {{ (filtered().length === 1 ? 'common.result' : 'common.results') | transloco }}</span>
         </div>
 
         <!-- Table -->
@@ -114,36 +116,36 @@ type SortDir = 'asc' | 'desc';
               <tr>
                 <th class="th-sort" [class.is-sorted]="sortCol()==='code'" [attr.aria-sort]="ariaSort('code')"
                     tabindex="0" (click)="toggleSort('code')" (keydown.enter)="toggleSort('code')" (keydown.space)="toggleSort('code'); $event.preventDefault()">
-                  <span class="th-inner">Code <i class="bi caret" [ngClass]="caret('code')"></i></span>
+                  <span class="th-inner">{{ 'projects.colCode' | transloco }} <i class="bi caret" [ngClass]="caret('code')"></i></span>
                 </th>
                 <th class="th-sort" [class.is-sorted]="sortCol()==='name'" [attr.aria-sort]="ariaSort('name')"
                     tabindex="0" (click)="toggleSort('name')" (keydown.enter)="toggleSort('name')" (keydown.space)="toggleSort('name'); $event.preventDefault()">
-                  <span class="th-inner">Nom du projet <i class="bi caret" [ngClass]="caret('name')"></i></span>
+                  <span class="th-inner">{{ 'projects.colName' | transloco }} <i class="bi caret" [ngClass]="caret('name')"></i></span>
                 </th>
                 <th class="th-sort d-none d-lg-table-cell" [class.is-sorted]="sortCol()==='chef'" [attr.aria-sort]="ariaSort('chef')"
                     tabindex="0" (click)="toggleSort('chef')" (keydown.enter)="toggleSort('chef')" (keydown.space)="toggleSort('chef'); $event.preventDefault()">
-                  <span class="th-inner">Chef de Projet <i class="bi caret" [ngClass]="caret('chef')"></i></span>
+                  <span class="th-inner">{{ 'projects.colManager' | transloco }} <i class="bi caret" [ngClass]="caret('chef')"></i></span>
                 </th>
                 <th class="th-sort d-none d-md-table-cell" [class.is-sorted]="sortCol()==='startDate'" [attr.aria-sort]="ariaSort('startDate')"
                     tabindex="0" (click)="toggleSort('startDate')" (keydown.enter)="toggleSort('startDate')" (keydown.space)="toggleSort('startDate'); $event.preventDefault()">
-                  <span class="th-inner">Début <i class="bi caret" [ngClass]="caret('startDate')"></i></span>
+                  <span class="th-inner">{{ 'projects.colStart' | transloco }} <i class="bi caret" [ngClass]="caret('startDate')"></i></span>
                 </th>
                 <th class="th-sort d-none d-md-table-cell" [class.is-sorted]="sortCol()==='endDate'" [attr.aria-sort]="ariaSort('endDate')"
                     tabindex="0" (click)="toggleSort('endDate')" (keydown.enter)="toggleSort('endDate')" (keydown.space)="toggleSort('endDate'); $event.preventDefault()">
-                  <span class="th-inner">Fin <i class="bi caret" [ngClass]="caret('endDate')"></i></span>
+                  <span class="th-inner">{{ 'projects.colEnd' | transloco }} <i class="bi caret" [ngClass]="caret('endDate')"></i></span>
                 </th>
                 <th class="th-sort d-none d-xl-table-cell" [class.is-sorted]="sortCol()==='createdAt'" [attr.aria-sort]="ariaSort('createdAt')"
                     tabindex="0" (click)="toggleSort('createdAt')" (keydown.enter)="toggleSort('createdAt')" (keydown.space)="toggleSort('createdAt'); $event.preventDefault()">
-                  <span class="th-inner">Créé le <i class="bi caret" [ngClass]="caret('createdAt')"></i></span>
+                  <span class="th-inner">{{ 'common.createdAt' | transloco }} <i class="bi caret" [ngClass]="caret('createdAt')"></i></span>
                 </th>
                 <th class="th-sort" [class.is-sorted]="sortCol()==='status'" [attr.aria-sort]="ariaSort('status')"
                     tabindex="0" (click)="toggleSort('status')" (keydown.enter)="toggleSort('status')" (keydown.space)="toggleSort('status'); $event.preventDefault()">
-                  <span class="th-inner">Statut <i class="bi caret" [ngClass]="caret('status')"></i></span>
+                  <span class="th-inner">{{ 'common.status' | transloco }} <i class="bi caret" [ngClass]="caret('status')"></i></span>
                 </th>
                 @if (auth.hasPermission('VIEW_KPI')) {
                   <th class="th-sort text-end" [class.is-sorted]="sortCol()==='budget'" [attr.aria-sort]="ariaSort('budget')"
                       tabindex="0" (click)="toggleSort('budget')" (keydown.enter)="toggleSort('budget')" (keydown.space)="toggleSort('budget'); $event.preventDefault()">
-                    <span class="th-inner">Budget (TND) <i class="bi caret" [ngClass]="caret('budget')"></i></span>
+                    <span class="th-inner">{{ 'projects.colBudget' | transloco }} <i class="bi caret" [ngClass]="caret('budget')"></i></span>
                   </th>
                 }
                 @if (auth.hasPermission('EDIT_PROJECT')) { <th></th> }
@@ -181,7 +183,7 @@ type SortDir = 'asc' | 'desc';
                     <td class="d-none d-md-table-cell muted-cell">{{ p.startDate ?? '—' }}</td>
                     <td class="d-none d-md-table-cell muted-cell">{{ p.endDate ?? '—' }}</td>
                     <td class="d-none d-xl-table-cell muted-cell">{{ p.createdAt ? (p.createdAt | date:'dd/MM/yyyy') : '—' }}</td>
-                    <td><span [class]="statusBadge(p.status)">{{ statusLabel(p.status) }}</span></td>
+                    <td><span [class]="statusBadge(p.status)">{{ 'status.' + p.status | transloco }}</span></td>
                     @if (auth.hasPermission('VIEW_KPI')) {
                       <td class="text-end num-cell">{{ (p.effectiveBudget ?? 0) | number:'1.0-0' }}</td>
                     }
@@ -189,14 +191,14 @@ type SortDir = 'asc' | 'desc';
                       <td class="text-end" style="white-space:nowrap">
                         @if (mode() === 'active') {
                           <a [routerLink]="['/projects', p.id, 'edit']" class="btn btn-ghost btn-icon btn-sm"
-                             title="Modifier le projet" aria-label="Modifier le projet"
+                             [title]="'projects.editTitle' | transloco" [attr.aria-label]="'projects.editTitle' | transloco"
                              (click)="$event.stopPropagation()">
                             <i class="bi bi-pencil"></i>
                           </a>
                         } @else {
                           <button class="btn btn-ghost btn-sm" (click)="unarchive(p); $event.stopPropagation()"
-                                  title="Restaurer le projet" aria-label="Restaurer le projet">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i>Restaurer
+                                  [title]="'projects.restoreTitle' | transloco" [attr.aria-label]="'projects.restoreTitle' | transloco">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i>{{ 'common.restore' | transloco }}
                           </button>
                         }
                       </td>
@@ -210,20 +212,20 @@ type SortDir = 'asc' | 'desc';
                       @if (hasFilters()) {
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-search"></i></div>
-                          <div class="es-title">Aucun résultat</div>
-                          <div class="es-desc">Aucun projet ne correspond à votre recherche ou à vos filtres.</div>
+                          <div class="es-title">{{ 'common.noResults' | transloco }}</div>
+                          <div class="es-desc">{{ 'projects.emptyFilteredDesc' | transloco }}</div>
                           <button class="btn btn-outline-secondary btn-sm mt-3" (click)="clearFilters()">
-                            <i class="bi bi-x-lg me-1"></i>Réinitialiser les filtres
+                            <i class="bi bi-x-lg me-1"></i>{{ 'projects.resetFilters' | transloco }}
                           </button>
                         </div>
                       } @else {
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi" [ngClass]="mode()==='archived' ? 'bi-archive' : 'bi-folder2-open'"></i></div>
-                          <div class="es-title">{{ mode() === 'archived' ? 'Aucun projet archivé' : 'Aucun projet' }}</div>
-                          <div class="es-desc">{{ mode() === 'archived' ? 'Les projets archivés apparaîtront ici.' : 'Commencez par créer votre premier projet.' }}</div>
+                          <div class="es-title">{{ (mode() === 'archived' ? 'projects.emptyArchived' : 'projects.empty') | transloco }}</div>
+                          <div class="es-desc">{{ (mode() === 'archived' ? 'projects.emptyArchivedDesc' : 'projects.emptyDesc') | transloco }}</div>
                           @if (auth.hasPermission('CREATE_PROJECT') && mode() === 'active') {
                             <a routerLink="/projects/new" class="btn btn-primary btn-sm mt-3">
-                              <i class="bi bi-plus-lg me-1"></i>Créer un projet
+                              <i class="bi bi-plus-lg me-1"></i>{{ 'projects.createFirst' | transloco }}
                             </a>
                           }
                         </div>
@@ -294,11 +296,6 @@ export class ProjectListComponent implements OnInit {
   });
 
   readonly hasFilters = computed(() => !!this.search() || !!this.statusFilter());
-  readonly headerCount = computed(() => {
-    const n = this.all().length;
-    const label = this.mode() === 'archived' ? 'projet archivé' : 'projet';
-    return `${n} ${label}${n !== 1 ? 's' : ''} · ${this.mode() === 'archived' ? 'archive' : 'liste complète'}`;
-  });
 
   ngOnInit(): void {
     const p = this.route.snapshot.queryParamMap;

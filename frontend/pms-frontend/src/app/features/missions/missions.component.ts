@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -29,13 +29,13 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
         <i class="bi bi-airplane" style="font-size:13px;color:var(--text-3)"></i>
         <span class="bc-sep">›</span>
         @if (selected()) {
-          <button class="bc-back-btn" (click)="clearSelection()" title="Retour à la sélection de projet">
-            <i class="bi bi-arrow-left"></i> Missions
+          <button class="bc-back-btn" (click)="clearSelection()" [title]="'missions.backToPicker' | transloco">
+            <i class="bi bi-arrow-left"></i> {{ 'nav.missions' | transloco }}
           </button>
           <span class="bc-sep">›</span>
           <span class="bc-curr">{{ selected()!.code }}</span>
         } @else {
-          <span class="bc-curr">Missions</span>
+          <span class="bc-curr">{{ 'nav.missions' | transloco }}</span>
         }
       </div>
     </div>
@@ -53,10 +53,10 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
       @if (selected()) {
         <div class="card">
           <div class="card-header justify-content-between">
-            <span><i class="bi bi-airplane me-2"></i>Missions — {{ selected()!.name }}</span>
+            <span><i class="bi bi-airplane me-2"></i>{{ 'nav.missions' | transloco }} — {{ selected()!.name }}</span>
             @if (canManage()) {
               <button class="btn btn-primary btn-sm" (click)="openMissionModal()">
-                <i class="bi bi-plus-lg me-1"></i>Nouvelle mission
+                <i class="bi bi-plus-lg me-1"></i>{{ 'missions.newMission' | transloco }}
               </button>
             }
           </div>
@@ -64,15 +64,15 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
             <table class="table table-hover mb-0 align-middle">
               <thead>
                 <tr>
-                  <th></th><th>Collaborateur</th><th>Objet</th><th>Lieu</th><th>Début</th><th>Fin</th><th>Durée</th>
-                  @if (canManage()) { <th class="text-end">Actions</th> }
+                  <th></th><th>{{ 'missions.colStaff' | transloco }}</th><th>{{ 'missions.colSubject' | transloco }}</th><th>{{ 'missions.colPlace' | transloco }}</th><th>{{ 'projects.colStart' | transloco }}</th><th>{{ 'projects.colEnd' | transloco }}</th><th>{{ 'missions.colDuration' | transloco }}</th>
+                  @if (canManage()) { <th class="text-end">{{ 'common.actions' | transloco }}</th> }
                 </tr>
               </thead>
               <tbody>
                 @for (m of missions(); track m.id) {
                   <tr>
                     <td>
-                      <button class="btn btn-sm btn-link p-0" (click)="toggleComposantes(m)" title="Composantes de coût">
+                      <button class="btn btn-sm btn-link p-0" (click)="toggleComposantes(m)" [title]="'missions.costComponents' | transloco">
                         <i class="bi" [class.bi-chevron-right]="expandedId() !== m.id" [class.bi-chevron-down]="expandedId() === m.id"></i>
                       </button>
                     </td>
@@ -85,7 +85,7 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
                     <td class="text-end">
                       @if (canManage()) {
                         <button class="btn btn-sm btn-outline-danger" (click)="deleteMission(m)"
-                                title="Supprimer" aria-label="Supprimer la mission">
+                                [title]="'common.delete' | transloco" [attr.aria-label]="'missions.deleteMission' | transloco">
                           <i class="bi bi-trash"></i>
                         </button>
                       }
@@ -96,16 +96,16 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
                       <td></td>
                       <td [attr.colspan]="canManage() ? 7 : 6" class="py-3">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                          <span class="sub-title">COMPOSANTES DE COÛT</span>
+                          <span class="sub-title">{{ 'missions.costComponents' | transloco }}</span>
                           @if (canManage()) {
                             <button class="btn btn-sm btn-outline-primary" (click)="openComposanteModal(m)">
-                              <i class="bi bi-plus-lg me-1"></i>Ajouter une composante
+                              <i class="bi bi-plus-lg me-1"></i>{{ 'missions.addComponent' | transloco }}
                             </button>
                           }
                         </div>
                         <table class="table table-sm mb-0 sub-table align-middle">
                           <thead>
-                            <tr><th>Type</th><th>Description</th><th class="text-end">Montant</th><th>Devise</th><th></th></tr>
+                            <tr><th>{{ 'missions.colType' | transloco }}</th><th>{{ 'common.description' | transloco }}</th><th class="text-end">{{ 'missions.colAmount' | transloco }}</th><th>{{ 'missions.colCurrency' | transloco }}</th><th></th></tr>
                           </thead>
                           <tbody>
                             @for (c of composantes(); track c.id) {
@@ -117,7 +117,7 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
                                 <td class="text-end">
                                   @if (canManage()) {
                                     <button class="btn btn-sm btn-outline-danger" (click)="deleteComposante(m, c)"
-                                            title="Supprimer" aria-label="Supprimer la composante">
+                                            [title]="'common.delete' | transloco" [attr.aria-label]="'missions.deleteComponent' | transloco">
                                       <i class="bi bi-trash"></i>
                                     </button>
                                   }
@@ -125,13 +125,13 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
                               </tr>
                             }
                             @empty {
-                              <tr><td colspan="5" class="text-center py-2 text-muted small">Aucune composante</td></tr>
+                              <tr><td colspan="5" class="text-center py-2 text-muted small">{{ 'missions.noComponents' | transloco }}</td></tr>
                             }
                           </tbody>
                           @if (composantes().length) {
                             <tfoot>
                               <tr class="fw-semibold">
-                                <td colspan="2" class="text-end">Total</td>
+                                <td colspan="2" class="text-end">{{ 'common.total' | transloco }}</td>
                                 <td class="text-end">{{ composanteTotal() | number:'1.0-2' }}</td>
                                 <td colspan="2"></td>
                               </tr>
@@ -146,9 +146,9 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
                   <tr><td colspan="8">
                     <div class="empty-state">
                       <div class="es-icon"><i class="bi bi-airplane"></i></div>
-                      <div class="es-title">Aucune mission</div>
-                      <div class="es-desc">Planifiez les déplacements et missions de l'équipe.</div>
-                      @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openMissionModal()"><i class="bi bi-plus-lg me-1"></i>Nouvelle mission</button> }
+                      <div class="es-title">{{ 'missions.empty' | transloco }}</div>
+                      <div class="es-desc">{{ 'missions.emptyDesc' | transloco }}</div>
+                      @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openMissionModal()"><i class="bi bi-plus-lg me-1"></i>{{ 'missions.newMission' | transloco }}</button> }
                     </div>
                   </td></tr>
                 }
@@ -166,44 +166,44 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Nouvelle mission</h5>
+              <h5 class="modal-title">{{ 'missions.newMission' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showMissionModal.set(false)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Collaborateur <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'missions.colStaff' | transloco }} <span class="text-danger">*</span></label>
                 <select class="form-select" [(ngModel)]="missionForm.userId">
-                  <option [value]="0" disabled>Sélectionner</option>
+                  <option [value]="0" disabled>{{ 'missions.select' | transloco }}</option>
                   @for (t of teamMembers(); track t.userId) {
                     <option [value]="t.userId">{{ t.userFullName }}</option>
                   }
                 </select>
               </div>
               <div class="mb-3">
-                <label class="form-label">Objet <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" [(ngModel)]="missionForm.objet" placeholder="Objet de la mission">
+                <label class="form-label">{{ 'missions.colSubject' | transloco }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="missionForm.objet" [placeholder]="'missions.subjectPh' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label">Lieu</label>
-                <input type="text" class="form-control" [(ngModel)]="missionForm.lieu" placeholder="Ville / pays">
+                <label class="form-label">{{ 'missions.colPlace' | transloco }}</label>
+                <input type="text" class="form-control" [(ngModel)]="missionForm.lieu" [placeholder]="'missions.placePh' | transloco">
               </div>
               <div class="row g-3">
                 <div class="col-6">
-                  <label class="form-label">Date début <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'missions.startDate' | transloco }} <span class="text-danger">*</span></label>
                   <input type="date" class="form-control" [(ngModel)]="missionForm.dateDebut">
                 </div>
                 <div class="col-6">
-                  <label class="form-label">Date fin <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'missions.endDate' | transloco }} <span class="text-danger">*</span></label>
                   <input type="date" class="form-control" [(ngModel)]="missionForm.dateFin">
                 </div>
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2 mt-3">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showMissionModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showMissionModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveMission()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -218,27 +218,27 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Ajouter une composante de coût</h5>
+              <h5 class="modal-title">{{ 'missions.addComponentTitle' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showComposanteModal.set(false)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Type <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'missions.colType' | transloco }} <span class="text-danger">*</span></label>
                 <select class="form-select" [(ngModel)]="composanteForm.typeComposante">
-                  <option value="PERDIEM">Per diem</option>
-                  <option value="BILLET">Billet</option>
-                  <option value="TRANSPORT">Transport</option>
-                  <option value="SEJOUR">Séjour</option>
-                  <option value="TIMBRE">Timbre</option>
+                  <option value="PERDIEM">{{ 'labels.missionItem.PERDIEM' | transloco }}</option>
+                  <option value="BILLET">{{ 'labels.missionItem.BILLET' | transloco }}</option>
+                  <option value="TRANSPORT">{{ 'labels.missionItem.TRANSPORT' | transloco }}</option>
+                  <option value="SEJOUR">{{ 'labels.missionItem.SEJOUR' | transloco }}</option>
+                  <option value="TIMBRE">{{ 'labels.missionItem.TIMBRE' | transloco }}</option>
                 </select>
               </div>
               <div class="row g-3 mb-3">
                 <div class="col-7">
-                  <label class="form-label">Montant <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'missions.colAmount' | transloco }} <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" [(ngModel)]="composanteForm.montant" min="0" step="0.01">
                 </div>
                 <div class="col-5">
-                  <label class="form-label">Devise <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'missions.colCurrency' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="composanteForm.devise">
                     <option value="TND">TND</option>
                     <option value="EUR">EUR</option>
@@ -247,16 +247,16 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
                 </div>
               </div>
               <div class="mb-3">
-                <label class="form-label">Description</label>
-                <input type="text" class="form-control" [(ngModel)]="composanteForm.description" placeholder="Optionnel">
+                <label class="form-label">{{ 'common.description' | transloco }}</label>
+                <input type="text" class="form-control" [(ngModel)]="composanteForm.description" [placeholder]="'missions.optionalPh' | transloco">
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showComposanteModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showComposanteModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveComposante()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -272,6 +272,7 @@ export class MissionsComponent implements OnInit {
   private readonly auth       = inject(AuthService);
   private readonly confirm    = inject(ConfirmService);
   private readonly toast      = inject(ToastService);
+  private readonly tr         = inject(TranslocoService);
   private readonly router     = inject(Router);
   private readonly route      = inject(ActivatedRoute);
 
@@ -352,27 +353,27 @@ export class MissionsComponent implements OnInit {
   saveMission(): void {
     const f = this.missionForm;
     if (!f.userId || !f.objet || !f.dateDebut || !f.dateFin) {
-      this.modalError.set('Collaborateur, objet et dates sont requis.');
+      this.modalError.set(this.tr.translate('missions.errRequired'));
       return;
     }
-    if (f.dateFin < f.dateDebut) { this.modalError.set('La date de fin doit être après la date de début.'); return; }
+    if (f.dateFin < f.dateDebut) { this.modalError.set(this.tr.translate('missions.errDateOrder')); return; }
     this.saving.set(true);
     this.missionSvc.create(this.selected()!.id, f).subscribe({
       next: () => {
         this.missionSvc.list(this.selected()!.id).subscribe(d => this.missions.set(d));
-        this.showMissionModal.set(false); this.saving.set(false); this.toast.success('Mission créée.');
+        this.showMissionModal.set(false); this.saving.set(false); this.toast.success(this.tr.translate('missions.okMissionCreated'));
       },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   async deleteMission(m: Mission): Promise<void> {
-    if (!await this.confirm.ask(`Supprimer la mission « ${m.objet} » ?`, 'Supprimer la mission')) return;
+    if (!await this.confirm.ask(this.tr.translate('missions.confirmDeleteMission', { name: m.objet }), this.tr.translate('missions.deleteMission'))) return;
     this.missionSvc.delete(this.selected()!.id, m.id).subscribe({
       next: () => {
         this.missionSvc.list(this.selected()!.id).subscribe(d => this.missions.set(d));
         if (this.expandedId() === m.id) this.expandedId.set(null);
-        this.toast.success('Mission supprimée.');
+        this.toast.success(this.tr.translate('missions.okMissionDeleted'));
       },
       error: () => this.toast.error('Suppression impossible.')
     });
@@ -388,23 +389,23 @@ export class MissionsComponent implements OnInit {
 
   saveComposante(): void {
     if (!this.composanteForm.montant || this.composanteForm.montant <= 0) {
-      this.modalError.set('Le montant doit être positif.');
+      this.modalError.set(this.tr.translate('missions.errAmountPositive'));
       return;
     }
     this.saving.set(true);
     this.missionSvc.createComposante(this.selected()!.id, this.composanteMissionId, this.composanteForm).subscribe({
       next: () => {
         this.missionSvc.listComposantes(this.selected()!.id, this.composanteMissionId).subscribe(d => this.composantes.set(d));
-        this.showComposanteModal.set(false); this.saving.set(false); this.toast.success('Composante ajoutée.');
+        this.showComposanteModal.set(false); this.saving.set(false); this.toast.success(this.tr.translate('missions.okComponentAdded'));
       },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   async deleteComposante(m: Mission, c: Composante): Promise<void> {
-    if (!await this.confirm.ask('Supprimer cette composante ?', 'Supprimer la composante')) return;
+    if (!await this.confirm.ask(this.tr.translate('missions.confirmDeleteComponent'), this.tr.translate('missions.deleteComponent'))) return;
     this.missionSvc.deleteComposante(this.selected()!.id, m.id, c.id).subscribe({
-      next: () => { this.missionSvc.listComposantes(this.selected()!.id, m.id).subscribe(d => this.composantes.set(d)); this.toast.success('Composante supprimée.'); },
+      next: () => { this.missionSvc.listComposantes(this.selected()!.id, m.id).subscribe(d => this.composantes.set(d)); this.toast.success(this.tr.translate('missions.okComponentDeleted')); },
       error: () => this.toast.error('Suppression impossible.')
     });
   }

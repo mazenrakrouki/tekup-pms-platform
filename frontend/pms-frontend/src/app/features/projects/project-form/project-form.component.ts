@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslocoModule, TranslocoService, provideTranslocoScope } from '@jsverse/transloco';
 import { ProjectService } from '../../../core/services/project.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -12,7 +13,8 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 @Component({
   selector: 'app-project-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  providers: [provideTranslocoScope('project')],
+  imports: [CommonModule, FormsModule, RouterLink, TranslocoModule],
   styles: [`
     /* Read-only / computed fields — token-based so they adapt to dark mode (replaces .bg-light) */
     .field-ro { background: var(--surface-2); color: var(--text-2); }
@@ -29,15 +31,15 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
     <div class="topbar">
       <div class="tb-breadcrumb">
         <a [routerLink]="['/projects']" [queryParams]="listState.query()" class="bc-back-btn">
-          <i class="bi bi-arrow-left"></i> Projets
+          <i class="bi bi-arrow-left"></i> {{ 'projects.title' | transloco }}
         </a>
         <span class="bc-sep">›</span>
         @if (isEdit && req.code) {
           <a [routerLink]="['/projects', projectId]" style="color:var(--text-2);text-decoration:none;font-size:12px">{{ req.code }}</a>
           <span class="bc-sep">›</span>
-          <span class="bc-curr">Modifier</span>
+          <span class="bc-curr">{{ 'project.form.edit' | transloco }}</span>
         } @else {
-          <span class="bc-curr">{{ isEdit ? 'Modifier' : 'Nouveau projet' }}</span>
+          <span class="bc-curr">{{ (isEdit ? 'project.form.edit' : 'project.form.new') | transloco }}</span>
         }
       </div>
     </div>
@@ -49,11 +51,10 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
         <div class="alert alert-info d-flex align-items-center gap-3 mb-4">
           <i class="bi bi-floppy fs-5 flex-shrink-0"></i>
           <div class="flex-grow-1">
-            <strong>Brouillon sauvegardé</strong> — Un brouillon de ce formulaire a été trouvé.
-            Souhaitez-vous le restaurer ?
+            <strong>{{ 'project.form.draftFound' | transloco }}</strong> — {{ 'project.form.draftFoundDesc' | transloco }}
           </div>
-          <button type="button" class="btn btn-sm btn-primary" (click)="restoreDraft()">Restaurer</button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="discardDraft()">Ignorer</button>
+          <button type="button" class="btn btn-sm btn-primary" (click)="restoreDraft()">{{ 'project.form.restore' | transloco }}</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="discardDraft()">{{ 'project.form.discard' | transloco }}</button>
         </div>
       }
 
@@ -61,7 +62,7 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
       @if (!loaded()) {
         <div class="text-center py-5">
           <div class="spinner-border text-primary mb-2"></div>
-          <p class="text-muted small mb-0">Chargement du projet…</p>
+          <p class="text-muted small mb-0">{{ 'project.form.loading' | transloco }}</p>
         </div>
       } @else {
 
@@ -71,74 +72,74 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
         <!-- ══ SECTION 1 : IDENTIFICATION ══════════════════════════ -->
         <div class="card mb-4">
           <div class="card-header">
-            <i class="bi bi-card-heading me-2 text-primary"></i>Identification
+            <i class="bi bi-card-heading me-2 text-primary"></i>{{ 'project.form.sectionIdentification' | transloco }}
           </div>
           <div class="card-body p-4">
             <div class="row g-3">
 
               <div class="col-md-3">
-                <label class="form-label">Code projet *</label>
+                <label class="form-label">{{ 'project.form.code' | transloco }} *</label>
                 <input class="form-control text-uppercase" name="code" [(ngModel)]="req.code"
                        required maxlength="20" placeholder="EX-2024-001"
                        [attr.readonly]="isEdit ? '' : null"
                        [class.field-ro]="isEdit">
                 @if (isEdit) {
-                  <div class="form-text text-muted">Non modifiable après création</div>
+                  <div class="form-text text-muted">{{ 'project.form.codeLocked' | transloco }}</div>
                 }
               </div>
 
               <div class="col-md-9">
-                <label class="form-label">Nom du projet *</label>
+                <label class="form-label">{{ 'project.form.name' | transloco }} *</label>
                 <input class="form-control" name="name" [(ngModel)]="req.name"
-                       required maxlength="255" placeholder="Intitulé complet du projet">
+                       required maxlength="255" [placeholder]="'project.form.namePh' | transloco">
               </div>
 
               <div class="col-12">
-                <label class="form-label">Description</label>
+                <label class="form-label">{{ 'common.description' | transloco }}</label>
                 <textarea class="form-control" name="description" [(ngModel)]="req.description"
-                          rows="3" placeholder="Contexte, objectifs, périmètre…"></textarea>
+                          rows="3" [placeholder]="'project.form.descriptionPh' | transloco"></textarea>
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Référence contrat</label>
+                <label class="form-label">{{ 'project.form.contractRef' | transloco }}</label>
                 <input class="form-control" name="contractId" [(ngModel)]="req.contractId"
-                       placeholder="Ex : CT-2024-0042">
+                       [placeholder]="'project.form.contractRefPh' | transloco">
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Client</label>
+                <label class="form-label">{{ 'project.info.client' | transloco }}</label>
                 <input class="form-control" name="client" [(ngModel)]="req.client">
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Bailleur de fonds</label>
+                <label class="form-label">{{ 'project.form.funder' | transloco }}</label>
                 <input class="form-control" name="funder" [(ngModel)]="req.funder"
-                       placeholder="Ex : Banque Mondiale (IDA)">
+                       [placeholder]="'project.form.funderPh' | transloco">
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Modèle business</label>
+                <label class="form-label">{{ 'project.form.businessModel' | transloco }}</label>
                 <select class="form-select" name="businessModel" [(ngModel)]="req.businessModel">
                   <option [ngValue]="null">—</option>
-                  <option value="SEUL">Seul</option>
-                  <option value="GROUPEMENT">En groupement</option>
+                  <option value="SEUL">{{ 'labels.businessModel.SEUL' | transloco }}</option>
+                  <option value="GROUPEMENT">{{ 'labels.businessModel.GROUPEMENT' | transloco }}</option>
                 </select>
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Type d'engagement</label>
+                <label class="form-label">{{ 'project.form.engagementType' | transloco }}</label>
                 <select class="form-select" name="engagementType" [(ngModel)]="req.engagementType">
                   <option [ngValue]="null">—</option>
-                  <option value="FORFAIT">Forfait (FP)</option>
-                  <option value="REGIE">Régie (T&amp;M)</option>
+                  <option value="FORFAIT">{{ 'labels.engagement.FORFAIT' | transloco }}</option>
+                  <option value="REGIE">{{ 'labels.engagement.REGIE' | transloco }}</option>
                 </select>
               </div>
 
               @if (auth.hasPermission('ASSIGN_CHEF_PROJET')) {
                 <div class="col-md-4">
-                  <label class="form-label">Chef de projet</label>
+                  <label class="form-label">{{ 'project.info.manager' | transloco }}</label>
                   <select class="form-select" name="chefProjetId" [(ngModel)]="req.chefProjetId">
-                    <option [ngValue]="null">— Non assigné —</option>
+                    <option [ngValue]="null">{{ 'project.form.unassigned' | transloco }}</option>
                     @for (u of chefs(); track u.id) {
                       <option [ngValue]="u.id">{{ u.firstName }} {{ u.lastName }}</option>
                     }
@@ -153,48 +154,48 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
         <!-- ══ SECTION 2 : PLANIFICATION ═══════════════════════════ -->
         <div class="card mb-4">
           <div class="card-header">
-            <i class="bi bi-calendar3 me-2 text-primary"></i>Planification
+            <i class="bi bi-calendar3 me-2 text-primary"></i>{{ 'project.form.sectionPlanning' | transloco }}
           </div>
           <div class="card-body p-4">
             <div class="row g-3">
 
               <div class="col-md-4">
-                <label class="form-label">Statut *</label>
+                <label class="form-label">{{ 'common.status' | transloco }} *</label>
                 <select class="form-select" name="status" [(ngModel)]="req.status" required>
-                  <option value="DRAFT">Brouillon</option>
-                  <option value="ACTIVE">Actif</option>
-                  <option value="ON_HOLD">En pause</option>
-                  <option value="COMPLETED">Terminé</option>
-                  <option value="CANCELLED">Annulé</option>
+                  <option value="DRAFT">{{ 'status.DRAFT' | transloco }}</option>
+                  <option value="ACTIVE">{{ 'status.ACTIVE' | transloco }}</option>
+                  <option value="ON_HOLD">{{ 'status.ON_HOLD' | transloco }}</option>
+                  <option value="COMPLETED">{{ 'status.COMPLETED' | transloco }}</option>
+                  <option value="CANCELLED">{{ 'status.CANCELLED' | transloco }}</option>
                 </select>
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Date de début</label>
+                <label class="form-label">{{ 'project.form.startDate' | transloco }}</label>
                 <input type="date" class="form-control" name="startDate"
                        [(ngModel)]="req.startDate">
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Date de fin prévue</label>
+                <label class="form-label">{{ 'project.form.endDate' | transloco }}</label>
                 <input type="date" class="form-control" name="endDate"
                        [(ngModel)]="req.endDate"
                        [class.is-invalid]="dateRangeInvalid">
                 @if (dateRangeInvalid) {
                   <div class="invalid-feedback">
-                    La date de fin doit être postérieure ou égale à la date de début.
+                    {{ 'project.form.dateOrder' | transloco }}
                   </div>
                 }
               </div>
 
               <div class="col-md-4">
-                <label class="form-label">Durée du contrat</label>
+                <label class="form-label">{{ 'project.form.contractDuration' | transloco }}</label>
                 <div class="input-group">
                   <div class="form-control field-ro"
                        [class.fw-semibold]="durationDays !== null">
                     {{ durationDays !== null ? durationDays : '—' }}
                   </div>
-                  <span class="input-group-text text-muted small">jours</span>
+                  <span class="input-group-text text-muted small">{{ 'project.form.days' | transloco }}</span>
                 </div>
               </div>
 
@@ -205,25 +206,25 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
         <!-- ══ SECTION 3 : FINANCIER ════════════════════════════════ -->
         <div class="card mb-4">
           <div class="card-header">
-            <i class="bi bi-cash-coin me-2 text-primary"></i>Financier
+            <i class="bi bi-cash-coin me-2 text-primary"></i>{{ 'project.form.sectionFinancial' | transloco }}
           </div>
           <div class="card-body p-4">
             <div class="row g-3">
 
               <div class="col-md-3">
-                <label class="form-label">Devise</label>
+                <label class="form-label">{{ 'project.form.currency' | transloco }}</label>
                 <select class="form-select" name="currency" [(ngModel)]="req.currency"
                         (ngModelChange)="onCurrencyChange($event)">
-                  <option value="TND">TND — Dinar Tunisien</option>
-                  <option value="EUR">EUR — Euro</option>
-                  <option value="USD">USD — Dollar US</option>
-                  <option value="FCFA">FCFA — Franc CFA</option>
+                  <option value="TND">{{ 'project.form.currencyTnd' | transloco }}</option>
+                  <option value="EUR">{{ 'project.form.currencyEur' | transloco }}</option>
+                  <option value="USD">{{ 'project.form.currencyUsd' | transloco }}</option>
+                  <option value="FCFA">{{ 'project.form.currencyFcfa' | transloco }}</option>
                 </select>
               </div>
 
               <div class="col-md-5">
                 <label class="form-label">
-                  Budget initial ({{ req.currency || 'TND' }})
+                  {{ 'project.form.initialBudget' | transloco: { currency: (req.currency || 'TND') } }}
                 </label>
                 <input type="number" class="form-control" name="budget"
                        [(ngModel)]="req.initialBudget" min="0" step="0.01">
@@ -231,9 +232,9 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 
               <div class="col-md-4">
                 <label class="form-label">
-                  Taux de change → TND
+                  {{ 'project.form.exchangeRate' | transloco }}
                   @if ((req.currency || 'TND') === 'TND') {
-                    <span class="fw-normal text-muted">(N/A)</span>
+                    <span class="fw-normal text-muted">{{ 'project.form.notApplicable' | transloco }}</span>
                   }
                 </label>
                 <input type="number" class="form-control" name="rate"
@@ -244,7 +245,7 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 
               <!-- Budget converti -->
               <div class="col-md-6">
-                <label class="form-label">Budget initial converti (TND)</label>
+                <label class="form-label">{{ 'project.form.convertedBudget' | transloco }}</label>
                 <div class="input-group">
                   <div class="form-control field-ro fw-semibold">
                     {{ budgetTnd !== null ? (budgetTnd | number:'1.0-0') : '—' }}
@@ -255,7 +256,7 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 
               <!-- PPR -->
               <div class="col-md-6">
-                <label class="form-label">PPR — Provision pour risques (5%)</label>
+                <label class="form-label">{{ 'project.form.pprLabel' | transloco }}</label>
                 <div class="input-group">
                   <div class="form-control field-ro fw-semibold">
                     {{ pprTnd !== null ? (pprTnd | number:'1.0-0') : '—' }}
@@ -270,9 +271,9 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
                   <div class="alert alert-secondary py-2 small d-flex align-items-center gap-2 mb-0">
                     <i class="bi bi-info-circle flex-shrink-0"></i>
                     <span>
-                      Budget révisé ({{ req.currency || 'TND' }}) :
+                      {{ 'project.form.revisedBudget' | transloco: { currency: (req.currency || 'TND') } }}
                       <strong>{{ revisedBudget | number:'1.2-2' }}</strong>
-                      — Géré via <strong>Facturation → Avenants</strong>.
+                      {{ 'project.form.revisedBudgetVia' | transloco }} <strong>{{ 'project.form.billingAmendments' | transloco }}</strong>.
                     </span>
                   </div>
                 </div>
@@ -281,14 +282,14 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
               <!-- Autres champs financiers -->
               <div class="col-md-6">
                 <label class="form-label">
-                  Budget licences &amp; sous-traitance (TND)
+                  {{ 'project.form.licenseBudget' | transloco }}
                 </label>
                 <input type="number" class="form-control" name="licBudget"
                        [(ngModel)]="req.licenseSubcontractBudget" min="0" step="0.01">
               </div>
 
               <div class="col-md-6">
-                <label class="form-label">Provision pénalités (PPP, TND)</label>
+                <label class="form-label">{{ 'project.form.penaltyProvision' | transloco }}</label>
                 <input type="number" class="form-control" name="ppp"
                        [(ngModel)]="req.penaltyProvision" min="0" step="0.01">
               </div>
@@ -300,17 +301,17 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
         <!-- ══ SECTION 4 : CHARGE VENDUE ════════════════════════════ -->
         <div class="card mb-4">
           <div class="card-header">
-            <i class="bi bi-people me-2 text-primary"></i>Charge vendue
+            <i class="bi bi-people me-2 text-primary"></i>{{ 'project.form.sectionSoldWorkload' | transloco }}
           </div>
           <div class="card-body p-4">
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label">Workload vendu (JH)</label>
+                <label class="form-label">{{ 'project.form.soldWorkloadDays' | transloco }}</label>
                 <input type="number" class="form-control" name="soldWl"
                        [(ngModel)]="req.soldWorkloadDays" min="0" step="0.5">
               </div>
               <div class="col-md-6">
-                <label class="form-label">Workload garantie (JH)</label>
+                <label class="form-label">{{ 'project.form.warrantyWorkloadDays' | transloco }}</label>
                 <input type="number" class="form-control" name="warrWl"
                        [(ngModel)]="req.warrantyWorkloadDays" min="0" step="0.5">
               </div>
@@ -331,13 +332,13 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
             @if (loading()) {
               <span class="spinner-border spinner-border-sm me-2"></span>
             }
-            {{ isEdit ? 'Enregistrer les modifications' : 'Créer le projet' }}
+            {{ (isEdit ? 'project.form.saveChanges' : 'project.form.createProject') | transloco }}
           </button>
           <button type="button" class="btn btn-outline-secondary" (click)="back()">
-            Annuler
+            {{ 'common.cancel' | transloco }}
           </button>
           @if (isDirty()) {
-            <span class="fa-spacer"><i class="bi bi-record-fill me-1" style="font-size:8px;color:var(--c-warning)"></i>Modifications non enregistrées</span>
+            <span class="fa-spacer"><i class="bi bi-record-fill me-1" style="font-size:8px;color:var(--c-warning)"></i>{{ 'project.form.unsavedChanges' | transloco }}</span>
           }
         </div>
 
@@ -349,6 +350,7 @@ import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 })
 export class ProjectFormComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   private readonly toast = inject(ToastService);
+  private readonly tr = inject(TranslocoService);
   readonly listState = inject(ProjectsListStateService);
 
   isEdit = false;
@@ -513,7 +515,7 @@ export class ProjectFormComponent implements OnInit, OnDestroy, HasUnsavedChange
 
   submit(): void {
     if (this.dateRangeInvalid) {
-      this.error.set('La date de fin doit être postérieure ou égale à la date de début.');
+      this.error.set(this.tr.translate('project.form.dateOrder'));
       return;
     }
     this.loading.set(true);
@@ -532,12 +534,12 @@ export class ProjectFormComponent implements OnInit, OnDestroy, HasUnsavedChange
           localStorage.removeItem(this.DRAFT_KEY);
           if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
         }
-        this.toast.success(this.isEdit ? 'Projet enregistré.' : 'Projet créé.');
+        this.toast.success(this.tr.translate(this.isEdit ? 'project.form.okSaved' : 'project.form.okCreated'));
         this.router.navigate(['/projects', p.id]);
       },
       error: e => {
         this.loading.set(false);
-        this.error.set(e.error?.detail ?? e.error?.message ?? 'Une erreur est survenue.');
+        this.error.set(e.error?.detail ?? e.error?.message ?? this.tr.translate('project.form.genericError'));
       }
     });
   }

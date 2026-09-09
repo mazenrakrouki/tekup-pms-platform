@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -39,13 +39,13 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
         <i class="bi bi-receipt" style="font-size:13px;color:var(--text-3)"></i>
         <span class="bc-sep">›</span>
         @if (selected()) {
-          <button class="bc-back-btn" (click)="clearSelection()" title="Retour à la sélection de projet">
-            <i class="bi bi-arrow-left"></i> Facturation
+          <button class="bc-back-btn" (click)="clearSelection()" [title]="'billing.backToPicker' | transloco">
+            <i class="bi bi-arrow-left"></i> {{ 'billing.title' | transloco }}
           </button>
           <span class="bc-sep">›</span>
           <span class="bc-curr">{{ selected()!.code }}</span>
         } @else {
-          <span class="bc-curr">Facturation</span>
+          <span class="bc-curr">{{ 'billing.title' | transloco }}</span>
         }
       </div>
     </div>
@@ -66,12 +66,12 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
           <div class="col-12">
             <div class="card">
               <div class="card-header justify-content-between">
-                <span><i class="bi bi-list-check me-2"></i>Jalons — {{ selected()!.name }}</span>
+                <span><i class="bi bi-list-check me-2"></i>{{ 'billing.milestones' | transloco }} — {{ selected()!.name }}</span>
                 <div class="d-flex align-items-center gap-3">
-                  <span class="text-muted small">Total facturé : {{ jalonTotal() | number:'1.0-0' }} TND</span>
+                  <span class="text-muted small">{{ 'billing.totalInvoiced' | transloco }} {{ jalonTotal() | number:'1.0-0' }} TND</span>
                   @if (canManage()) {
                     <button class="btn btn-primary btn-sm" (click)="openModal('jalon')">
-                      <i class="bi bi-plus-lg me-1"></i>Ajouter un jalon
+                      <i class="bi bi-plus-lg me-1"></i>{{ 'billing.addMilestone' | transloco }}
                     </button>
                   }
                 </div>
@@ -82,7 +82,7 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
                     <tr>
                       <th class="th-sort" [class.is-sorted]="jalonSortCol()==='label'" [attr.aria-sort]="ariaJalonSort('label')"
                           tabindex="0" (click)="toggleJalonSort('label')" (keydown.enter)="toggleJalonSort('label')" (keydown.space)="toggleJalonSort('label'); $event.preventDefault()">
-                        <span class="th-inner">Libellé <i class="bi caret" [ngClass]="caretJalon('label')"></i></span>
+                        <span class="th-inner">{{ 'billing.colLabel' | transloco }} <i class="bi caret" [ngClass]="caretJalon('label')"></i></span>
                       </th>
                       <th class="th-sort text-end" [class.is-sorted]="jalonSortCol()==='pourcentage'" [attr.aria-sort]="ariaJalonSort('pourcentage')"
                           tabindex="0" (click)="toggleJalonSort('pourcentage')" (keydown.enter)="toggleJalonSort('pourcentage')" (keydown.space)="toggleJalonSort('pourcentage'); $event.preventDefault()">
@@ -90,13 +90,13 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
                       </th>
                       <th class="th-sort text-end" [class.is-sorted]="jalonSortCol()==='montant'" [attr.aria-sort]="ariaJalonSort('montant')"
                           tabindex="0" (click)="toggleJalonSort('montant')" (keydown.enter)="toggleJalonSort('montant')" (keydown.space)="toggleJalonSort('montant'); $event.preventDefault()">
-                        <span class="th-inner">Montant <i class="bi caret" [ngClass]="caretJalon('montant')"></i></span>
+                        <span class="th-inner">{{ 'billing.colAmount' | transloco }} <i class="bi caret" [ngClass]="caretJalon('montant')"></i></span>
                       </th>
                       <th class="th-sort" [class.is-sorted]="jalonSortCol()==='datePrevue'" [attr.aria-sort]="ariaJalonSort('datePrevue')"
                           tabindex="0" (click)="toggleJalonSort('datePrevue')" (keydown.enter)="toggleJalonSort('datePrevue')" (keydown.space)="toggleJalonSort('datePrevue'); $event.preventDefault()">
-                        <span class="th-inner">Date prévue <i class="bi caret" [ngClass]="caretJalon('datePrevue')"></i></span>
+                        <span class="th-inner">{{ 'billing.colDueDate' | transloco }} <i class="bi caret" [ngClass]="caretJalon('datePrevue')"></i></span>
                       </th>
-                      <th>Date facture</th><th>Statut</th><th></th>
+                      <th>{{ 'billing.colInvoiceDate' | transloco }}</th><th>{{ 'common.status' | transloco }}</th><th></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -115,16 +115,16 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
                         <td class="text-end text-nowrap">
                           @if (canManage()) {
                             @if (j.statut === 'PREVU') {
-                              <button class="btn btn-sm btn-outline-primary me-1" (click)="openFacturer(j)" title="Facturer">
-                                <i class="bi bi-receipt-cutoff me-1"></i>Facturer
+                              <button class="btn btn-sm btn-outline-primary me-1" (click)="openFacturer(j)" [title]="'billing.invoice' | transloco">
+                                <i class="bi bi-receipt-cutoff me-1"></i>{{ 'billing.invoice' | transloco }}
                               </button>
                             } @else {
-                              <button class="btn btn-sm btn-outline-success me-1" (click)="openPaiement(j)" title="Enregistrer un paiement">
-                                <i class="bi bi-cash-coin me-1"></i>Paiement
+                              <button class="btn btn-sm btn-outline-success me-1" (click)="openPaiement(j)" [title]="'billing.recordPayment' | transloco">
+                                <i class="bi bi-cash-coin me-1"></i>{{ 'billing.payment' | transloco }}
                               </button>
                             }
                             <button class="btn btn-ghost btn-icon btn-sm act-danger" (click)="deleteJalon(j)"
-                                    title="Supprimer" aria-label="Supprimer le jalon">
+                                    [title]="'common.delete' | transloco" [attr.aria-label]="'billing.deleteMilestone' | transloco">
                               <i class="bi bi-trash"></i>
                             </button>
                           } @else { <span class="text-muted">—</span> }
@@ -135,9 +135,9 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
                       <tr><td colspan="7">
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-list-check"></i></div>
-                          <div class="es-title">Aucun jalon</div>
-                          <div class="es-desc">Découpez le contrat en jalons de facturation.</div>
-                          @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openModal('jalon')"><i class="bi bi-plus-lg me-1"></i>Ajouter un jalon</button> }
+                          <div class="es-title">{{ 'billing.noMilestones' | transloco }}</div>
+                          <div class="es-desc">{{ 'billing.noMilestonesDesc' | transloco }}</div>
+                          @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openModal('jalon')"><i class="bi bi-plus-lg me-1"></i>{{ 'billing.addMilestone' | transloco }}</button> }
                         </div>
                       </td></tr>
                     }
@@ -151,10 +151,10 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
           <div class="col-12">
             <div class="card">
               <div class="card-header justify-content-between">
-                <span><i class="bi bi-file-earmark-plus me-2"></i>Avenants — {{ selected()!.name }}</span>
+                <span><i class="bi bi-file-earmark-plus me-2"></i>{{ 'billing.amendments' | transloco }} — {{ selected()!.name }}</span>
                 @if (canManage()) {
                   <button class="btn btn-primary btn-sm" (click)="openModal('avenant')">
-                    <i class="bi bi-plus-lg me-1"></i>Ajouter un avenant
+                    <i class="bi bi-plus-lg me-1"></i>{{ 'billing.addAmendment' | transloco }}
                   </button>
                 }
               </div>
@@ -164,17 +164,17 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
                     <tr>
                       <th class="th-sort" [class.is-sorted]="avenantSortCol()==='numero'" [attr.aria-sort]="ariaAvenantSort('numero')"
                           tabindex="0" (click)="toggleAvenantSort('numero')" (keydown.enter)="toggleAvenantSort('numero')" (keydown.space)="toggleAvenantSort('numero'); $event.preventDefault()">
-                        <span class="th-inner">N° <i class="bi caret" [ngClass]="caretAvenant('numero')"></i></span>
+                        <span class="th-inner">{{ 'billing.colNumber' | transloco }} <i class="bi caret" [ngClass]="caretAvenant('numero')"></i></span>
                       </th>
-                      <th>Objet</th>
+                      <th>{{ 'billing.colSubject' | transloco }}</th>
                       <th class="th-sort text-end" [class.is-sorted]="avenantSortCol()==='montant'" [attr.aria-sort]="ariaAvenantSort('montant')"
                           tabindex="0" (click)="toggleAvenantSort('montant')" (keydown.enter)="toggleAvenantSort('montant')" (keydown.space)="toggleAvenantSort('montant'); $event.preventDefault()">
-                        <span class="th-inner">Montant <i class="bi caret" [ngClass]="caretAvenant('montant')"></i></span>
+                        <span class="th-inner">{{ 'billing.colAmount' | transloco }} <i class="bi caret" [ngClass]="caretAvenant('montant')"></i></span>
                       </th>
-                      <th class="text-end">Workload (JH)</th>
+                      <th class="text-end">{{ 'billing.colWorkloadDays' | transloco }}</th>
                       <th class="th-sort" [class.is-sorted]="avenantSortCol()==='dateAvenant'" [attr.aria-sort]="ariaAvenantSort('dateAvenant')"
                           tabindex="0" (click)="toggleAvenantSort('dateAvenant')" (keydown.enter)="toggleAvenantSort('dateAvenant')" (keydown.space)="toggleAvenantSort('dateAvenant'); $event.preventDefault()">
-                        <span class="th-inner">Date <i class="bi caret" [ngClass]="caretAvenant('dateAvenant')"></i></span>
+                        <span class="th-inner">{{ 'common.date' | transloco }} <i class="bi caret" [ngClass]="caretAvenant('dateAvenant')"></i></span>
                       </th>
                       <th></th>
                     </tr>
@@ -194,7 +194,7 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
                         <td class="text-end">
                           @if (canManage()) {
                             <button class="btn btn-ghost btn-icon btn-sm act-danger" (click)="deleteAvenant(a)"
-                                    title="Supprimer" aria-label="Supprimer l'avenant">
+                                    [title]="'common.delete' | transloco" [attr.aria-label]="'billing.deleteAmendment' | transloco">
                               <i class="bi bi-trash"></i>
                             </button>
                           } @else { <span class="text-muted">—</span> }
@@ -205,9 +205,9 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
                       <tr><td colspan="6">
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-file-earmark-plus"></i></div>
-                          <div class="es-title">Aucun avenant</div>
-                          <div class="es-desc">Les avenants ajustent le budget et la charge vendue du projet.</div>
-                          @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openModal('avenant')"><i class="bi bi-plus-lg me-1"></i>Ajouter un avenant</button> }
+                          <div class="es-title">{{ 'billing.noAmendments' | transloco }}</div>
+                          <div class="es-desc">{{ 'billing.noAmendmentsDesc' | transloco }}</div>
+                          @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openModal('avenant')"><i class="bi bi-plus-lg me-1"></i>{{ 'billing.addAmendment' | transloco }}</button> }
                         </div>
                       </td></tr>
                     }
@@ -227,32 +227,32 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Ajouter un jalon</h5>
+              <h5 class="modal-title">{{ 'billing.addMilestone' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="modal.set(null)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Libellé <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" [(ngModel)]="jalonForm.label" placeholder="Ex: Livraison phase 1">
+                <label class="form-label">{{ 'billing.colLabel' | transloco }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="jalonForm.label" [placeholder]="'billing.milestoneLabelPh' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label">Pourcentage <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'billing.percentage' | transloco }} <span class="text-danger">*</span></label>
                 <div class="input-group">
                   <input type="number" class="form-control" [(ngModel)]="jalonForm.pourcentage" min="1" max="100">
                   <span class="input-group-text">%</span>
                 </div>
               </div>
               <div class="mb-3">
-                <label class="form-label">Date prévue</label>
+                <label class="form-label">{{ 'billing.colDueDate' | transloco }}</label>
                 <input type="date" class="form-control" [(ngModel)]="jalonForm.datePrevue">
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="modal.set(null)">Annuler</button>
+              <button class="btn btn-secondary" (click)="modal.set(null)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveJalon()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -267,37 +267,37 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Ajouter un avenant</h5>
+              <h5 class="modal-title">{{ 'billing.addAmendment' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="modal.set(null)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Numéro <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" [(ngModel)]="avenantForm.numero" placeholder="Ex: AV-001">
+                <label class="form-label">{{ 'billing.colNumber' | transloco }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="avenantForm.numero" [placeholder]="'billing.amendmentNumberPh' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label">Objet</label>
-                <input type="text" class="form-control" [(ngModel)]="avenantForm.objet" placeholder="Description de l'avenant">
+                <label class="form-label">{{ 'billing.colSubject' | transloco }}</label>
+                <input type="text" class="form-control" [(ngModel)]="avenantForm.objet" [placeholder]="'billing.amendmentSubjectPh' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label">Montant <span class="text-danger">*</span></label>
-                <input type="number" class="form-control" [(ngModel)]="avenantForm.montant" placeholder="Positif = augmentation, négatif = réduction">
+                <label class="form-label">{{ 'billing.colAmount' | transloco }} <span class="text-danger">*</span></label>
+                <input type="number" class="form-control" [(ngModel)]="avenantForm.montant" [placeholder]="'billing.amountPh' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label">Impact charge vendue (JH)</label>
-                <input type="number" class="form-control" [(ngModel)]="avenantForm.workloadDays" min="0" step="0.5" placeholder="Optionnel — workload avenant">
+                <label class="form-label">{{ 'billing.soldWorkloadImpact' | transloco }}</label>
+                <input type="number" class="form-control" [(ngModel)]="avenantForm.workloadDays" min="0" step="0.5" [placeholder]="'billing.workloadPh' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label">Date <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'common.date' | transloco }} <span class="text-danger">*</span></label>
                 <input type="date" class="form-control" [(ngModel)]="avenantForm.dateAvenant">
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="modal.set(null)">Annuler</button>
+              <button class="btn btn-secondary" (click)="modal.set(null)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveAvenant()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -312,25 +312,25 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Facturer le jalon</h5>
+              <h5 class="modal-title">{{ 'billing.invoiceMilestone' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="modal.set(null)"></button>
             </div>
             <div class="modal-body">
               <p class="text-muted small mb-3">
-                Jalon <strong>{{ currentJalon()?.label }}</strong>
-                ({{ currentJalon()?.montant | number:'1.0-0' }} TND) → passe au statut <span class="badge-completed">{{ 'milestoneStatus.FACTURE' | transloco }}</span>
+                {{ 'billing.milestoneWord' | transloco }} <strong>{{ currentJalon()?.label }}</strong>
+                ({{ currentJalon()?.montant | number:'1.0-0' }} TND) → {{ 'billing.movesToStatus' | transloco }} <span class="badge-completed">{{ 'milestoneStatus.FACTURE' | transloco }}</span>
               </p>
               <div class="mb-3">
-                <label class="form-label">Date de facture <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'billing.invoiceDate' | transloco }} <span class="text-danger">*</span></label>
                 <input type="date" class="form-control" [(ngModel)]="facturerDate">
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="modal.set(null)">Annuler</button>
+              <button class="btn btn-secondary" (click)="modal.set(null)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveFacturer()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Facturer
+                {{ 'billing.invoice' | transloco }}
               </button>
             </div>
           </div>
@@ -345,16 +345,16 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Enregistrer un paiement</h5>
+              <h5 class="modal-title">{{ 'billing.recordPayment' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="modal.set(null)"></button>
             </div>
             <div class="modal-body">
               <p class="text-muted small mb-3">
-                Jalon <strong>{{ currentJalon()?.label }}</strong> — montant facturé {{ currentJalon()?.montant | number:'1.0-0' }} TND
+                {{ 'billing.milestoneWord' | transloco }} <strong>{{ currentJalon()?.label }}</strong> — {{ 'billing.invoicedAmount' | transloco }} {{ currentJalon()?.montant | number:'1.0-0' }} TND
               </p>
               @if (paiements().length) {
                 <div class="mb-3">
-                  <div class="fw-semibold small text-muted mb-1">Paiements déjà reçus</div>
+                  <div class="fw-semibold small text-muted mb-1">{{ 'billing.paymentsReceived' | transloco }}</div>
                   <ul class="list-group list-group-flush small">
                     @for (pmt of paiements(); track pmt.id) {
                       <li class="list-group-item px-0 py-1 d-flex justify-content-between">
@@ -366,24 +366,24 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
                 </div>
               }
               <div class="mb-3">
-                <label class="form-label">Montant reçu (TND) <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'billing.amountReceived' | transloco }} <span class="text-danger">*</span></label>
                 <input type="number" class="form-control" [(ngModel)]="paiementForm.montantRecu" min="0" step="0.01">
               </div>
               <div class="mb-3">
-                <label class="form-label">Date du paiement <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'billing.paymentDate' | transloco }} <span class="text-danger">*</span></label>
                 <input type="date" class="form-control" [(ngModel)]="paiementForm.datePaiement">
               </div>
               <div class="mb-3">
-                <label class="form-label">Référence</label>
-                <input type="text" class="form-control" [(ngModel)]="paiementForm.reference" placeholder="N° virement / chèque">
+                <label class="form-label">{{ 'billing.reference' | transloco }}</label>
+                <input type="text" class="form-control" [(ngModel)]="paiementForm.reference" [placeholder]="'billing.referencePh' | transloco">
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="modal.set(null)">Annuler</button>
+              <button class="btn btn-secondary" (click)="modal.set(null)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-success" (click)="savePaiement()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer le paiement
+                {{ 'billing.savePayment' | transloco }}
               </button>
             </div>
           </div>
@@ -398,6 +398,7 @@ export class BillingComponent implements OnInit {
   private readonly auth       = inject(AuthService);
   private readonly confirm    = inject(ConfirmService);
   private readonly toast      = inject(ToastService);
+  private readonly tr         = inject(TranslocoService);
   private readonly router     = inject(Router);
   private readonly route      = inject(ActivatedRoute);
 
@@ -517,7 +518,7 @@ export class BillingComponent implements OnInit {
 
   saveJalon(): void {
     if (!this.jalonForm.label || !this.jalonForm.pourcentage) {
-      this.modalError.set('Libellé et pourcentage sont requis.');
+      this.modalError.set(this.tr.translate('billing.errLabelPct'));
       return;
     }
     this.saving.set(true);
@@ -528,28 +529,30 @@ export class BillingComponent implements OnInit {
       datePrevue: this.jalonForm.datePrevue || undefined
     };
     this.billingSvc.createJalon(this.selected()!.id, body).subscribe({
-      next: () => { this.reload(); this.modal.set(null); this.saving.set(false); this.toast.success('Jalon ajouté.'); },
+      next: () => { this.reload(); this.modal.set(null); this.saving.set(false); this.toast.success(this.tr.translate('billing.okMilestoneAdded')); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   saveAvenant(): void {
     if (!this.avenantForm.numero || !this.avenantForm.dateAvenant) {
-      this.modalError.set('Numéro et date sont requis.');
+      this.modalError.set(this.tr.translate('billing.errNumberDate'));
       return;
     }
     this.saving.set(true);
     this.modalError.set('');
     this.billingSvc.createAvenant(this.selected()!.id, this.avenantForm).subscribe({
-      next: () => { this.reload(); this.modal.set(null); this.saving.set(false); this.toast.success('Avenant ajouté.'); },
+      next: () => { this.reload(); this.modal.set(null); this.saving.set(false); this.toast.success(this.tr.translate('billing.okAmendmentAdded')); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   async deleteJalon(j: JalonFacturation): Promise<void> {
-    if (!await this.confirm.ask(`Supprimer le jalon « ${j.label} » ?`, 'Supprimer le jalon')) return;
+    if (!await this.confirm.ask(
+      this.tr.translate('billing.confirmDeleteMilestone', { name: j.label }),
+      this.tr.translate('billing.deleteMilestone'))) return;
     this.billingSvc.deleteJalon(this.selected()!.id, j.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Jalon supprimé.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('billing.okMilestoneDeleted')); },
       error: () => this.toast.error('Suppression impossible.')
     });
   }
@@ -566,7 +569,7 @@ export class BillingComponent implements OnInit {
     if (!this.facturerDate) { this.modalError.set('Date de facture requise.'); return; }
     this.saving.set(true);
     this.billingSvc.facturer(this.selected()!.id, this.currentJalon()!.id, this.facturerDate).subscribe({
-      next: () => { this.reload(); this.modal.set(null); this.saving.set(false); this.toast.success('Jalon facturé.'); },
+      next: () => { this.reload(); this.modal.set(null); this.saving.set(false); this.toast.success(this.tr.translate('billing.okMilestoneInvoiced')); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
@@ -582,21 +585,23 @@ export class BillingComponent implements OnInit {
 
   savePaiement(): void {
     if (!this.paiementForm.montantRecu || this.paiementForm.montantRecu <= 0) {
-      this.modalError.set('Le montant reçu doit être positif.');
+      this.modalError.set(this.tr.translate('billing.errAmountPositive'));
       return;
     }
     if (!this.paiementForm.datePaiement) { this.modalError.set('Date du paiement requise.'); return; }
     this.saving.set(true);
     this.billingSvc.createPaiement(this.selected()!.id, this.currentJalon()!.id, this.paiementForm).subscribe({
-      next: () => { this.reload(); this.modal.set(null); this.saving.set(false); this.toast.success('Paiement enregistré.'); },
+      next: () => { this.reload(); this.modal.set(null); this.saving.set(false); this.toast.success(this.tr.translate('billing.okPaymentSaved')); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   async deleteAvenant(a: Avenant): Promise<void> {
-    if (!await this.confirm.ask(`Supprimer l'avenant « ${a.numero} » ?`, 'Supprimer l\'avenant')) return;
+    if (!await this.confirm.ask(
+      this.tr.translate('billing.confirmDeleteAmendment', { name: a.numero }),
+      this.tr.translate('billing.deleteAmendment'))) return;
     this.billingSvc.deleteAvenant(this.selected()!.id, a.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Avenant supprimé.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('billing.okAmendmentDeleted')); },
       error: () => this.toast.error('Suppression impossible.')
     });
   }

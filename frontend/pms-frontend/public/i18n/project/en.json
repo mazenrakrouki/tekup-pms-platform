@@ -25,7 +25,8 @@
     "effectiveBudget": "Effective budget",
     "budgetTnd": "Budget (TND)",
     "ppr": "PPR",
-    "soldWorkload": "Sold workload"
+    "soldWorkload": "Sold workload",
+    "warranty": "warranty"
   },
   "kpi": {
     "title": "Real-time KPIs",
@@ -43,7 +44,9 @@
     "sold": "sold",
     "evProgress": "EV % (progress)",
     "estimatedEndDate": "Estimated end date",
-    "highlights": "Highlights"
+    "highlights": "Highlights",
+    "consumedShort": "used",
+    "remainingShort": "ETC"
   },
   "team": {
     "title": "Team members",
@@ -58,7 +61,8 @@
     "roleInTeam": "Role in the team",
     "rolePlaceholder": "e.g. Developer",
     "startDate": "Start date",
-    "removeConfirm": "Remove {{name}} from the team?"
+    "removeConfirm": "Remove {{name}} from the team?",
+    "assign": "Assign"
   },
   "workload": {
     "planTitle": "Workload plan",
@@ -82,14 +86,16 @@
     "subject": "Subject",
     "date": "Date",
     "percent": "%",
-    "dueDatePlanned": "Planned date"
+    "dueDatePlanned": "Planned date",
+    "emptyAmendments": "No amendment"
   },
   "missions": {
     "collaborator": "Collaborator",
     "subject": "Subject",
     "place": "Place",
     "start": "Start",
-    "end": "End"
+    "end": "End",
+    "empty": "No mission"
   },
   "governance": {
     "risks": "Risks",
@@ -101,7 +107,10 @@
     "dueDate": "Due date",
     "changeRequests": "Change requests",
     "requester": "Requester",
-    "priority": "Priority"
+    "priority": "Priority",
+    "emptyRisks": "No risk",
+    "emptyDeliverables": "No deliverable",
+    "emptyChangeRequests": "No change request"
   },
   "manager": {
     "label": "Project manager",
@@ -116,6 +125,63 @@
     "archived": "Project archived.",
     "unarchived": "Project unarchived.",
     "statusUpdated": "Status updated: {{status}}.",
-    "teamFormRequired": "Member, role in the team and start date are required."
+    "teamFormRequired": "Member, role in the team and start date are required.",
+    "statusChangeConfirm": "Change the project status to “{{status}}”?",
+    "statusChangeTitle": "Change the status",
+    "statusChangeError": "Could not change the status."
+  },
+  "form": {
+    "edit": "Edit",
+    "new": "New project",
+    "draftFound": "Draft saved",
+    "draftFoundDesc": "A draft of this form was found. Do you want to restore it?",
+    "restore": "Restore",
+    "discard": "Discard",
+    "loading": "Loading the project…",
+    "sectionIdentification": "Identification",
+    "code": "Project code",
+    "codePh": "EX-2024-001",
+    "codeLocked": "Cannot be changed after creation",
+    "name": "Project name",
+    "namePh": "Full title of the project",
+    "descriptionPh": "Context, objectives, scope…",
+    "contractRef": "Contract reference",
+    "contractRefPh": "e.g. CT-2024-0042",
+    "funder": "Funder",
+    "funderPh": "e.g. World Bank (IDA)",
+    "businessModel": "Business model",
+    "engagementType": "Engagement type",
+    "unassigned": "— Unassigned —",
+    "sectionPlanning": "Planning",
+    "startDate": "Start date",
+    "endDate": "Planned end date",
+    "dateOrder": "The end date must be on or after the start date.",
+    "contractDuration": "Contract duration",
+    "days": "days",
+    "sectionFinancial": "Financial",
+    "currency": "Currency",
+    "currencyTnd": "TND — Tunisian Dinar",
+    "currencyEur": "EUR — Euro",
+    "currencyUsd": "USD — US Dollar",
+    "currencyFcfa": "FCFA — CFA Franc",
+    "initialBudget": "Initial budget ({{currency}})",
+    "exchangeRate": "Exchange rate → TND",
+    "notApplicable": "(N/A)",
+    "convertedBudget": "Converted initial budget (TND)",
+    "pprLabel": "PPR — Risk provision (5%)",
+    "revisedBudget": "Revised budget ({{currency}}):",
+    "revisedBudgetVia": "— Managed through",
+    "billingAmendments": "Billing → Amendments",
+    "licenseBudget": "Licence & subcontracting budget (TND)",
+    "penaltyProvision": "Penalty provision (PPP, TND)",
+    "sectionSoldWorkload": "Sold workload",
+    "soldWorkloadDays": "Sold workload (MD)",
+    "warrantyWorkloadDays": "Warranty workload (MD)",
+    "saveChanges": "Save changes",
+    "createProject": "Create the project",
+    "unsavedChanges": "Unsaved changes",
+    "okSaved": "Project saved.",
+    "okCreated": "Project created.",
+    "genericError": "Something went wrong."
   }
 }

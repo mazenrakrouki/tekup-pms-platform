@@ -1,8 +1,9 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslocoModule } from '@jsverse/transloco';
 import { ProjectService } from '../../core/services/project.service';
-import { Project, PROJECT_STATUS_LABELS } from '../../core/models/project.model';
+import { Project } from '../../core/models/project.model';
 import { KpiResponse } from '../../core/models/kpi.model';
 import { PaginationComponent } from '../../shared/pagination/pagination.component';
 
@@ -27,7 +28,7 @@ interface ChartRow {
 @Component({
   selector: 'app-kpi',
   standalone: true,
-  imports: [CommonModule, RouterLink, PaginationComponent],
+  imports: [CommonModule, RouterLink, PaginationComponent, TranslocoModule],
   styles: [`
     .chart-row:hover { background: var(--surface, var(--bg)); }
     .kpi-bar--profit-high  { background: #16a34a; }
@@ -87,15 +88,15 @@ interface ChartRow {
       <div class="tb-breadcrumb">
         <i class="bi bi-graph-up fs-13" style="color:var(--text-3)"></i>
         <span class="bc-sep">›</span>
-        <span class="bc-curr">Tableau de bord KPI</span>
+        <span class="bc-curr">{{ 'kpi.breadcrumb' | transloco }}</span>
       </div>
       <div class="tb-right">
         <div class="seg">
           <button class="seg-btn" [class.seg-on]="view()==='portfolio'" (click)="view.set('portfolio')">
-            <i class="bi bi-bar-chart-line me-1"></i>Portefeuille
+            <i class="bi bi-bar-chart-line me-1"></i>{{ 'kpi.tabPortfolio' | transloco }}
           </button>
           <button class="seg-btn" [class.seg-on]="view()==='cards'" (click)="view.set('cards')">
-            <i class="bi bi-grid me-1"></i>Projets
+            <i class="bi bi-grid me-1"></i>{{ 'kpi.tabProjects' | transloco }}
           </button>
         </div>
       </div>
@@ -106,7 +107,7 @@ interface ChartRow {
       <!-- Page header -->
       <div class="page-header d-flex align-items-start justify-content-between flex-wrap gap-2">
         <div>
-          <h1 class="page-title">Indicateurs de performance</h1>
+          <h1 class="page-title">{{ 'kpi.title' | transloco }}</h1>
         </div>
       </div>
 
@@ -130,9 +131,9 @@ interface ChartRow {
               <div class="metric-card kpi-metric">
                 <div class="d-flex align-items-start justify-content-between mb-2">
                   <div class="metric-icon metric-icon--brand"><i class="bi bi-briefcase-fill"></i></div>
-                  <span class="text-caption">portefeuille</span>
+                  <span class="text-caption">{{ 'kpi.portfolioCaption' | transloco }}</span>
                 </div>
-                <div class="metric-label">Budget total</div>
+                <div class="metric-label">{{ 'kpi.totalBudget' | transloco }}</div>
                 <div class="metric-value">{{ agg.totalBudget | number:'1.0-0' }} <span class="kpi-unit">TND</span></div>
               </div>
             </div>
@@ -142,10 +143,10 @@ interface ChartRow {
                   <div class="metric-icon" [style.background]="agg.totalEac > agg.totalBudget ? 'var(--c-danger-dim,rgba(220,38,38,.12))' : 'var(--c-success-dim)'"
                        [style.color]="agg.totalEac > agg.totalBudget ? 'var(--c-danger,#dc2626)' : 'var(--c-success)'"><i class="bi bi-graph-up-arrow"></i></div>
                   <span class="fs-11" [class.text-danger]="agg.totalEac > agg.totalBudget" [class.text-success]="agg.totalEac <= agg.totalBudget">
-                    {{ agg.totalEac <= agg.totalBudget ? 'dans le budget' : 'dépassement' }}
+                    {{ (agg.totalEac <= agg.totalBudget ? 'kpi.withinBudget' : 'kpi.overBudget') | transloco }}
                   </span>
                 </div>
-                <div class="metric-label">EAC total</div>
+                <div class="metric-label">{{ 'kpi.totalEac' | transloco }}</div>
                 <div class="metric-value" [class.text-danger]="agg.totalEac > agg.totalBudget">{{ agg.totalEac | number:'1.0-0' }} <span class="kpi-unit">TND</span></div>
               </div>
             </div>
@@ -158,7 +159,7 @@ interface ChartRow {
                     {{ agg.globalMarginPct >= 0 ? '+' : '' }}{{ agg.globalMarginPct | number:'1.1-1' }}%
                   </span>
                 </div>
-                <div class="metric-label">Marge nette globale</div>
+                <div class="metric-label">{{ 'kpi.netMargin' | transloco }}</div>
                 <div class="metric-value" [class.text-success]="agg.totalMarge >= 0" [class.text-danger]="agg.totalMarge < 0">
                   {{ agg.totalMarge >= 0 ? '+' : '' }}{{ agg.totalMarge | number:'1.0-0' }} <span class="kpi-unit">TND</span>
                 </div>
@@ -168,9 +169,9 @@ interface ChartRow {
               <div class="metric-card kpi-metric">
                 <div class="d-flex align-items-start justify-content-between mb-2">
                   <div class="metric-icon metric-icon--teal"><i class="bi bi-check2-circle"></i></div>
-                  <span class="text-caption">sur {{ agg.total }}</span>
+                  <span class="text-caption">{{ 'kpi.outOf' | transloco: { total: agg.total } }}</span>
                 </div>
-                <div class="metric-label">Projets rentables</div>
+                <div class="metric-label">{{ 'kpi.profitableProjects' | transloco }}</div>
                 <div class="metric-value text-success">{{ agg.profitCount }}<span class="kpi-unit"> / {{ agg.total }}</span></div>
               </div>
             </div>
@@ -180,19 +181,19 @@ interface ChartRow {
           @if (health(); as h) {
             <div class="card p-3 mb-4">
               <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="fs-13 fw-semibold"><i class="bi bi-heart-pulse me-1" style="color:var(--c-brand)"></i>Santé du portefeuille</span>
-                <span class="text-caption">{{ h.total }} projets évalués</span>
+                <span class="fs-13 fw-semibold"><i class="bi bi-heart-pulse me-1" style="color:var(--c-brand)"></i>{{ 'kpi.portfolioHealth' | transloco }}</span>
+                <span class="text-caption">{{ 'kpi.projectsAssessed' | transloco: { count: h.total } }}</span>
               </div>
               <div class="pf-health" role="img"
-                   [attr.aria-label]="'Santé du portefeuille : ' + h.profit + ' rentables, ' + h.breakEven + ' à l\\'équilibre, ' + h.deficit + ' déficitaires sur ' + h.total + ' projets.'">
-                @if (h.profit)   { <div class="pf-seg kpi-bar--profit-high" [style.width.%]="h.profitPct"   [title]="h.profit + ' rentables'"></div> }
-                @if (h.breakEven){ <div class="pf-seg kpi-bar--break-even" [style.width.%]="h.breakPct"    [title]="h.breakEven + ' à l\\'équilibre'"></div> }
-                @if (h.deficit)  { <div class="pf-seg kpi-bar--loss-high" [style.width.%]="h.deficitPct"  [title]="h.deficit + ' déficitaires'"></div> }
+                   [attr.aria-label]="'kpi.healthAria' | transloco: { profit: h.profit, breakEven: h.breakEven, deficit: h.deficit, total: h.total }">
+                @if (h.profit)   { <div class="pf-seg kpi-bar--profit-high" [style.width.%]="h.profitPct"   [title]="'kpi.profitableCount' | transloco: { count: h.profit }"></div> }
+                @if (h.breakEven){ <div class="pf-seg kpi-bar--break-even" [style.width.%]="h.breakPct"    [title]="'kpi.breakEvenCount' | transloco: { count: h.breakEven }"></div> }
+                @if (h.deficit)  { <div class="pf-seg kpi-bar--loss-high" [style.width.%]="h.deficitPct"  [title]="'kpi.deficitCount' | transloco: { count: h.deficit }"></div> }
               </div>
               <div class="d-flex gap-3 mt-2 flex-wrap fs-11" style="color:var(--text-2)">
-                <span><span class="legend-dot me-1 kpi-bar--profit-high"></span>Rentables <b>{{ h.profit }}</b></span>
-                <span><span class="legend-dot me-1 kpi-bar--break-even"></span>À l'équilibre <b>{{ h.breakEven }}</b></span>
-                <span><span class="legend-dot me-1 kpi-bar--loss-high"></span>Déficitaires <b>{{ h.deficit }}</b></span>
+                <span><span class="legend-dot me-1 kpi-bar--profit-high"></span>{{ 'kpi.profitable' | transloco }} <b>{{ h.profit }}</b></span>
+                <span><span class="legend-dot me-1 kpi-bar--break-even"></span>{{ 'kpi.breakEven' | transloco }} <b>{{ h.breakEven }}</b></span>
+                <span><span class="legend-dot me-1 kpi-bar--loss-high"></span>{{ 'kpi.deficit' | transloco }} <b>{{ h.deficit }}</b></span>
               </div>
             </div>
           }
@@ -209,19 +210,19 @@ interface ChartRow {
         <div class="card mb-4">
           <div class="card-header justify-content-between">
             <div>
-              <i class="bi bi-bar-chart-line me-2"></i>Budget vs EAC — comparaison portefeuille
+              <i class="bi bi-bar-chart-line me-2"></i>{{ 'kpi.budgetVsEacTitle' | transloco }}
             </div>
             <div class="d-flex gap-3 align-items-center fs-11">
-              <span><span class="legend-dot kpi-bar--profit-high"></span> Rentable</span>
-              <span><span class="legend-dot kpi-bar--break-even"></span> À l'équilibre</span>
-              <span><span class="legend-dot kpi-bar--loss-high"></span> Déficitaire</span>
-              <span style="color:var(--text-3)">| = Budget contractuel</span>
+              <span><span class="legend-dot kpi-bar--profit-high"></span> {{ 'kpi.profitableOne' | transloco }}</span>
+              <span><span class="legend-dot kpi-bar--break-even"></span> {{ 'kpi.breakEven' | transloco }}</span>
+              <span><span class="legend-dot kpi-bar--loss-high"></span> {{ 'kpi.deficitOne' | transloco }}</span>
+              <span style="color:var(--text-3)">{{ 'kpi.contractBudgetMark' | transloco }}</span>
             </div>
           </div>
 
           @if (portfolioRows().length === 0) {
             <div class="card-body text-center text-muted py-4">
-              <span class="spinner-border spinner-border-sm me-2"></span>Calcul des KPI en cours…
+              <span class="spinner-border spinner-border-sm me-2"></span>{{ 'kpi.computing' | transloco }}
             </div>
           } @else {
             <div class="card-body p-0">
@@ -239,7 +240,7 @@ interface ChartRow {
                       {{ row.p.name }}
                     </div>
                     <div class="text-micro" style="margin-top:1px">
-                      {{ statusLabel(row.p.status) }}
+                      {{ 'status.' + row.p.status | transloco }}
                       @if (row.p.client) { · {{ row.p.client }} }
                     </div>
                   </div>
@@ -287,7 +288,7 @@ interface ChartRow {
                     </div>
                     @if (row.consumed > 0) {
                       <div class="text-micro">
-                        Consommé {{ row.consumed | number:'1.0-0' }}
+                        {{ 'kpi.consumed' | transloco }} {{ row.consumed | number:'1.0-0' }}
                       </div>
                     }
                   </div>
@@ -302,10 +303,10 @@ interface ChartRow {
 
             <!-- Chart legend footer -->
             <div class="card-footer text-caption d-flex flex-wrap" style="gap:1.5rem">
-              <span><b>Barre grise</b> = budget contractuel</span>
-              <span><b>Couleur</b> = EAC (coût estimé final)</span>
-              <span><b>Partie sombre</b> = déjà consommé</span>
-              <span><b>Rouge au-delà du trait</b> = dépassement budget</span>
+              <span><b>{{ 'kpi.legendGrey' | transloco }}</b> {{ 'kpi.legendGreyDesc' | transloco }}</span>
+              <span><b>{{ 'kpi.legendColour' | transloco }}</b> {{ 'kpi.legendColourDesc' | transloco }}</span>
+              <span><b>{{ 'kpi.legendDark' | transloco }}</b> {{ 'kpi.legendDarkDesc' | transloco }}</span>
+              <span><b>{{ 'kpi.legendRed' | transloco }}</b> {{ 'kpi.legendRedDesc' | transloco }}</span>
             </div>
           }
         </div>
@@ -314,7 +315,7 @@ interface ChartRow {
         @if (portfolioRows().length > 0) {
           <div class="card mb-4">
             <div class="card-header">
-              <i class="bi bi-currency-exchange me-2"></i>Marge par projet — vue comparative
+              <i class="bi bi-currency-exchange me-2"></i>{{ 'kpi.marginByProject' | transloco }}
             </div>
             <div class="card-body p-0">
               @for (row of pagedPortfolioRows(); track row.p.id; let last = $last) {
@@ -356,12 +357,12 @@ interface ChartRow {
             </div>
             <div class="card-footer text-caption">
               <span class="legend-inline">
-                <span class="legend-swatch kpi-bar--loss-high"></span> Déficit
+                <span class="legend-swatch kpi-bar--loss-high"></span> {{ 'kpi.loss' | transloco }}
               </span>
               <span class="legend-inline" style="margin-left:1rem">
-                <span class="legend-swatch kpi-bar--profit-high"></span> Bénéfice
+                <span class="legend-swatch kpi-bar--profit-high"></span> {{ 'kpi.profit' | transloco }}
               </span>
-              <span style="margin-left:1rem">| = zéro (seuil de rentabilité)</span>
+              <span style="margin-left:1rem">{{ 'kpi.breakEvenAxis' | transloco }}</span>
             </div>
           </div>
         }
@@ -378,7 +379,7 @@ interface ChartRow {
                     <div class="fw-bold monospace fs-12">{{ p.code }}</div>
                     <div class="small text-muted text-truncate" style="max-width:200px">{{ p.name }}</div>
                   </div>
-                  <span [class]="badge(p.status)">{{ statusLabel(p.status) }}</span>
+                  <span [class]="badge(p.status)">{{ 'status.' + p.status | transloco }}</span>
                 </div>
 
                 @if (kpiMap()[p.id]; as k) {
@@ -386,7 +387,7 @@ interface ChartRow {
                     <!-- Main metrics grid -->
                     <div class="row g-2 text-center mb-3">
                       <div class="col-6">
-                        <div class="kpi-mini-label">Budget</div>
+                        <div class="kpi-mini-label">{{ 'kpi.budget' | transloco }}</div>
                         <div class="fw-bold fs-13" style="color:var(--text-1)">
                           {{ (p.budgetTnd ?? k.eac + k.marge) | number:'1.0-0' }}
                         </div>
@@ -402,14 +403,14 @@ interface ChartRow {
                         <div class="kpi-mini-unit">TND</div>
                       </div>
                       <div class="col-6">
-                        <div class="kpi-mini-label">Consommé</div>
+                        <div class="kpi-mini-label">{{ 'kpi.consumed' | transloco }}</div>
                         <div class="fw-bold text-warning fs-13">
                           {{ k.budgetConsome | number:'1.0-0' }}
                         </div>
                         <div class="kpi-mini-unit">TND</div>
                       </div>
                       <div class="col-6">
-                        <div class="kpi-mini-label">Marge prévue</div>
+                        <div class="kpi-mini-label">{{ 'kpi.plannedMargin' | transloco }}</div>
                         <div class="fw-bold fs-13"
                              [class.text-success]="k.marge != null && k.marge >= 0"
                              [class.text-danger]="k.marge != null && k.marge < 0">
@@ -427,8 +428,8 @@ interface ChartRow {
                     <!-- Budget vs EAC mini bar -->
                     <div class="mb-2">
                       <div class="d-flex justify-content-between mb-1 text-micro">
-                        <span>Budget vs EAC</span>
-                        <span>{{ cardEacPct(p, k) | number:'1.0-0' }}% du budget</span>
+                        <span>{{ 'kpi.budgetVsEac' | transloco }}</span>
+                        <span>{{ cardEacPct(p, k) | number:'1.0-0' }}{{ 'kpi.pctOfBudget' | transloco }}</span>
                       </div>
                       <div style="position:relative; height:8px; background:var(--surface-3); border-radius:4px; overflow:visible">
                         <!-- EAC bar -->
@@ -454,7 +455,7 @@ interface ChartRow {
                     <!-- Taux de consommation bar -->
                     <div class="mb-3">
                       <div class="d-flex justify-content-between mb-1 text-micro">
-                        <span>Taux consommation</span>
+                        <span>{{ 'kpi.consumptionRate' | transloco }}</span>
                         <span>{{ k.tauxConsommation * 100 | number:'1.0-1' }}%</span>
                       </div>
                       <div class="progress" style="height:4px">
@@ -475,13 +476,13 @@ interface ChartRow {
                         }
                         @if (k.consommeJh != null) {
                           <div class="col-4 text-center p-1 rounded kpi-stat-box">
-                            <div class="kpi-stat-label">Consommé JH</div>
+                            <div class="kpi-stat-label">{{ 'kpi.consumedMd' | transloco }}</div>
                             <div class="fw-semibold">{{ k.consommeJh | number:'1.0-0' }}</div>
                           </div>
                         }
                         @if (k.rafJh != null) {
                           <div class="col-4 text-center p-1 rounded kpi-stat-box">
-                            <div class="kpi-stat-label">RAF JH</div>
+                            <div class="kpi-stat-label">{{ 'kpi.remainingMd' | transloco }}</div>
                             <div class="fw-semibold">{{ k.rafJh | number:'1.0-0' }}</div>
                           </div>
                         }
@@ -500,7 +501,7 @@ interface ChartRow {
 
                     <div class="text-end">
                       <a [routerLink]="['/projects', p.id]" class="btn btn-sm btn-outline-primary">
-                        Détail <i class="bi bi-arrow-right ms-1"></i>
+                        {{ 'kpi.detail' | transloco }} <i class="bi bi-arrow-right ms-1"></i>
                       </a>
                     </div>
                   </div>
@@ -509,16 +510,16 @@ interface ChartRow {
                   <div class="card-body d-flex flex-column align-items-center justify-content-center text-muted small gap-2"
                        style="min-height:140px">
                     <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
-                    <span>Indicateurs indisponibles</span>
+                    <span>{{ 'kpi.unavailable' | transloco }}</span>
                     <button class="btn btn-sm btn-outline-secondary" (click)="load(p)">
-                      <i class="bi bi-arrow-clockwise me-1"></i>Réessayer
+                      <i class="bi bi-arrow-clockwise me-1"></i>{{ 'kpi.retry' | transloco }}
                     </button>
                   </div>
                 } @else {
                   <div class="card-body d-flex flex-column align-items-center justify-content-center text-muted small gap-2"
                        style="min-height:140px">
                     <span class="spinner-border spinner-border-sm text-primary"></span>
-                    <span>Calcul en cours…</span>
+                    <span>{{ 'kpi.computingShort' | transloco }}</span>
                   </div>
                 }
               </div>
@@ -706,9 +707,6 @@ export class KpiComponent implements OnInit {
     return 'loss-high';
   }
 
-  statusLabel(s: string): string {
-    return PROJECT_STATUS_LABELS[s as keyof typeof PROJECT_STATUS_LABELS] ?? s;
-  }
 
   badge(s: string): string {
     const m: Record<string, string> = {

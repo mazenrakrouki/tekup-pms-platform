@@ -135,5 +135,38 @@
     "MISSION": "Missions",
     "PROJET": "Projets",
     "RESSOURCE": "Ressources"
+  },
+  "permissionDesc": {
+    "ASSIGN_CHEF_PROJET": "Affecter un chef de projet.",
+    "ASSIGN_DEVELOPER": "Affecter des développeurs à une équipe projet.",
+    "CREATE_PROJECT": "Créer un projet.",
+    "DELETE_PROJECT": "Supprimer (archiver) un projet.",
+    "EDIT_PROJECT": "Modifier un projet.",
+    "MANAGE_AGILE": "Gérer les sprints et le backlog produit.",
+    "MANAGE_BILLING": "Gérer les jalons et la facturation.",
+    "MANAGE_DI": "Gérer le devis interne (données financières sensibles).",
+    "MANAGE_GOVERNANCE": "Gérer la gouvernance (risques, livrables, changements).",
+    "MANAGE_MISSION": "Gérer les missions.",
+    "MANAGE_RESOURCES": "Consulter et modifier le référentiel des ressources et tarifs TCC.",
+    "MANAGE_ROLES": "Créer, modifier et supprimer les rôles ; affecter les permissions.",
+    "MANAGE_USERS": "Gérer les comptes utilisateurs (création, activation, suppression).",
+    "SUBMIT_WORKLOAD": "Saisir ses propres charges de travail.",
+    "VALIDATE_WORKLOAD": "Valider les charges de travail de l'équipe.",
+    "VIEW_AGILE": "Consulter les sprints et le backlog produit.",
+    "VIEW_ALL_PROJECTS": "Consulter tous les projets du portefeuille.",
+    "VIEW_BILLING": "Consulter la facturation.",
+    "VIEW_GOVERNANCE": "Consulter la gouvernance (risques, livrables, changements).",
+    "VIEW_KPI": "Consulter les indicateurs (KPI / EVM).",
+    "VIEW_MISSION": "Consulter les missions.",
+    "VIEW_PROJECT": "Consulter les projets.",
+    "VIEW_RESOURCES": "Consulter le référentiel des ressources et tarifs TCC.",
+    "VIEW_TEAM": "Consulter la composition des équipes.",
+    "VIEW_WORKLOAD": "Consulter les plans et charges réelles."
+  },
+  "roleDesc": {
+    "ADMIN": "Administration de la plateforme : utilisateurs, rôles et référentiel TCC.",
+    "CHEF_PROJET": "Exécution opérationnelle des projets gérés : équipe, charges, facturation.",
+    "DEVELOPPEUR": "Contributeur : consultation de ses projets et saisie de ses charges.",
+    "DIRECTEUR": "Gouvernance du portefeuille : pilotage projets, vues transverses, TCC."
   }
 }

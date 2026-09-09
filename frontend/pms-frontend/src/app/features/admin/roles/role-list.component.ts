@@ -69,7 +69,7 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
                         }
                       </div>
                     </td>
-                    <td class="d-none d-md-table-cell cell-desc">{{ r.description || '—' }}</td>
+                    <td class="d-none d-md-table-cell cell-desc">{{ describeRole(r) }}</td>
                     <td class="text-center"><span class="badge-active">{{ r.permissions.length }}</span></td>
                     <td class="text-center cell-muted">{{ r.userCount }}</td>
                     <td class="text-end">
@@ -154,7 +154,7 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
                           <input type="checkbox" [checked]="selectedIds().has(p.id)"
                                  (change)="togglePerm(p.id)">
                           <span class="perm-code">{{ p.code }}</span>
-                          @if (p.description) { <span class="perm-desc">{{ p.description }}</span> }
+                          @if (describePerm(p)) { <span class="perm-desc">{{ describePerm(p) }}</span> }
                         </label>
                       }
                     </div>
@@ -224,8 +224,27 @@ export class RoleListComponent implements OnInit {
     const list = this.roles();
     if (!s) return list;
     return list.filter(r =>
-      r.name.toLowerCase().includes(s) || (r.description ?? '').toLowerCase().includes(s));
+      r.name.toLowerCase().includes(s) || this.describeRole(r).toLowerCase().includes(s));
   });
+
+  /**
+   * Role and permission descriptions are seeded in French by the migrations. The
+   * catalogue carries a translation per code; the stored text stays the fallback so
+   * a role or permission created later still shows something.
+   */
+  private translated(key: string, stored: string | undefined): string {
+    const value = this.t.translate(key);
+    if (value && value !== key) return value;
+    return stored || '';
+  }
+
+  describeRole(r: Role): string {
+    return this.translated('admin.roleDesc.' + r.name, r.description) || '—';
+  }
+
+  describePerm(p: Permission): string {
+    return this.translated('admin.permissionDesc.' + p.code, p.description);
+  }
 
   readonly moduleGroups = computed<ModuleGroup[]>(() => {
     const groups = new Map<string, Permission[]>();

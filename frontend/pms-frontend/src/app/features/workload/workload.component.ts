@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, signal, inject } from '@angular/core';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -68,13 +68,13 @@ interface MatrixResource { userId: number; name: string; role: string; }
         <i class="bi bi-calendar3 fs-13" style="color:var(--text-3)"></i>
         <span class="bc-sep">›</span>
         @if (selected()) {
-          <button class="bc-back-btn" (click)="clearSelection()" title="Retour à la sélection de projet">
-            <i class="bi bi-arrow-left"></i> Charges de travail
+          <button class="bc-back-btn" (click)="clearSelection()" [title]="'workload.backToPicker' | transloco">
+            <i class="bi bi-arrow-left"></i> {{ 'workload.title' | transloco }}
           </button>
           <span class="bc-sep">›</span>
           <span class="bc-curr">{{ selected()!.code }}</span>
         } @else {
-          <span class="bc-curr">Charges de travail</span>
+          <span class="bc-curr">{{ 'workload.title' | transloco }}</span>
         }
       </div>
     </div>
@@ -97,16 +97,16 @@ interface MatrixResource { userId: number; name: string; role: string; }
           </div>
           <div class="d-flex gap-2">
             <button class="btn btn-outline-secondary btn-sm" (click)="exportCsv()" [disabled]="periods().length === 0">
-              <i class="bi bi-download me-1"></i>Exporter
+              <i class="bi bi-download me-1"></i>{{ 'workload.export' | transloco }}
             </button>
             @if (canSubmit()) {
               <button class="btn btn-outline-secondary btn-sm" (click)="openChargeModal()">
-                <i class="bi bi-clock-history me-1"></i>Saisir une charge
+                <i class="bi bi-clock-history me-1"></i>{{ 'workload.enterActual' | transloco }}
               </button>
             }
             @if (canPlan()) {
               <button class="btn btn-primary btn-sm" (click)="openPlanModal()">
-                <i class="bi bi-plus-lg me-1"></i>Planifier une charge
+                <i class="bi bi-plus-lg me-1"></i>{{ 'workload.planWorkload' | transloco }}
               </button>
             }
           </div>
@@ -119,10 +119,10 @@ interface MatrixResource { userId: number; name: string; role: string; }
               <div class="d-flex align-items-start justify-content-between mb-2">
                 <div class="metric-icon metric-icon--brand"><i class="bi bi-calendar-check"></i></div>
               </div>
-              <div class="metric-label">Occupation réelle</div>
-              <div class="metric-value wl-value-lg">{{ totalActual() | number:'1.0-1' }} <span class="m-unit">JH</span></div>
+              <div class="metric-label">{{ 'workload.actualOccupancy' | transloco }}</div>
+              <div class="metric-value wl-value-lg">{{ totalActual() | number:'1.0-1' }} <span class="m-unit">{{ 'common.manDays' | transloco }}</span></div>
               <div class="occ-progress"><div [style.width.%]="min(realizationPct(), 100)"></div></div>
-              <div class="wl-metric-sub">sur {{ totalPlanned() | number:'1.0-1' }} JH planifiés</div>
+              <div class="wl-metric-sub">{{ 'workload.ofPlannedDays' | transloco: { days: (totalPlanned() | number:'1.0-1') } }}</div>
             </div>
           </div>
           <div class="col-6 col-xl-3">
@@ -130,9 +130,9 @@ interface MatrixResource { userId: number; name: string; role: string; }
               <div class="d-flex align-items-start justify-content-between mb-2">
                 <div class="metric-icon metric-icon--purple"><i class="bi bi-people-fill"></i></div>
               </div>
-              <div class="metric-label">Ressources actives</div>
-              <div class="metric-value wl-value-lg">{{ resources().length }} <span class="m-unit">{{ resources().length > 1 ? 'consultants' : 'consultant' }}</span></div>
-              <div class="wl-metric-sub">{{ periods().length }} mois planifiés</div>
+              <div class="metric-label">{{ 'workload.activeResources' | transloco }}</div>
+              <div class="metric-value wl-value-lg">{{ resources().length }} <span class="m-unit">{{ (resources().length > 1 ? 'workload.consultants' : 'workload.consultant') | transloco }}</span></div>
+              <div class="wl-metric-sub">{{ 'workload.monthsPlanned' | transloco: { count: periods().length } }}</div>
             </div>
           </div>
           <div class="col-6 col-xl-3">
@@ -140,12 +140,12 @@ interface MatrixResource { userId: number; name: string; role: string; }
               <div class="d-flex align-items-start justify-content-between mb-2">
                 <div class="metric-icon metric-icon--teal"><i class="bi bi-speedometer2"></i></div>
                 <span class="fs-11 fw-semibold" [class.text-success]="realizationPct() <= 105" [class.text-danger]="realizationPct() > 105">
-                  {{ ecart() >= 0 ? '+' : '' }}{{ ecart() | number:'1.0-1' }} JH
+                  {{ ecart() >= 0 ? '+' : '' }}{{ ecart() | number:'1.0-1' }} {{ 'common.manDays' | transloco }}
                 </span>
               </div>
-              <div class="metric-label">Taux de réalisation</div>
+              <div class="metric-label">{{ 'workload.realizationRate' | transloco }}</div>
               <div class="metric-value wl-value-lg">{{ realizationPct() | number:'1.0-0' }}<span class="m-unit">%</span></div>
-              <div class="wl-metric-sub">réel vs. planifié</div>
+              <div class="wl-metric-sub">{{ 'workload.actualVsPlanned' | transloco }}</div>
             </div>
           </div>
           <div class="col-6 col-xl-3">
@@ -153,10 +153,10 @@ interface MatrixResource { userId: number; name: string; role: string; }
               <div class="d-flex align-items-start justify-content-between mb-2">
                 <div class="metric-icon metric-icon--amber"><i class="bi bi-graph-up"></i></div>
               </div>
-              <div class="metric-label">Mois de pic</div>
+              <div class="metric-label">{{ 'workload.peakMonth' | transloco }}</div>
               <div class="metric-value wl-value-md">{{ peakMonth()?.label ?? '—' }}</div>
               <div class="wl-metric-sub">
-                @if (peakMonth(); as pk) { {{ pk.cumul | number:'1.0-1' }} JH cumulés } @else { Aucune donnée }
+                @if (peakMonth(); as pk) { {{ 'workload.cumulativeDays' | transloco: { days: (pk.cumul | number:'1.0-1') } }} } @else { {{ 'workload.noData' | transloco }} }
               </div>
             </div>
           </div>
@@ -165,7 +165,7 @@ interface MatrixResource { userId: number; name: string; role: string; }
         <!-- Matrix -->
         <div class="card">
           <div class="card-header justify-content-between flex-wrap gap-2">
-            <span><i class="bi bi-grid-3x3-gap me-2"></i>Matrice — {{ selected()!.name }}</span>
+            <span><i class="bi bi-grid-3x3-gap me-2"></i>{{ 'workload.matrixOf' | transloco }} — {{ selected()!.name }}</span>
             <div class="d-flex align-items-center gap-3 flex-wrap">
               @if (years().length > 1) {
                 <div class="seg-years">
@@ -175,8 +175,8 @@ interface MatrixResource { userId: number; name: string; role: string; }
                 </div>
               }
               <span class="occ-legend">
-                <span><span class="sw" style="background:var(--surface-3)"></span>Planifié</span>
-                <span><span class="sw" style="background:var(--c-brand)"></span>Réel</span>
+                <span><span class="sw" style="background:var(--surface-3)"></span>{{ 'workload.planned' | transloco }}</span>
+                <span><span class="sw" style="background:var(--c-brand)"></span>{{ 'workload.actual' | transloco }}</span>
               </span>
             </div>
           </div>
@@ -184,9 +184,9 @@ interface MatrixResource { userId: number; name: string; role: string; }
           @if (periods().length === 0) {
             <div class="empty-state">
               <div class="es-icon"><i class="bi bi-calendar3"></i></div>
-              <div class="es-title">Aucune charge planifiée ni saisie</div>
+              <div class="es-title">{{ 'workload.empty' | transloco }}</div>
               @if (canPlan()) {
-                <button class="btn btn-primary btn-sm mt-3" (click)="openPlanModal()"><i class="bi bi-plus-lg me-1"></i>Planifier une charge</button>
+                <button class="btn btn-primary btn-sm mt-3" (click)="openPlanModal()"><i class="bi bi-plus-lg me-1"></i>{{ 'workload.planWorkload' | transloco }}</button>
               }
             </div>
           } @else {
@@ -194,7 +194,7 @@ interface MatrixResource { userId: number; name: string; role: string; }
               <table class="occ">
                 <thead>
                   <tr>
-                    <th class="occ-res-col">Ressource / Rôle</th>
+                    <th class="occ-res-col">{{ 'workload.colResourceRole' | transloco }}</th>
                     @for (per of periods(); track per.year * 100 + per.month) {
                       <th class="text-center" [class.occ-peak]="isPeak(per)">
                         {{ monthName(per.month) }}
@@ -228,7 +228,7 @@ interface MatrixResource { userId: number; name: string; role: string; }
                 </tbody>
                 <tfoot>
                   <tr class="occ-totals">
-                    <td class="occ-tot-label">Totaux mensuels</td>
+                    <td class="occ-tot-label">{{ 'workload.monthlyTotals' | transloco }}</td>
                     @for (per of periods(); track per.year * 100 + per.month) {
                       <td class="text-center" [class.occ-peak-cell]="isPeak(per)">
                         <span class="occ-cell">
@@ -253,17 +253,17 @@ interface MatrixResource { userId: number; name: string; role: string; }
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Saisir une charge réelle</h5>
+              <h5 class="modal-title">{{ 'workload.enterActualTitle' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showChargeModal.set(false)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Ressource <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'workload.resource' | transloco }} <span class="text-danger">*</span></label>
                 @if (isDevOnly()) {
                   <input type="text" class="form-control" [value]="currentUserFullName" disabled>
                 } @else {
                   <select class="form-select" [(ngModel)]="chargeForm.userId">
-                    <option [value]="0" disabled>Sélectionner une ressource</option>
+                    <option [value]="0" disabled>{{ 'workload.selectResource' | transloco }}</option>
                     @for (m of teamMembers(); track m.userId) {
                       <option [value]="m.userId">{{ m.userFullName }}</option>
                     }
@@ -272,11 +272,11 @@ interface MatrixResource { userId: number; name: string; role: string; }
               </div>
               <div class="row g-3">
                 <div class="col-6">
-                  <label class="form-label">Année <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'workload.year' | transloco }} <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" [(ngModel)]="chargeForm.year" min="2000" max="2100">
                 </div>
                 <div class="col-6">
-                  <label class="form-label">Mois <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'workload.month' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="chargeForm.month">
                     @for (m of months; track m.v) {
                       <option [value]="m.v">{{ m.l }}</option>
@@ -285,7 +285,7 @@ interface MatrixResource { userId: number; name: string; role: string; }
                 </div>
               </div>
               <div class="mb-3 mt-3">
-                <label class="form-label">Jours travaillés <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'workload.daysWorked' | transloco }} <span class="text-danger">*</span></label>
                 <input type="number" class="form-control" [(ngModel)]="chargeForm.actualDays" min="0" max="31" step="0.5">
               </div>
               @if (chargeError()) {
@@ -293,10 +293,10 @@ interface MatrixResource { userId: number; name: string; role: string; }
               }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showChargeModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showChargeModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="submitCharge()" [disabled]="chargeSaving()">
                 @if (chargeSaving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -311,14 +311,14 @@ interface MatrixResource { userId: number; name: string; role: string; }
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Planifier une charge</h5>
+              <h5 class="modal-title">{{ 'workload.planWorkload' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showPlanModal.set(false)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label">Ressource <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'workload.resource' | transloco }} <span class="text-danger">*</span></label>
                 <select class="form-select" [(ngModel)]="planForm.userId">
-                  <option [value]="0" disabled>Sélectionner une ressource</option>
+                  <option [value]="0" disabled>{{ 'workload.selectResource' | transloco }}</option>
                   @for (m of teamMembers(); track m.userId) {
                     <option [value]="m.userId">{{ m.userFullName }}</option>
                   }
@@ -326,11 +326,11 @@ interface MatrixResource { userId: number; name: string; role: string; }
               </div>
               <div class="row g-3">
                 <div class="col-6">
-                  <label class="form-label">Année <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'workload.year' | transloco }} <span class="text-danger">*</span></label>
                   <input type="number" class="form-control" [(ngModel)]="planForm.year" min="2000" max="2100">
                 </div>
                 <div class="col-6">
-                  <label class="form-label">Mois <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'workload.month' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="planForm.month">
                     @for (m of months; track m.v) {
                       <option [value]="m.v">{{ m.l }}</option>
@@ -339,16 +339,16 @@ interface MatrixResource { userId: number; name: string; role: string; }
                 </div>
               </div>
               <div class="mb-3 mt-3">
-                <label class="form-label">Jours planifiés <span class="text-danger">*</span></label>
+                <label class="form-label">{{ 'workload.daysPlanned' | transloco }} <span class="text-danger">*</span></label>
                 <input type="number" class="form-control" [(ngModel)]="planForm.plannedDays" min="0" max="31" step="0.5">
               </div>
               @if (planError()) { <div class="alert alert-danger py-2">{{ planError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showPlanModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showPlanModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="submitPlan()" [disabled]="planSaving()">
                 @if (planSaving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -363,6 +363,7 @@ export class WorkloadComponent implements OnInit {
   private readonly teamSvc = inject(TeamService);
   private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
+  private readonly tr = inject(TranslocoService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -405,12 +406,22 @@ export class WorkloadComponent implements OnInit {
   chargeForm = { userId: 0, year: new Date().getFullYear(), month: new Date().getMonth() + 1, actualDays: 0 };
   planForm = { userId: 0, year: new Date().getFullYear(), month: new Date().getMonth() + 1, plannedDays: 0 };
 
-  readonly months = [
-    { v: 1, l: 'Janvier' }, { v: 2, l: 'Février' }, { v: 3, l: 'Mars' },
-    { v: 4, l: 'Avril' }, { v: 5, l: 'Mai' }, { v: 6, l: 'Juin' },
-    { v: 7, l: 'Juillet' }, { v: 8, l: 'Août' }, { v: 9, l: 'Septembre' },
-    { v: 10, l: 'Octobre' }, { v: 11, l: 'Novembre' }, { v: 12, l: 'Décembre' }
-  ];
+  /** Month options for the pickers, named in the active language. */
+  private monthsCache: { lang: string; list: { v: number; l: string }[] } | null = null;
+  get months(): { v: number; l: string }[] {
+    const lang = this.tr.getActiveLang();
+    if (!this.monthsCache || this.monthsCache.lang !== lang) {
+      const fmt = new Intl.DateTimeFormat(lang, { month: 'long' });
+      this.monthsCache = {
+        lang,
+        list: Array.from({ length: 12 }, (_, i) => ({
+          v: i + 1,
+          l: fmt.format(new Date(2000, i, 1)),
+        })),
+      };
+    }
+    return this.monthsCache.list;
+  }
 
   private readonly avatarPalette = ['#2563eb', '#7c3aed', '#0891b2', '#059669', '#d97706', '#dc2626', '#db2777', '#4f46e5'];
 
@@ -551,22 +562,28 @@ export class WorkloadComponent implements OnInit {
     return this.avatarPalette[h % this.avatarPalette.length];
   }
   monthName(m: number): string {
-    return ['JANVIER', 'FÉVRIER', 'MARS', 'AVRIL', 'MAI', 'JUIN', 'JUILLET', 'AOÛT', 'SEPTEMBRE', 'OCTOBRE', 'NOVEMBRE', 'DÉCEMBRE'][m - 1] ?? String(m);
+    if (m < 1 || m > 12) return String(m);
+    return new Intl.DateTimeFormat(this.tr.getActiveLang(), { month: 'long' })
+      .format(new Date(2000, m - 1, 1)).toUpperCase();
   }
   monthShort(m: number): string {
-    return ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'][m - 1] ?? String(m);
+    if (m < 1 || m > 12) return String(m);
+    return new Intl.DateTimeFormat(this.tr.getActiveLang(), { month: 'short' })
+      .format(new Date(2000, m - 1, 1));
   }
   min(a: number, b: number): number { return Math.min(a, b); }
 
   // ── Export ─────────────────────────────────────────────────────
   exportCsv(): void {
     const per = this.periods();
-    const header = ['Ressource', 'Rôle', ...per.flatMap(p => [`${this.monthShort(p.month)} ${p.year} (Plan)`, `${this.monthShort(p.month)} ${p.year} (Réel)`])];
+    const plan = this.tr.translate('workload.csvPlan');
+    const real = this.tr.translate('workload.csvActual');
+    const header = [this.tr.translate('workload.resource'), this.tr.translate('workload.csvRole'), ...per.flatMap(p => [`${this.monthShort(p.month)} ${p.year} (${plan})`, `${this.monthShort(p.month)} ${p.year} (${real})`])];
     const rows = this.resources().map(r => [
       r.name, r.role || '',
       ...per.flatMap(p => [String(this.planOf(r.userId, p)), String(this.actualOf(r.userId, p))]),
     ]);
-    const totals = ['Totaux mensuels', '', ...per.flatMap(p => [String(this.monthTotalPlanned(p)), String(this.monthTotalActual(p))])];
+    const totals = [this.tr.translate('workload.csvMonthlyTotals'), '', ...per.flatMap(p => [String(this.monthTotalPlanned(p)), String(this.monthTotalActual(p))])];
     const csv = [header, ...rows, totals]
       .map(line => line.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';'))
       .join('\n');
@@ -589,13 +606,13 @@ export class WorkloadComponent implements OnInit {
 
   submitCharge(): void {
     if (!this.chargeForm.userId || !this.chargeForm.actualDays) {
-      this.chargeError.set('Ressource et jours sont requis.');
+      this.chargeError.set(this.tr.translate('workload.errResourceDays'));
       return;
     }
     this.chargeSaving.set(true);
     this.chargeError.set('');
     this.workloadSvc.submitCharge(this.selected()!.id, this.chargeForm).subscribe({
-      next: () => { this.loadAll(); this.showChargeModal.set(false); this.chargeSaving.set(false); this.toast.success('Charge réelle enregistrée.'); },
+      next: () => { this.loadAll(); this.showChargeModal.set(false); this.chargeSaving.set(false); this.toast.success(this.tr.translate('workload.okActualSaved')); },
       error: (e) => { this.chargeError.set(e.error?.message ?? 'Erreur lors de la soumission.'); this.chargeSaving.set(false); }
     });
   }
@@ -608,13 +625,13 @@ export class WorkloadComponent implements OnInit {
 
   submitPlan(): void {
     if (!this.planForm.userId || !this.planForm.plannedDays) {
-      this.planError.set('Ressource et jours sont requis.');
+      this.planError.set(this.tr.translate('workload.errResourceDays'));
       return;
     }
     this.planSaving.set(true);
     this.planError.set('');
     this.workloadSvc.createPlanCharge(this.selected()!.id, this.planForm).subscribe({
-      next: () => { this.loadAll(); this.showPlanModal.set(false); this.planSaving.set(false); this.toast.success('Charge planifiée.'); },
+      next: () => { this.loadAll(); this.showPlanModal.set(false); this.planSaving.set(false); this.toast.success(this.tr.translate('workload.okPlanSaved')); },
       error: (e) => { this.planError.set(e.error?.message ?? 'Erreur lors de la planification.'); this.planSaving.set(false); }
     });
   }

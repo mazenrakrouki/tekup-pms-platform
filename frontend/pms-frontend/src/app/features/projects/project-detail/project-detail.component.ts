@@ -16,7 +16,7 @@ import { ConfirmService } from '../../../core/services/confirm.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ProjectsListStateService } from '../projects-list-state.service';
 import { LanguageService } from '../../../core/i18n/language.service';
-import { Project, ProjectStatus, PROJECT_STATUS_LABELS } from '../../../core/models/project.model';
+import { Project, ProjectStatus } from '../../../core/models/project.model';
 import { KpiResponse } from '../../../core/models/kpi.model';
 import { TeamAssignment } from '../../../core/models/team.model';
 import { PlanCharge, ChargeReelle } from '../../../core/models/workload.model';
@@ -78,7 +78,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
     <div class="topbar">
       <div class="tb-breadcrumb">
         <a [routerLink]="['/projects']" [queryParams]="listState.query()" class="bc-back-btn">
-          <i class="bi bi-arrow-left"></i> Projets
+          <i class="bi bi-arrow-left"></i> {{ 'projects.title' | transloco }}
         </a>
         <span class="bc-sep">›</span>
         <span class="bc-curr">{{ project()?.code ?? '—' }}</span>
@@ -95,7 +95,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
         @if (auth.hasPermission('EDIT_PROJECT')) {
           @if (!project()?.archived) {
             <a [routerLink]="['/projects', project()?.id, 'edit']" class="btn btn-outline-secondary btn-sm">
-              <i class="bi bi-pencil"></i>Modifier
+              <i class="bi bi-pencil"></i>{{ 'common.edit' | transloco }}
             </a>
             @if (project()?.status === 'COMPLETED') {
               <button class="btn btn-outline-secondary btn-sm" (click)="archiveProject()">
@@ -245,9 +245,9 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                     }
                   }
                   @if (p.soldWorkloadDays) {
-                    <dt class="col-5 text-muted">Workload vendu</dt>
-                    <dd class="col-7">{{ p.soldWorkloadDays | number:'1.0-0' }} JH
-                      @if (p.warrantyWorkloadDays) { <span class="text-muted">(garantie {{ p.warrantyWorkloadDays | number:'1.0-0' }} JH)</span> }
+                    <dt class="col-5 text-muted">{{ 'project.info.soldWorkload' | transloco }}</dt>
+                    <dd class="col-7">{{ p.soldWorkloadDays | number:'1.0-0' }} {{ 'common.manDays' | transloco }}
+                      @if (p.warrantyWorkloadDays) { <span class="text-muted">({{ 'project.info.warranty' | transloco }} {{ p.warrantyWorkloadDays | number:'1.0-0' }} {{ 'common.manDays' | transloco }})</span> }
                     </dd>
                   }
                 </dl>
@@ -328,10 +328,10 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                            [style.background]="(kpi()!.deriveJh ?? 0) < 0 ? 'var(--c-danger-dim)' : 'var(--c-brand-dim)'">
                         <div class="small text-muted">{{ 'project.kpi.variance' | transloco }}</div>
                         <div class="fs-5 fw-bold" [class.text-danger]="(kpi()!.deriveJh ?? 0) < 0">
-                          {{ kpi()!.deriveJh != null ? (kpi()!.deriveJh | number:'1.0-1') + ' JH' : '—' }}
+                          {{ kpi()!.deriveJh != null ? (kpi()!.deriveJh | number:'1.0-1') + ' ' + ('common.manDays' | transloco) : '—' }}
                         </div>
                         <div class="small text-muted">
-                          {{ kpi()!.consommeJh | number:'1.0-1' }} conso. / {{ kpi()!.rafJh | number:'1.0-1' }} RAF
+                          {{ kpi()!.consommeJh | number:'1.0-1' }} {{ 'project.kpi.consumedShort' | transloco }} / {{ kpi()!.rafJh | number:'1.0-1' }} {{ 'project.kpi.remainingShort' | transloco }}
                         </div>
                       </div>
                     </div>
@@ -424,7 +424,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               <span class="badge-draft">{{ team().length }} membres</span>
               @if (auth.hasPermission('ASSIGN_DEVELOPER')) {
                 <button class="btn btn-primary btn-sm" (click)="openTeamModal()">
-                  <i class="bi bi-person-plus me-1"></i>Affecter un membre
+                  <i class="bi bi-person-plus me-1"></i>{{ 'project.team.assignTitle' | transloco }}
                 </button>
               }
             </div>
@@ -561,8 +561,8 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           <div class="col-12">
             <div class="card">
               <div class="card-header d-flex justify-content-between">
-                <span><i class="bi bi-receipt me-2"></i>Jalons de facturation</span>
-                <span class="text-muted small">Total : {{ jalonTotal() | number:'1.0-0' }} TND</span>
+                <span><i class="bi bi-receipt me-2"></i>{{ 'project.billing.milestones' | transloco }}</span>
+                <span class="text-muted small">{{ 'common.total' | transloco }} {{ jalonTotal() | number:'1.0-0' }} TND</span>
               </div>
               <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
@@ -604,7 +604,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           <div class="col-12">
             <div class="card">
               <div class="card-header">
-                <i class="bi bi-file-earmark-plus me-2"></i>Avenants
+                <i class="bi bi-file-earmark-plus me-2"></i>{{ 'project.billing.amendments' | transloco }}
               </div>
               <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
@@ -626,7 +626,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       <tr><td colspan="4">
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-file-earmark-plus"></i></div>
-                          <div class="es-title">Aucun avenant</div>
+                          <div class="es-title">{{ 'project.billing.emptyAmendments' | transloco }}</div>
                         </div>
                       </td></tr>
                     }
@@ -663,7 +663,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                   <tr><td colspan="5">
                     <div class="empty-state">
                       <div class="es-icon"><i class="bi bi-kanban"></i></div>
-                      <div class="es-title">Aucune mission</div>
+                      <div class="es-title">{{ 'project.missions.empty' | transloco }}</div>
                     </div>
                   </td></tr>
                 }
@@ -705,7 +705,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       </tr>
                     }
                     @empty {
-                      <tr><td colspan="4" class="text-center py-3 text-muted small">Aucun risque</td></tr>
+                      <tr><td colspan="4" class="text-center py-3 text-muted small">{{ 'project.governance.emptyRisks' | transloco }}</td></tr>
                     }
                   </tbody>
                 </table>
@@ -717,7 +717,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           <div class="col-lg-6">
             <div class="card h-100">
               <div class="card-header">
-                <i class="bi bi-check2-square me-2 text-success"></i>Livrables
+                <i class="bi bi-check2-square me-2 text-success"></i>{{ 'project.governance.deliverables' | transloco }}
               </div>
               <div class="table-responsive">
                 <table class="table table-sm mb-0 align-middle">
@@ -733,7 +733,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       </tr>
                     }
                     @empty {
-                      <tr><td colspan="3" class="text-center py-3 text-muted small">Aucun livrable</td></tr>
+                      <tr><td colspan="3" class="text-center py-3 text-muted small">{{ 'project.governance.emptyDeliverables' | transloco }}</td></tr>
                     }
                   </tbody>
                 </table>
@@ -771,7 +771,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       </tr>
                     }
                     @empty {
-                      <tr><td colspan="5" class="text-center py-3 text-muted small">Aucune demande de changement</td></tr>
+                      <tr><td colspan="5" class="text-center py-3 text-muted small">{{ 'project.governance.emptyChangeRequests' | transloco }}</td></tr>
                     }
                   </tbody>
                 </table>
@@ -799,7 +799,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                 <div class="input-wrap mb-2">
                   <i class="bi bi-search input-icon"></i>
                   <input type="search" class="form-control form-control-sm"
-                         placeholder="Rechercher par nom..."
+                         [placeholder]="'common.searchByName' | transloco"
                          [ngModel]="chefSearch()" (ngModelChange)="chefSearch.set($event)">
                 </div>
                 <div class="picker-list">
@@ -819,7 +819,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showChefModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showChefModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveChef()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
                 Assigner
@@ -842,13 +842,13 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Membre <span class="text-danger">*</span></label>
+                <label class="form-label fw-semibold">{{ 'project.team.member' | transloco }} <span class="text-danger">*</span></label>
                 <!-- Recherche + filtre rôle pour faciliter la sélection -->
                 <div class="d-flex gap-2 mb-2">
                   <div class="input-wrap" style="flex:1">
                     <i class="bi bi-search input-icon"></i>
                     <input type="search" class="form-control form-control-sm"
-                           placeholder="Rechercher par nom..."
+                           [placeholder]="'common.searchByName' | transloco"
                            [ngModel]="memberSearch()" (ngModelChange)="memberSearch.set($event)">
                   </div>
                   <select class="form-select form-select-sm" style="max-width:170px"
@@ -883,10 +883,10 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showTeamModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showTeamModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveTeamMember()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Affecter
+                {{ 'project.team.assign' | transloco }}
               </button>
             </div>
           </div>
@@ -1074,10 +1074,13 @@ export class ProjectDetailComponent implements OnInit {
   async changeStatus(target: ProjectStatus): Promise<void> {
     this.statusMenuOpen.set(false);
     const label = this.t.translate('status.' + target);
-    if (!await this.confirm.ask(`Changer le statut du projet vers « ${label} » ?`, 'Changer le statut')) return;
+    if (!await this.confirm.ask(
+      this.t.translate('project.msg.statusChangeConfirm', { status: label }),
+      this.t.translate('project.msg.statusChangeTitle'))) return;
     this.svc.changeStatus(this.projectId, target).subscribe({
       next: p => { this.project.set(p); this.toast.success(this.t.translate('project.msg.statusUpdated', { status: label })); },
-      error: e => this.toast.error(e.error?.detail ?? e.error?.message ?? 'Erreur lors du changement de statut.')
+      error: e => this.toast.error(e.error?.detail ?? e.error?.message
+        ?? this.t.translate('project.msg.statusChangeError'))
     });
   }
 
@@ -1125,9 +1128,6 @@ export class ProjectDetailComponent implements OnInit {
     return new Intl.DateTimeFormat(this.locale(), { month: 'short' }).format(new Date(2000, m - 1, 1));
   }
 
-  statusLabel(s: string): string {
-    return PROJECT_STATUS_LABELS[s as keyof typeof PROJECT_STATUS_LABELS] ?? s;
-  }
 
   badge(s: string): string {
     const m: Record<string, string> = {

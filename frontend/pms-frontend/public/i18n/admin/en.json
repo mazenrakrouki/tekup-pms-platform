@@ -135,5 +135,38 @@
     "MISSION": "Missions",
     "PROJET": "Projects",
     "RESSOURCE": "Resources"
+  },
+  "permissionDesc": {
+    "ASSIGN_CHEF_PROJET": "Assign a project manager.",
+    "ASSIGN_DEVELOPER": "Assign developers to a project team.",
+    "CREATE_PROJECT": "Create a project.",
+    "DELETE_PROJECT": "Delete (archive) a project.",
+    "EDIT_PROJECT": "Edit a project.",
+    "MANAGE_AGILE": "Manage sprints and the product backlog.",
+    "MANAGE_BILLING": "Manage billing milestones and invoicing.",
+    "MANAGE_DI": "Manage the internal quote (sensitive financial data).",
+    "MANAGE_GOVERNANCE": "Manage governance (risks, deliverables, changes).",
+    "MANAGE_MISSION": "Manage missions.",
+    "MANAGE_RESOURCES": "View and edit the resource and TCC rate reference data.",
+    "MANAGE_ROLES": "Create, edit and delete roles; assign permissions.",
+    "MANAGE_USERS": "Manage user accounts (creation, activation, deletion).",
+    "SUBMIT_WORKLOAD": "Record one's own workload.",
+    "VALIDATE_WORKLOAD": "Validate the workload of the team.",
+    "VIEW_AGILE": "View sprints and the product backlog.",
+    "VIEW_ALL_PROJECTS": "View every project in the portfolio.",
+    "VIEW_BILLING": "View billing.",
+    "VIEW_GOVERNANCE": "View governance (risks, deliverables, changes).",
+    "VIEW_KPI": "View the indicators (KPI / EVM).",
+    "VIEW_MISSION": "View missions.",
+    "VIEW_PROJECT": "View projects.",
+    "VIEW_RESOURCES": "View the resource and TCC rate reference data.",
+    "VIEW_TEAM": "View the composition of teams.",
+    "VIEW_WORKLOAD": "View workload plans and actuals."
+  },
+  "roleDesc": {
+    "ADMIN": "Platform administration: users, roles and the TCC reference data.",
+    "CHEF_PROJET": "Operational execution of the projects managed: team, workload, billing.",
+    "DEVELOPPEUR": "Contributor: views their own projects and records their own workload.",
+    "DIRECTEUR": "Portfolio governance: project steering, cross-cutting views, TCC."
   }
 }

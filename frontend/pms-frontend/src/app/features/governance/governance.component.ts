@@ -1,5 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
-import { TranslocoModule } from '@jsverse/transloco';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -26,13 +26,13 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         <i class="bi bi-shield-check" style="font-size:13px;color:var(--text-3)"></i>
         <span class="bc-sep">›</span>
         @if (selected()) {
-          <button class="bc-back-btn" (click)="clearSelection()" title="Retour à la sélection de projet">
-            <i class="bi bi-arrow-left"></i> Gouvernance
+          <button class="bc-back-btn" (click)="clearSelection()" [title]="'governance.backToPicker' | transloco">
+            <i class="bi bi-arrow-left"></i> {{ 'nav.governance' | transloco }}
           </button>
           <span class="bc-sep">›</span>
           <span class="bc-curr">{{ selected()!.code }}</span>
         } @else {
-          <span class="bc-curr">Gouvernance</span>
+          <span class="bc-curr">{{ 'nav.governance' | transloco }}</span>
         }
       </div>
     </div>
@@ -51,16 +51,16 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         <!-- Sub-tabs (design-system segmented control) -->
         <div class="pms-tabs mb-3" style="width:fit-content;max-width:100%;overflow-x:auto">
           <button class="tab-item" [class.active]="govTab()==='risks'" (click)="setGovTab('risks')">
-            <i class="bi bi-exclamation-triangle me-1"></i>Risques ({{ risks().length }})
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ 'governance.tabRisks' | transloco }} ({{ risks().length }})
           </button>
           <button class="tab-item" [class.active]="govTab()==='livrables'" (click)="setGovTab('livrables')">
-            <i class="bi bi-check2-square me-1"></i>Livrables ({{ livrables().length }})
+            <i class="bi bi-check2-square me-1"></i>{{ 'governance.tabDeliverables' | transloco }} ({{ livrables().length }})
           </button>
           <button class="tab-item" [class.active]="govTab()==='changes'" (click)="setGovTab('changes')">
-            <i class="bi bi-arrow-repeat me-1"></i>Changements ({{ changes().length }})
+            <i class="bi bi-arrow-repeat me-1"></i>{{ 'governance.tabChanges' | transloco }} ({{ changes().length }})
           </button>
           <button class="tab-item" [class.active]="govTab()==='parties'" (click)="setGovTab('parties')">
-            <i class="bi bi-person-lines-fill me-1"></i>Parties prenantes ({{ parties().length }})
+            <i class="bi bi-person-lines-fill me-1"></i>{{ 'governance.tabStakeholders' | transloco }} ({{ parties().length }})
           </button>
         </div>
 
@@ -68,17 +68,17 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         @if (govTab() === 'risks') {
           <div class="card">
             <div class="card-header justify-content-between">
-              <span>Registre des risques — {{ selected()!.name }}</span>
+              <span>{{ 'governance.riskRegister' | transloco }} — {{ selected()!.name }}</span>
               @if (canManage()) {
                 <button class="btn btn-primary btn-sm" (click)="openRiskModal()">
-                  <i class="bi bi-plus-lg me-1"></i>Ajouter un risque
+                  <i class="bi bi-plus-lg me-1"></i>{{ 'governance.addRisk' | transloco }}
                 </button>
               }
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0 align-middle">
                 <thead>
-                  <tr><th>Description</th><th>Probabilité</th><th>Impact</th><th>Plan de mitigation</th><th>Statut</th><th></th></tr>
+                  <tr><th>{{ 'common.description' | transloco }}</th><th>{{ 'governance.colProbability' | transloco }}</th><th>{{ 'governance.colImpact' | transloco }}</th><th>{{ 'governance.colMitigation' | transloco }}</th><th>{{ 'common.status' | transloco }}</th><th></th></tr>
                 </thead>
                 <tbody>
                   @for (r of risks(); track r.id) {
@@ -95,7 +95,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                       <td class="text-end">
                         @if (canManage()) {
                           <button class="btn btn-sm btn-outline-danger" (click)="deleteRisk(r)"
-                                  title="Supprimer" aria-label="Supprimer le risque">
+                                  [title]="'common.delete' | transloco" [attr.aria-label]="'governance.deleteRisk' | transloco">
                             <i class="bi bi-trash"></i>
                           </button>
                         } @else { <span class="text-muted">—</span> }
@@ -106,9 +106,9 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                     <tr><td colspan="6">
                       <div class="empty-state">
                         <div class="es-icon"><i class="bi bi-exclamation-triangle"></i></div>
-                        <div class="es-title">Aucun risque</div>
-                        <div class="es-desc">Aucun risque n'a encore été enregistré pour ce projet.</div>
-                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openRiskModal()"><i class="bi bi-plus-lg me-1"></i>Ajouter un risque</button> }
+                        <div class="es-title">{{ 'governance.noRisks' | transloco }}</div>
+                        <div class="es-desc">{{ 'governance.noRisksDesc' | transloco }}</div>
+                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openRiskModal()"><i class="bi bi-plus-lg me-1"></i>{{ 'governance.addRisk' | transloco }}</button> }
                       </div>
                     </td></tr>
                   }
@@ -122,17 +122,17 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         @if (govTab() === 'livrables') {
           <div class="card">
             <div class="card-header justify-content-between">
-              <span>Livrables — {{ selected()!.name }}</span>
+              <span>{{ 'governance.deliverables' | transloco }} — {{ selected()!.name }}</span>
               @if (canManage()) {
                 <button class="btn btn-primary btn-sm" (click)="openLivrableModal()">
-                  <i class="bi bi-plus-lg me-1"></i>Ajouter un livrable
+                  <i class="bi bi-plus-lg me-1"></i>{{ 'governance.addDeliverable' | transloco }}
                 </button>
               }
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0 align-middle">
                 <thead>
-                  <tr><th>Titre</th><th>Description</th><th>Échéance</th><th>Statut</th><th>Actions</th></tr>
+                  <tr><th>{{ 'governance.colTitle' | transloco }}</th><th>{{ 'common.description' | transloco }}</th><th>{{ 'governance.colDueDate' | transloco }}</th><th>{{ 'common.status' | transloco }}</th><th>{{ 'common.actions' | transloco }}</th></tr>
                 </thead>
                 <tbody>
                   @for (l of livrables(); track l.id) {
@@ -144,22 +144,22 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                       <td>
                         @if (canManage()) {
                           @if (l.statut === 'EN_ATTENTE') {
-                            <button class="btn btn-sm btn-outline-primary me-1" (click)="demarrerLivrable(l)" title="Démarrer">
+                            <button class="btn btn-sm btn-outline-primary me-1" (click)="demarrerLivrable(l)" [title]="'governance.start' | transloco">
                               <i class="bi bi-play-fill"></i>
                             </button>
                           }
                           @if (l.statut === 'EN_COURS') {
-                            <button class="btn btn-sm btn-outline-info me-1" (click)="livrerLivrable(l)" title="Livrer">
+                            <button class="btn btn-sm btn-outline-info me-1" (click)="livrerLivrable(l)" [title]="'governance.deliver' | transloco">
                               <i class="bi bi-box-arrow-up"></i>
                             </button>
                           }
                           @if (l.statut === 'LIVRE') {
-                            <button class="btn btn-sm btn-outline-success me-1" (click)="validerLivrable(l)" title="Valider">
+                            <button class="btn btn-sm btn-outline-success me-1" (click)="validerLivrable(l)" [title]="'governance.approve' | transloco">
                               <i class="bi bi-check-lg"></i>
                             </button>
                           }
                           <button class="btn btn-sm btn-outline-danger" (click)="deleteLivrable(l)"
-                                  title="Supprimer" aria-label="Supprimer le livrable">
+                                  [title]="'common.delete' | transloco" [attr.aria-label]="'governance.deleteDeliverable' | transloco">
                             <i class="bi bi-trash"></i>
                           </button>
                         } @else { <span class="text-muted">—</span> }
@@ -170,9 +170,9 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                     <tr><td colspan="5">
                       <div class="empty-state">
                         <div class="es-icon"><i class="bi bi-check2-square"></i></div>
-                        <div class="es-title">Aucun livrable</div>
-                        <div class="es-desc">Définissez les livrables attendus pour ce projet.</div>
-                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openLivrableModal()"><i class="bi bi-plus-lg me-1"></i>Ajouter un livrable</button> }
+                        <div class="es-title">{{ 'governance.noDeliverables' | transloco }}</div>
+                        <div class="es-desc">{{ 'governance.noDeliverablesDesc' | transloco }}</div>
+                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openLivrableModal()"><i class="bi bi-plus-lg me-1"></i>{{ 'governance.addDeliverable' | transloco }}</button> }
                       </div>
                     </td></tr>
                   }
@@ -186,17 +186,17 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         @if (govTab() === 'changes') {
           <div class="card">
             <div class="card-header justify-content-between">
-              <span>Demandes de changement — {{ selected()!.name }}</span>
+              <span>{{ 'governance.changeRequests' | transloco }} — {{ selected()!.name }}</span>
               @if (canManage()) {
                 <button class="btn btn-primary btn-sm" (click)="openChangeModal()">
-                  <i class="bi bi-plus-lg me-1"></i>Nouvelle demande
+                  <i class="bi bi-plus-lg me-1"></i>{{ 'governance.newRequest' | transloco }}
                 </button>
               }
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0 align-middle">
                 <thead>
-                  <tr><th>Titre</th><th>Demandeur</th><th>Priorité</th><th>Date</th><th>Statut</th><th>Actions</th></tr>
+                  <tr><th>{{ 'governance.colTitle' | transloco }}</th><th>{{ 'governance.colRequester' | transloco }}</th><th>{{ 'governance.colPriority' | transloco }}</th><th>{{ 'common.date' | transloco }}</th><th>{{ 'common.status' | transloco }}</th><th>{{ 'common.actions' | transloco }}</th></tr>
                 </thead>
                 <tbody>
                   @for (dc of changes(); track dc.id) {
@@ -221,7 +221,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                             </button>
                           }
                           <button class="btn btn-sm btn-outline-danger" (click)="deleteChange(dc)"
-                                  title="Supprimer" aria-label="Supprimer la demande">
+                                  [title]="'common.delete' | transloco" [attr.aria-label]="'governance.deleteRequest' | transloco">
                             <i class="bi bi-trash"></i>
                           </button>
                         } @else { <span class="text-muted">—</span> }
@@ -232,9 +232,9 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                     <tr><td colspan="6">
                       <div class="empty-state">
                         <div class="es-icon"><i class="bi bi-arrow-repeat"></i></div>
-                        <div class="es-title">Aucune demande de changement</div>
-                        <div class="es-desc">Les demandes de changement du projet apparaîtront ici.</div>
-                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openChangeModal()"><i class="bi bi-plus-lg me-1"></i>Nouvelle demande</button> }
+                        <div class="es-title">{{ 'governance.noRequests' | transloco }}</div>
+                        <div class="es-desc">{{ 'governance.noRequestsDesc' | transloco }}</div>
+                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openChangeModal()"><i class="bi bi-plus-lg me-1"></i>{{ 'governance.newRequest' | transloco }}</button> }
                       </div>
                     </td></tr>
                   }
@@ -248,17 +248,17 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         @if (govTab() === 'parties') {
           <div class="card">
             <div class="card-header justify-content-between">
-              <span>Parties prenantes — {{ selected()!.name }}</span>
+              <span>{{ 'governance.stakeholders' | transloco }} — {{ selected()!.name }}</span>
               @if (canManage()) {
                 <button class="btn btn-primary btn-sm" (click)="openPartieModal()">
-                  <i class="bi bi-plus-lg me-1"></i>Ajouter une partie prenante
+                  <i class="bi bi-plus-lg me-1"></i>{{ 'governance.addStakeholder' | transloco }}
                 </button>
               }
             </div>
             <div class="table-responsive">
               <table class="table table-hover mb-0 align-middle">
                 <thead>
-                  <tr><th>Nom</th><th>Fonction</th><th>Email</th><th>Téléphone</th><th>Influence</th><th>Intérêt</th><th></th></tr>
+                  <tr><th>{{ 'common.name' | transloco }}</th><th>{{ 'governance.colFunction' | transloco }}</th><th>{{ 'common.email' | transloco }}</th><th>{{ 'governance.colPhone' | transloco }}</th><th>{{ 'governance.colInfluence' | transloco }}</th><th>{{ 'governance.colInterest' | transloco }}</th><th></th></tr>
                 </thead>
                 <tbody>
                   @for (pp of parties(); track pp.id) {
@@ -272,7 +272,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                       <td class="text-end">
                         @if (canManage()) {
                           <button class="btn btn-sm btn-outline-danger" (click)="deletePartie(pp)"
-                                  title="Supprimer" aria-label="Supprimer la partie prenante">
+                                  [title]="'common.delete' | transloco" [attr.aria-label]="'governance.deleteStakeholder' | transloco">
                             <i class="bi bi-trash"></i>
                           </button>
                         } @else { <span class="text-muted">—</span> }
@@ -283,9 +283,9 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                     <tr><td colspan="7">
                       <div class="empty-state">
                         <div class="es-icon"><i class="bi bi-person-lines-fill"></i></div>
-                        <div class="es-title">Aucune partie prenante</div>
-                        <div class="es-desc">Recensez les parties prenantes impliquées dans le projet.</div>
-                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openPartieModal()"><i class="bi bi-plus-lg me-1"></i>Ajouter une partie prenante</button> }
+                        <div class="es-title">{{ 'governance.noStakeholders' | transloco }}</div>
+                        <div class="es-desc">{{ 'governance.noStakeholdersDesc' | transloco }}</div>
+                        @if (canManage()) { <button class="btn btn-primary btn-sm mt-3" (click)="openPartieModal()"><i class="bi bi-plus-lg me-1"></i>{{ 'governance.addStakeholder' | transloco }}</button> }
                       </div>
                     </td></tr>
                   }
@@ -304,31 +304,31 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Ajouter une partie prenante</h5>
+              <h5 class="modal-title">{{ 'governance.addStakeholder' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showPartieModal.set(false)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Nom <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" [(ngModel)]="partieForm.nom" placeholder="Nom complet">
+                <label class="form-label fw-semibold">{{ 'common.name' | transloco }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="partieForm.nom" [placeholder]="'governance.fullNamePh' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Fonction</label>
-                <input type="text" class="form-control" [(ngModel)]="partieForm.fonction" placeholder="Ex: Sponsor, Client...">
+                <label class="form-label fw-semibold">{{ 'governance.colFunction' | transloco }}</label>
+                <input type="text" class="form-control" [(ngModel)]="partieForm.fonction" [placeholder]="'governance.functionPh' | transloco">
               </div>
               <div class="row g-3 mb-3">
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Email</label>
+                  <label class="form-label fw-semibold">{{ 'common.email' | transloco }}</label>
                   <input type="email" class="form-control" [(ngModel)]="partieForm.email" placeholder="email@example.com">
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Téléphone</label>
+                  <label class="form-label fw-semibold">{{ 'governance.colPhone' | transloco }}</label>
                   <input type="text" class="form-control" [(ngModel)]="partieForm.telephone" placeholder="+216 ...">
                 </div>
               </div>
               <div class="row g-3">
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Influence <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold">{{ 'governance.colInfluence' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="partieForm.influence">
                     <option value="FAIBLE">{{ 'riskLevel.FAIBLE' | transloco }}</option>
                     <option value="MOYEN">{{ 'riskLevel.MOYEN' | transloco }}</option>
@@ -336,7 +336,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                   </select>
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Intérêt <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold">{{ 'governance.colInterest' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="partieForm.interet">
                     <option value="FAIBLE">{{ 'riskLevel.FAIBLE' | transloco }}</option>
                     <option value="MOYEN">{{ 'riskLevel.MOYEN' | transloco }}</option>
@@ -347,10 +347,10 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
               @if (modalError()) { <div class="alert alert-danger py-2 mt-3">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showPartieModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showPartieModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="savePartie()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -365,17 +365,17 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Ajouter un risque</h5>
+              <h5 class="modal-title">{{ 'governance.addRisk' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showRiskModal.set(false)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
-                <textarea class="form-control" rows="2" [(ngModel)]="riskForm.description" placeholder="Description du risque"></textarea>
+                <label class="form-label fw-semibold">{{ 'common.description' | transloco }} <span class="text-danger">*</span></label>
+                <textarea class="form-control" rows="2" [(ngModel)]="riskForm.description" [placeholder]="'governance.riskDescPh' | transloco"></textarea>
               </div>
               <div class="row g-3 mb-3">
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Probabilité <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold">{{ 'governance.colProbability' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="riskForm.probabilite">
                     <option value="FAIBLE">{{ 'riskLevel.FAIBLE' | transloco }}</option>
                     <option value="MOYEN">{{ 'riskLevel.MOYEN' | transloco }}</option>
@@ -383,7 +383,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                   </select>
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Impact <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold">{{ 'governance.colImpact' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="riskForm.impact">
                     <option value="FAIBLE">{{ 'riskLevel.FAIBLE' | transloco }}</option>
                     <option value="MOYEN">{{ 'riskLevel.MOYEN' | transloco }}</option>
@@ -392,11 +392,11 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                 </div>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Plan de mitigation</label>
-                <textarea class="form-control" rows="2" [(ngModel)]="riskForm.planMitigation" placeholder="Actions pour mitiger le risque"></textarea>
+                <label class="form-label fw-semibold">{{ 'governance.colMitigation' | transloco }}</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="riskForm.planMitigation" [placeholder]="'governance.mitigationPh' | transloco"></textarea>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Statut <span class="text-danger">*</span></label>
+                <label class="form-label fw-semibold">{{ 'common.status' | transloco }} <span class="text-danger">*</span></label>
                 <select class="form-select" [(ngModel)]="riskForm.statut">
                   <option value="OUVERT">{{ 'riskStatus.OUVERT' | transloco }}</option>
                   <option value="MITIGE">{{ 'riskStatus.MITIGE' | transloco }}</option>
@@ -406,10 +406,10 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showRiskModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showRiskModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveRisk()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -424,29 +424,29 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Ajouter un livrable</h5>
+              <h5 class="modal-title">{{ 'governance.addDeliverable' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showLivrableModal.set(false)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Titre <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" [(ngModel)]="livrableForm.titre" placeholder="Titre du livrable">
+                <label class="form-label fw-semibold">{{ 'governance.colTitle' | transloco }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="livrableForm.titre" [placeholder]="'governance.deliverableTitlePh' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Description</label>
-                <textarea class="form-control" rows="2" [(ngModel)]="livrableForm.description" placeholder="Description optionnelle"></textarea>
+                <label class="form-label fw-semibold">{{ 'common.description' | transloco }}</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="livrableForm.description" [placeholder]="'governance.optionalDescPh' | transloco"></textarea>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Date d'échéance</label>
+                <label class="form-label fw-semibold">{{ 'governance.dueDateLabel' | transloco }}</label>
                 <input type="date" class="form-control" [(ngModel)]="livrableForm.dateEcheance">
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showLivrableModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showLivrableModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveLivrable()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -461,30 +461,30 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Nouvelle demande de changement</h5>
+              <h5 class="modal-title">{{ 'governance.newChangeRequest' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showChangeModal.set(false)"></button>
             </div>
             <div class="modal-body">
               <div class="mb-3">
-                <label class="form-label fw-semibold">Titre <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" [(ngModel)]="changeForm.titre" placeholder="Titre de la demande">
+                <label class="form-label fw-semibold">{{ 'governance.colTitle' | transloco }} <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" [(ngModel)]="changeForm.titre" [placeholder]="'governance.requestTitlePh' | transloco">
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Demandeur <span class="text-danger">*</span></label>
+                <label class="form-label fw-semibold">{{ 'governance.colRequester' | transloco }} <span class="text-danger">*</span></label>
                 <select class="form-select" [(ngModel)]="changeForm.demandeurId">
-                  <option [value]="0" disabled>Sélectionner un membre</option>
+                  <option [value]="0" disabled>{{ 'governance.selectMember' | transloco }}</option>
                   @for (m of teamMembers(); track m.userId) {
                     <option [value]="m.userId">{{ m.userFullName }}</option>
                   }
                 </select>
               </div>
               <div class="mb-3">
-                <label class="form-label fw-semibold">Description</label>
-                <textarea class="form-control" rows="2" [(ngModel)]="changeForm.description" placeholder="Description optionnelle"></textarea>
+                <label class="form-label fw-semibold">{{ 'common.description' | transloco }}</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="changeForm.description" [placeholder]="'governance.optionalDescPh' | transloco"></textarea>
               </div>
               <div class="row g-3 mb-3">
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Priorité <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold">{{ 'governance.colPriority' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="changeForm.priorite">
                     <option value="FAIBLE">{{ 'changePriority.FAIBLE' | transloco }}</option>
                     <option value="NORMALE">{{ 'changePriority.NORMALE' | transloco }}</option>
@@ -493,17 +493,17 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                   </select>
                 </div>
                 <div class="col-6">
-                  <label class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+                  <label class="form-label fw-semibold">{{ 'common.date' | transloco }} <span class="text-danger">*</span></label>
                   <input type="date" class="form-control" [(ngModel)]="changeForm.dateDemande">
                 </div>
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
             </div>
             <div class="modal-footer">
-              <button class="btn btn-secondary" (click)="showChangeModal.set(false)">Annuler</button>
+              <button class="btn btn-secondary" (click)="showChangeModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="saveChange()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>
@@ -519,6 +519,7 @@ export class GovernanceComponent implements OnInit {
   private readonly auth       = inject(AuthService);
   private readonly confirm    = inject(ConfirmService);
   private readonly toast      = inject(ToastService);
+  private readonly tr         = inject(TranslocoService);
   private readonly router     = inject(Router);
   private readonly route      = inject(ActivatedRoute);
 
@@ -602,18 +603,18 @@ export class GovernanceComponent implements OnInit {
   }
 
   savePartie(): void {
-    if (!this.partieForm.nom) { this.modalError.set('Le nom est requis.'); return; }
+    if (!this.partieForm.nom) { this.modalError.set(this.tr.translate('governance.errNameRequired')); return; }
     this.saving.set(true);
     this.govSvc.createPartie(this.selected()!.id, this.partieForm).subscribe({
-      next: () => { this.reload(); this.showPartieModal.set(false); this.saving.set(false); this.toast.success('Partie prenante ajoutée.'); },
+      next: () => { this.reload(); this.showPartieModal.set(false); this.saving.set(false); this.toast.success(this.tr.translate('governance.okStakeholderAdded')); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   async deletePartie(pp: PartiePrenante): Promise<void> {
-    if (!await this.confirm.ask(`Supprimer « ${pp.nom} » ?`, 'Supprimer la partie prenante')) return;
+    if (!await this.confirm.ask(this.tr.translate('governance.confirmDeleteStakeholder', { name: pp.nom }), this.tr.translate('governance.deleteStakeholder'))) return;
     this.govSvc.deletePartie(this.selected()!.id, pp.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Partie prenante supprimée.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('governance.okStakeholderDeleted')); },
       error: () => this.toast.error('Suppression impossible.')
     });
   }
@@ -629,15 +630,15 @@ export class GovernanceComponent implements OnInit {
     if (!this.riskForm.description) { this.modalError.set('Description requise.'); return; }
     this.saving.set(true);
     this.govSvc.createRisk(this.selected()!.id, this.riskForm).subscribe({
-      next: () => { this.reload(); this.showRiskModal.set(false); this.saving.set(false); this.toast.success('Risque enregistré.'); },
+      next: () => { this.reload(); this.showRiskModal.set(false); this.saving.set(false); this.toast.success(this.tr.translate('governance.okRiskSaved')); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   async deleteRisk(r: Risk): Promise<void> {
-    if (!await this.confirm.ask('Supprimer ce risque ?', 'Supprimer le risque')) return;
+    if (!await this.confirm.ask(this.tr.translate('governance.confirmDeleteRisk'), this.tr.translate('governance.deleteRisk'))) return;
     this.govSvc.deleteRisk(this.selected()!.id, r.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Risque supprimé.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('governance.okRiskDeleted')); },
       error: () => this.toast.error('Suppression impossible.')
     });
   }
@@ -653,36 +654,36 @@ export class GovernanceComponent implements OnInit {
     if (!this.livrableForm.titre) { this.modalError.set('Titre requis.'); return; }
     this.saving.set(true);
     this.govSvc.createLivrable(this.selected()!.id, this.livrableForm).subscribe({
-      next: () => { this.reload(); this.showLivrableModal.set(false); this.saving.set(false); this.toast.success('Livrable créé.'); },
+      next: () => { this.reload(); this.showLivrableModal.set(false); this.saving.set(false); this.toast.success(this.tr.translate('governance.okDeliverableCreated')); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   demarrerLivrable(l: Livrable): void {
     this.govSvc.demarrerLivrable(this.selected()!.id, l.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Livrable démarré.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('governance.okDeliverableStarted')); },
       error: () => this.toast.error('Action impossible.')
     });
   }
 
   livrerLivrable(l: Livrable): void {
     this.govSvc.livrerLivrable(this.selected()!.id, l.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Livrable marqué comme livré.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('governance.okDeliverableDelivered')); },
       error: () => this.toast.error('Action impossible.')
     });
   }
 
   validerLivrable(l: Livrable): void {
     this.govSvc.validerLivrable(this.selected()!.id, l.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Livrable validé.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('governance.okDeliverableApproved')); },
       error: () => this.toast.error('Action impossible.')
     });
   }
 
   async deleteLivrable(l: Livrable): Promise<void> {
-    if (!await this.confirm.ask(`Supprimer le livrable « ${l.titre} » ?`, 'Supprimer le livrable')) return;
+    if (!await this.confirm.ask(this.tr.translate('governance.confirmDeleteDeliverable', { name: l.titre }), this.tr.translate('governance.deleteDeliverable'))) return;
     this.govSvc.deleteLivrable(this.selected()!.id, l.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Livrable supprimé.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('governance.okDeliverableDeleted')); },
       error: () => this.toast.error('Suppression impossible.')
     });
   }
@@ -696,34 +697,34 @@ export class GovernanceComponent implements OnInit {
 
   saveChange(): void {
     if (!this.changeForm.titre || !this.changeForm.demandeurId) {
-      this.modalError.set('Titre et demandeur sont requis.');
+      this.modalError.set(this.tr.translate('governance.errTitleRequester'));
       return;
     }
     this.saving.set(true);
     this.govSvc.createChangement(this.selected()!.id, this.changeForm).subscribe({
-      next: () => { this.reload(); this.showChangeModal.set(false); this.saving.set(false); this.toast.success('Demande de changement créée.'); },
+      next: () => { this.reload(); this.showChangeModal.set(false); this.saving.set(false); this.toast.success(this.tr.translate('governance.okRequestCreated')); },
       error: (e) => { this.modalError.set(e.error?.message ?? 'Erreur.'); this.saving.set(false); }
     });
   }
 
   approuver(dc: DemandeChangement): void {
     this.govSvc.approuverChangement(this.selected()!.id, dc.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Demande approuvée.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('governance.okRequestApproved')); },
       error: () => this.toast.error('Action impossible.')
     });
   }
 
   rejeter(dc: DemandeChangement): void {
     this.govSvc.rejeterChangement(this.selected()!.id, dc.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Demande rejetée.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('governance.okRequestRejected')); },
       error: () => this.toast.error('Action impossible.')
     });
   }
 
   async deleteChange(dc: DemandeChangement): Promise<void> {
-    if (!await this.confirm.ask(`Supprimer la demande « ${dc.titre} » ?`, 'Supprimer la demande')) return;
+    if (!await this.confirm.ask(this.tr.translate('governance.confirmDeleteRequest', { name: dc.titre }), this.tr.translate('governance.deleteRequest'))) return;
     this.govSvc.deleteChangement(this.selected()!.id, dc.id).subscribe({
-      next: () => { this.reload(); this.toast.success('Demande supprimée.'); },
+      next: () => { this.reload(); this.toast.success(this.tr.translate('governance.okRequestDeleted')); },
       error: () => this.toast.error('Suppression impossible.')
     });
   }
