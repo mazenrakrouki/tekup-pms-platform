@@ -308,6 +308,18 @@ alongside a column holding the product backlog. Moving a card calls a single end
 reassigns the iteration and the column together, because on a board those two actions are one
 gesture: dragging a card from the backlog into the current sprint changes both at once.
 
+\subsubsection{Who does the work}
+An item carries the team member responsible for it, shown on the card so that the distribution of a
+sprint is readable without opening anything. The field is deliberately optional: an item can be
+committed to a sprint before anyone picks it up, and an item still in the product backlog normally
+has no owner at all, so unassigned is a state rather than an omission.
+
+The service refuses an assignee who is not a member of the project team, for the same reason it
+refuses an iteration belonging to another project: without that check a guessed identifier would
+attach one project's work to somebody who does not work on it. The constraint also keeps the module
+consistent with Sprint~4, where the team assignment is what authorises a developer to record
+workload on a project at all.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\columnwidth]{img/ui_agile_board.png}

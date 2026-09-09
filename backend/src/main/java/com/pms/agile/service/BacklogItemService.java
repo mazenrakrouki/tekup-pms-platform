@@ -10,7 +10,11 @@ import com.pms.agile.repository.BacklogItemRepository;
 import com.pms.agile.repository.SprintRepository;
 import com.pms.project.entity.Project;
 import com.pms.project.repository.ProjectRepository;
+import com.pms.shared.exception.BusinessRuleException;
 import com.pms.shared.exception.NotFoundException;
+import com.pms.team.repository.TeamAssignmentRepository;
+import com.pms.user.entity.User;
+import com.pms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -22,10 +26,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BacklogItemService {
 
-    private final BacklogItemRepository backlogItemRepository;
-    private final SprintRepository      sprintRepository;
-    private final ProjectRepository     projectRepository;
-    private final BacklogItemMapper     backlogItemMapper;
+    private final BacklogItemRepository      backlogItemRepository;
+    private final SprintRepository           sprintRepository;
+    private final ProjectRepository          projectRepository;
+    private final BacklogItemMapper          backlogItemMapper;
+    private final UserRepository             userRepository;
+    private final TeamAssignmentRepository   teamAssignmentRepository;
 
     @PreAuthorize("hasAuthority('VIEW_AGILE')")
     @Transactional(readOnly = true)
@@ -46,6 +52,7 @@ public class BacklogItemService {
                 .priority(request.priority())
                 .estimateDays(request.estimateDays())
                 .status(request.status())
+                .assignee(resolveAssignee(request.assigneeId(), projectId))
                 .build();
         return backlogItemMapper.toResponse(backlogItemRepository.save(item));
     }
@@ -60,6 +67,7 @@ public class BacklogItemService {
         item.setEstimateDays(request.estimateDays());
         item.setStatus(request.status());
         item.setSprint(resolveSprint(request.sprintId(), projectId));
+        item.setAssignee(resolveAssignee(request.assigneeId(), projectId));
         return backlogItemMapper.toResponse(backlogItemRepository.save(item));
     }
 
@@ -97,6 +105,26 @@ public class BacklogItemService {
             throw new NotFoundException("Sprint introuvable : " + sprintId);
         }
         return sprint;
+    }
+
+    /**
+     * Résout la personne affectée en garantissant qu'elle appartient à l'équipe du
+     * projet. Même raisonnement que pour le sprint : sans ce contrôle, un identifiant
+     * deviné permettrait d'affecter le travail d'un projet à quelqu'un qui n'y
+     * participe pas. {@code null} est une valeur légitime : l'élément n'est pas
+     * encore pris en charge.
+     */
+    private User resolveAssignee(Long assigneeId, Long projectId) {
+        if (assigneeId == null) {
+            return null;
+        }
+        User user = userRepository.findActiveById(assigneeId)
+                .orElseThrow(() -> new NotFoundException("Utilisateur introuvable : " + assigneeId));
+        if (!teamAssignmentRepository.existsByProjectIdAndUserIdAndDeletedFalse(projectId, assigneeId)) {
+            throw new BusinessRuleException(
+                    "L'utilisateur affecté doit être membre de l'équipe du projet.");
+        }
+        return user;
     }
 
     private BacklogItem loadItem(Long id, Long projectId) {

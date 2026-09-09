@@ -70,6 +70,12 @@ class BacklogItem {
   - status : BacklogItemStatus
 }
 
+class User {
+  - lastName : String
+  - firstName : String
+  - email : String
+}
+
 enum SprintStatus {
   PLANNED
   ACTIVE
@@ -92,14 +98,17 @@ enum BacklogItemStatus {
 Project "1" *-- "0..*" Sprint      : plans >
 Project "1" *-- "0..*" BacklogItem : owns >
 Sprint  "0..1" o-- "0..*" BacklogItem : commits >
+BacklogItem "0..*" -- "0..1" User : assigned to >
 
 Sprint      .right.> SprintStatus
 BacklogItem .right.> BacklogItemStatus
 BacklogItem .down.>  BacklogPriority
 
 note bottom of BacklogItem
-  A null sprint means the item is
-  still in the product backlog.
+  A null sprint means the item is still in
+  the product backlog; a null assignee means
+  nobody has picked the item up yet.
+  The assignee must belong to the project team.
 end note
 
 note top of Sprint

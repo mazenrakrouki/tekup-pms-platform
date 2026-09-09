@@ -15,5 +15,7 @@ public record BacklogItemRequest(
         @PositiveOrZero BigDecimal estimateDays,
         @NotNull BacklogItemStatus status,
         /** Null keeps the item in the product backlog. */
-        Long sprintId
+        Long sprintId,
+        /** Null leaves the item unassigned; otherwise it must be a member of the project team. */
+        Long assigneeId
 ) {}

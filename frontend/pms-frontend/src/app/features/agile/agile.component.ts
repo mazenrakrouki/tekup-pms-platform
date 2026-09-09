@@ -6,6 +6,8 @@ import { TranslocoModule, TranslocoService, provideTranslocoScope } from '@jsver
 
 import { AgileService } from '../../core/services/agile.service';
 import { ProjectService } from '../../core/services/project.service';
+import { TeamService } from '../../core/services/team.service';
+import { TeamAssignment } from '../../core/models/team.model';
 import { AuthService } from '../../core/services/auth.service';
 import { ConfirmService } from '../../core/services/confirm.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -92,6 +94,17 @@ type View = number | null;
     .ticket.p-HIGH     { border-left-color:var(--c-warning); }
     .ticket.p-LOW      { border-left-color:var(--border); }
     .tk-title { font-size:13px; font-weight:500; color:var(--text-1); line-height:1.35; }
+
+    /* Assignee chip: who is doing the work, readable at a glance on the card. */
+    .tk-owner { display:flex; align-items:center; gap:.35rem; margin-top:.4rem; min-width:0; }
+    .tk-owner-name { font-size:11px; color:var(--text-2); overflow:hidden;
+      text-overflow:ellipsis; white-space:nowrap; }
+    .tk-owner--none .tk-owner-name { color:var(--text-3); font-style:italic; }
+    .tk-avatar { flex:0 0 auto; width:20px; height:20px; border-radius:50%;
+      background:var(--c-brand-dim); color:var(--c-brand);
+      font-size:9px; font-weight:700; letter-spacing:.02em;
+      display:inline-flex; align-items:center; justify-content:center; }
+    .tk-avatar--none { background:var(--surface-2); color:var(--text-3); font-size:11px; }
     .tk-foot { display:flex; align-items:center; gap:.5rem; margin-top:.4rem;
                font-size:11px; color:var(--text-3); font-variant-numeric:tabular-nums; }
     .tk-prio { font-weight:600; }
@@ -250,6 +263,9 @@ type View = number | null;
                     <div class="bl-title">{{ it.title }}</div>
                     @if (it.description) { <div class="bl-desc text-truncate">{{ it.description }}</div> }
                   </div>
+                  @if (it.assigneeName) {
+                    <span class="tk-avatar" [title]="it.assigneeName">{{ initials(it.assigneeName) }}</span>
+                  }
                   @if (it.estimateDays) {
                     <span class="text-muted small num">{{ it.estimateDays }} {{ 'agile.unit.days' | transloco }}</span>
                   }
@@ -290,6 +306,17 @@ type View = number | null;
                              (dragstart)="onDragStart(it)" (dragend)="onDragEnd()"
                              tabindex="0">
                           <div class="tk-title">{{ it.title }}</div>
+                          @if (it.assigneeName) {
+                            <div class="tk-owner" [title]="it.assigneeName">
+                              <span class="tk-avatar">{{ initials(it.assigneeName) }}</span>
+                              <span class="tk-owner-name">{{ it.assigneeName }}</span>
+                            </div>
+                          } @else {
+                            <div class="tk-owner tk-owner--none">
+                              <span class="tk-avatar tk-avatar--none"><i class="bi bi-person"></i></span>
+                              <span class="tk-owner-name">{{ 'agile.item.unassigned2' | transloco }}</span>
+                            </div>
+                          }
                           <div class="tk-foot">
                             <span class="tk-prio" [class]="'tk-prio p-' + it.priority">
                               {{ 'agile.priority.' + it.priority | transloco }}
@@ -439,6 +466,18 @@ type View = number | null;
                   </select>
                 </div>
               </div>
+              <div class="row g-2 mt-1">
+                <div class="col">
+                  <label class="form-label" for="it-assignee">{{ 'agile.item.assignee' | transloco }}</label>
+                  <select id="it-assignee" class="form-select" [(ngModel)]="itemForm.assigneeId">
+                    <option [ngValue]="null">{{ 'agile.item.unassigned2' | transloco }}</option>
+                    @for (m of team(); track m.userId) {
+                      <option [ngValue]="m.userId">{{ m.userFullName }}</option>
+                    }
+                  </select>
+                  <div class="form-text">{{ 'agile.item.assigneeHint' | transloco }}</div>
+                </div>
+              </div>
             </div>
             <div class="modal-footer">
               <button class="btn btn-secondary" (click)="itemModal.set(false)">{{ 'agile.actions.cancel' | transloco }}</button>
@@ -462,6 +501,7 @@ export class AgileComponent implements OnInit {
   private readonly t        = inject(TranslocoService);
   private readonly router   = inject(Router);
   private readonly route    = inject(ActivatedRoute);
+  private readonly teamSvc  = inject(TeamService);
 
   readonly columns: BacklogItemStatus[]   = BACKLOG_STATUSES;
   readonly priorities: BacklogPriority[]  = BACKLOG_PRIORITIES;
@@ -470,6 +510,8 @@ export class AgileComponent implements OnInit {
   selected = signal<Project | null>(null);
   sprints  = signal<Sprint[]>([]);
   items    = signal<BacklogItem[]>([]);
+  /** Project team: the only people an item may be assigned to. */
+  team     = signal<TeamAssignment[]>([]);
   view     = signal<View>(null);
   loading  = signal(false);
   saving   = signal(false);
@@ -486,9 +528,10 @@ export class AgileComponent implements OnInit {
 
   itemForm: { id: number | null; title: string; description: string;
               priority: BacklogPriority; estimateDays: number | null;
-              status: BacklogItemStatus; sprintId: number | null } =
+              status: BacklogItemStatus; sprintId: number | null;
+              assigneeId: number | null } =
     { id: null, title: '', description: '', priority: 'MEDIUM',
-      estimateDays: null, status: 'TODO', sprintId: null };
+      estimateDays: null, status: 'TODO', sprintId: null, assigneeId: null };
 
   readonly currentSprint  = computed(() => this.sprints().find(s => s.id === this.view()) ?? null);
   readonly backlogItems   = computed(() => this.items().filter(i => (i.sprintId ?? null) === null));
@@ -539,6 +582,14 @@ export class AgileComponent implements OnInit {
     }
   }
 
+  /** Two-letter monogram for the assignee chip; a full name does not fit on a card. */
+  initials(name: string): string {
+    const parts = name.trim().split(/\s+/);
+    const first = parts[0]?.charAt(0) ?? '';
+    const last = parts.length > 1 ? parts[parts.length - 1].charAt(0) : '';
+    return (first + last).toUpperCase();
+  }
+
   itemsOf(sprintId: number): BacklogItem[] {
     return this.items().filter(i => (i.sprintId ?? null) === sprintId);
   }
@@ -564,6 +615,12 @@ export class AgileComponent implements OnInit {
     const p = this.selected();
     if (!p) return;
     this.loading.set(true);
+    // The team drives the assignee list; a failure there must not block the board,
+    // so it is loaded independently and simply leaves the list empty.
+    this.teamSvc.list(p.id).subscribe({
+      next: t => this.team.set(t),
+      error: () => this.team.set([]),
+    });
     this.agile.listSprints(p.id).subscribe({
       next: list => {
         this.sprints.set(list);
@@ -649,9 +706,11 @@ export class AgileComponent implements OnInit {
     this.itemForm = it
       ? { id: it.id, title: it.title, description: it.description ?? '',
           priority: it.priority, estimateDays: it.estimateDays ?? null,
-          status: it.status, sprintId: it.sprintId ?? null }
+          status: it.status, sprintId: it.sprintId ?? null,
+          assigneeId: it.assigneeId ?? null }
       : { id: null, title: '', description: '', priority: 'MEDIUM',
-          estimateDays: null, status: 'TODO', sprintId: this.view() };
+          estimateDays: null, status: 'TODO', sprintId: this.view(),
+          assigneeId: null };
     this.itemModal.set(true);
   }
 
@@ -665,7 +724,8 @@ export class AgileComponent implements OnInit {
       priority: this.itemForm.priority,
       estimateDays: this.itemForm.estimateDays ?? null,
       status: this.itemForm.status,
-      sprintId: this.itemForm.sprintId ?? null
+      sprintId: this.itemForm.sprintId ?? null,
+      assigneeId: this.itemForm.assigneeId ?? null
     };
     this.saving.set(true);
     const req = this.itemForm.id

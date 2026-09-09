@@ -15,5 +15,7 @@ public record BacklogItemResponse(
         String description,
         BacklogPriority priority,
         BigDecimal estimateDays,
-        BacklogItemStatus status
+        BacklogItemStatus status,
+        Long assigneeId,
+        String assigneeName
 ) {}

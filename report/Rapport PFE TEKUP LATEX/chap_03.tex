@@ -221,127 +221,216 @@ platform is a single deployable artefact, consistent with the modular monolith d
   \label{fig:deploy}
 \end{figure}
 
-\section{Technical Environment}
-Every technology below was chosen against the same two constraints: a single developer with eight
-months, and a platform whose value lies in financial correctness rather than in scale. That
-combination consistently favours mature, well-documented tools with a short path from decision to
-working code, over newer ones that would have to be learned first.
+\section{Working Environment}
+The technical stack was assembled under two constraints that never changed: a single developer with
+eight months, and a platform whose value lies in financial correctness rather than in scale. That
+combination consistently favoured mature, well-documented tools with a short path from decision to
+working code, over newer ones that would have had to be learned first. Where the assigned subject
+named a technology, that choice was taken as given and is stated as such.
 
-\subsection{Backend}
+\subsection{Hardware environment}
+Development was carried out on a workstation with an Intel Core~i7 processor, 16~GB of RAM and an
+NVMe SSD, under Windows~11. The memory matters more than it may appear: the backend, the Angular
+development server and a PostgreSQL instance run simultaneously throughout a working session, and
+the containerised stack of Sprint~10 adds three more processes on top of them.
 
-\begin{longtable}{|m{1.9cm}|m{2.5cm}|m{10.0cm}|}
-\hline
-\textbf{} & \textbf{Technology} & \textbf{What it is, and why it was chosen} \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_java.png} & Java~21 &
-A statically typed, object-oriented language running on a virtual machine. Version~21 is a
-long-term-support release, so the platform rests on a version that will still be maintained well
-after the internship. It is also the language named by the assigned subject. \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_springboot.png} & Spring Boot~3.3 &
-A framework that turns a Java application into a self-contained, runnable server with its
-dependencies already wired. It was chosen because it removes almost all configuration work:
-persistence, security, validation and the REST layer are declared rather than assembled, which is
-what makes ten sprints of business features possible for one developer. \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_springsecurity.png} & Spring Security &
-The security layer of the same framework, handling authentication and authorization. It was chosen
-because it supports exactly the model this platform needs: a check expressed as a permission the
-caller must hold, evaluated on the method rather than on the route, which is what allows the
-authorization policy to live in the database instead of in the code. \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_hibernate.png} & Hibernate (JPA) &
-The object-relational mapper that translates between Java objects and database rows. It was chosen
-for one property in particular: it can be told to \emph{validate} the schema at startup instead of
-generating it, so a divergence between the code and the database stops the application immediately
-rather than corrupting data later. \\
-\hline
- & MapStruct &
-A code generator that writes the conversions between entities and the objects returned by the API.
-It was chosen so that persistence structures are never exposed directly by the REST layer, without
-paying for that separation in hand-written boilerplate. \\
-\hline
-\caption{Backend technologies}
-\label{tab:tech-backend}
-\end{longtable}
+\subsection{Programming languages}
 
-\subsection{Database}
+\noindent\textbf{Java 21 (LTS)}\\
+Language of the backend: the REST API, the business services, the persistence layer and the
+indicator engine. Version~21 is a long-term-support release, so the platform rests on a version
+that will still be maintained well after the internship, and it is the language named by the
+assigned subject.
 
-\begin{longtable}{|m{1.9cm}|m{2.5cm}|m{10.0cm}|}
-\hline
-\textbf{} & \textbf{Technology} & \textbf{What it is, and why it was chosen} \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_postgresql.png} & PostgreSQL~17 &
-An open-source relational database. It was chosen over a document store because the domain is
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.2cm,keepaspectratio]{img/logo_java.png}
+  \caption{Logo of Java 21 (LTS)}
+  \label{fig:logo-java}
+\end{figure}
+
+\noindent\textbf{TypeScript}\\
+Typed language of the Angular frontend: HTTP services, application state, route guards and
+interceptors. It was chosen for the same reason the backend is typed: the platform manipulates
+money, and a field that silently changes shape between the API and the screen is a class of error
+worth eliminating at compile time.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.2cm,keepaspectratio]{img/logo_typescript.png}
+  \caption{Logo of TypeScript}
+  \label{fig:logo-typescript}
+\end{figure}
+
+\noindent\textbf{SQL}\\
+Language of the schema and of the versioned migrations. Every structural change to the database is
+written by hand as SQL rather than generated, which is what makes the schema reviewable.
+
+\subsection{Backend stack}
+
+\noindent\textbf{Spring Boot 3.3}\\
+Framework of the application server: REST API, dependency injection, configuration and
+self-contained startup. It removes almost all configuration work, which is what makes ten sprints
+of business features possible for one developer.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.2cm,keepaspectratio]{img/logo_springboot.png}
+  \caption{Logo of Spring Boot 3.3}
+  \label{fig:logo-springboot}
+\end{figure}
+
+\noindent\textbf{Spring Security}\\
+Authentication and authorization: JWT verification, BCrypt password hashing, and permission checks
+carried on the service methods. It supports the exact model this platform needs, a check expressed
+as a permission code rather than a role name, which is what allows the authorization policy to live
+in the database.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.2cm,keepaspectratio]{img/logo_springsecurity.png}
+  \caption{Logo of Spring Security}
+  \label{fig:logo-springsecurity}
+\end{figure}
+
+\noindent\textbf{Hibernate (JPA)}\\
+Object-relational mapping between the Java entities and the PostgreSQL tables. It is run in
+\emph{validate} mode rather than generation mode, so a divergence between the code and the schema
+stops the application at startup instead of corrupting data at runtime.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=1.6cm,keepaspectratio]{img/logo_hibernate.png}
+  \caption{Logo of Hibernate (JPA)}
+  \label{fig:logo-hibernate}
+\end{figure}
+
+\noindent\textbf{MapStruct}\\
+Generation of the conversions between entities and the objects returned by the API, so that
+persistence structures are never exposed directly by the REST layer and the separation costs no
+hand-written boilerplate.
+
+\subsection{Database and persistence}
+
+\noindent\textbf{PostgreSQL 17}\\
+Relational database of the platform. It was chosen over a document store because the domain is
 relational by nature: a project, its team, its milestones and its monthly workload are joined
 constantly. Its exact decimal type also matters here, since financial totals computed in floating
-point drift by fractions of a dinar and a report that does not balance is worthless. \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_flyway.png} & Flyway &
-A schema migration tool: every change to the database is a numbered, versioned script rather than a
-manual operation. It was chosen because it makes the schema reproducible and reviewable, and
-because the twenty-seven migrations it holds are the living documentation of how the schema
-reached its present shape. \\
-\hline
-\caption{Database technologies}
-\label{tab:tech-database}
-\end{longtable}
+point drift by fractions of a dinar.
 
-\subsection{Frontend}
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.4cm,keepaspectratio]{img/logo_postgresql.png}
+  \caption{Logo of PostgreSQL 17}
+  \label{fig:logo-postgresql}
+\end{figure}
 
-\begin{longtable}{|m{1.9cm}|m{2.5cm}|m{10.0cm}|}
-\hline
-\textbf{} & \textbf{Technology} & \textbf{What it is, and why it was chosen} \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_angular.png} & Angular~21 &
-A framework for building single-page applications: the browser loads the application once and then
-exchanges only data with the server. It was chosen because it is opinionated. Routing, forms, HTTP
-and internationalisation all come from the framework, so a single developer spends the time on
-screens rather than on choosing and gluing libraries. It is also the framework named by the
-assigned subject. \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_typescript.png} & TypeScript &
-JavaScript with static types. It was chosen for the same reason the backend is typed: the platform
-manipulates money, and a field that silently changes shape between the API and the screen is a
-class of error worth eliminating at compile time. \\
-\hline
-\caption{Frontend technologies}
-\label{tab:tech-frontend}
-\end{longtable}
+\noindent\textbf{Flyway}\\
+Schema migration tool: every change to the database is a numbered, versioned script applied
+automatically at startup. The twenty-eight migrations it holds are the living documentation of how
+the schema reached its present shape.
 
-\subsection{Tooling}
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.2cm,keepaspectratio]{img/logo_flyway.png}
+  \caption{Logo of Flyway}
+  \label{fig:logo-flyway}
+\end{figure}
 
-\begin{longtable}{|m{1.9cm}|m{2.5cm}|m{10.0cm}|}
-\hline
-\textbf{} & \textbf{Tool} & \textbf{What it is, and why it was chosen} \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_maven.png} & Maven &
-The build tool for the backend: it resolves dependencies, compiles, runs the tests and produces the
-executable archive. Chosen because it is the default in the Spring ecosystem, so every example in
-the documentation applies without translation. \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_git.png} & Git &
-Distributed version control. Chosen for the ordinary reason: it keeps the history of the work and
-makes any change reversible. The repository is hosted privately, since the platform contains the
-company's financial logic. \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_plantuml.png} & PlantUML &
-A tool that renders UML diagrams from a plain-text description. It was chosen so that the diagrams
-of this report are versioned as source next to the code: a diagram that is a text file is reviewed,
-diffed and corrected like anything else, whereas an exported image quietly goes out of date. \\
-\hline
-\centering\includegraphics[width=1.65cm,height=1.05cm,keepaspectratio]{img/logo_lucidchart.png} & Lucidchart &
-A diagramming application used for the global class diagram of Figure~\ref{fig:class-global}. That
-one diagram is the map of the whole domain and needed to be laid out by hand, grouping the classes
-as a reader thinks about them rather than as an automatic layout engine places them, which is what
-a direct-manipulation editor does better than a text-driven one. \\
-\hline
-\caption{Development and modelling tools}
-\label{tab:tech-tooling}
-\end{longtable}
+\subsection{Frontend stack}
 
-Containerization arrived later, in Sprint~10, and is presented there
-(Section~\ref{sec:sprint10}) rather than here, because it was a decision the project revisited
+\noindent\textbf{Angular 21}\\
+Framework of the single-page application: standalone components, signals, routing, forms and HTTP
+interceptors. It was chosen because it is opinionated, so a single developer spends the time on
+screens rather than on choosing and gluing libraries, and it is the framework named by the assigned
+subject.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=1.7cm,keepaspectratio]{img/logo_angular.png}
+  \caption{Logo of Angular 21}
+  \label{fig:logo-angular}
+\end{figure}
+
+\noindent\textbf{Transloco}\\
+Internationalisation of the interface: the screens are served in French and in English from the
+same build, with the language switched at runtime and no page reload.
+
+\subsection{Development tools}
+
+\noindent\textbf{IntelliJ IDEA}\\
+Main environment for the backend: writing the Java modules, navigating the Spring context, running
+the test suite and debugging the services.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.2cm,keepaspectratio]{img/logo_intellij.png}
+  \caption{Logo of IntelliJ IDEA}
+  \label{fig:logo-intellij}
+\end{figure}
+
+\noindent\textbf{Visual Studio Code}\\
+Environment for the Angular frontend, the SQL migrations, the UML sources and the \LaTeX{} of this
+report.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.2cm,keepaspectratio]{img/logo_vscode.png}
+  \caption{Logo of Visual Studio Code}
+  \label{fig:logo-vscode}
+\end{figure}
+
+\noindent\textbf{Maven}\\
+Build tool of the backend: dependency resolution, compilation, test execution and packaging of the
+executable archive.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=1.3cm,keepaspectratio]{img/logo_maven.png}
+  \caption{Logo of Maven}
+  \label{fig:logo-maven}
+\end{figure}
+
+\noindent\textbf{Git}\\
+Version control of the whole project, code and report alike. The repository is private, since the
+platform contains the company's financial logic.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=1.6cm,keepaspectratio]{img/logo_git.png}
+  \caption{Logo of Git}
+  \label{fig:logo-git}
+\end{figure}
+
+\subsection{Modelling tools}
+
+\noindent\textbf{PlantUML}\\
+Rendering of the UML diagrams from a plain-text description, so that they are versioned as source
+next to the code: a diagram that is a text file is reviewed, diffed and corrected like anything
+else, whereas an exported image quietly goes out of date.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.0cm,keepaspectratio]{img/logo_plantuml.png}
+  \caption{Logo of PlantUML}
+  \label{fig:logo-plantuml}
+\end{figure}
+
+\noindent\textbf{Lucidchart}\\
+Diagramming application used for the global class diagram of Figure~\ref{fig:class-global}. That one
+diagram is the map of the whole domain and needed to be laid out by hand, grouping the classes as a
+reader thinks about them rather than as an automatic layout engine places them.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[height=2.0cm,keepaspectratio]{img/logo_lucidchart.png}
+  \caption{Logo of Lucidchart}
+  \label{fig:logo-lucidchart}
+\end{figure}
+
+The design sketches of the preparation phase were produced with Google Stitch, presented in
+Section~\ref{sec:sketches}. Containerization arrived later, in Sprint~10, and Docker is introduced
+there (Section~\ref{sec:sprint10}) rather than here, because it was a decision the project revisited
 rather than one taken at the outset.
 
 \section*{Conclusion}

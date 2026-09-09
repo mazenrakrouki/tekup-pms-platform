@@ -38,7 +38,10 @@
     "sprint": "Sprint",
     "unassigned": "Backlog produit",
     "delete": "Supprimer l'élément",
-    "deleteConfirm": "Supprimer cet élément du backlog ?"
+    "deleteConfirm": "Supprimer cet élément du backlog ?",
+    "assignee": "Affecté à",
+    "unassigned2": "Non affecté",
+    "assigneeHint": "Seuls les membres de l'équipe du projet peuvent être affectés."
   },
   "priority": {
     "LOW": "Basse",

@@ -2,6 +2,7 @@ package com.pms.agile.entity;
 
 import com.pms.project.entity.Project;
 import com.pms.shared.entity.BaseEntity;
+import com.pms.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +25,15 @@ public class BacklogItem extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sprint_id")
     private Sprint sprint;
+
+    /**
+     * Team member doing the work. Null is legitimate: an item can be committed to
+     * a sprint before anyone picks it up, and a product backlog item usually has
+     * no owner at all.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignee_id")
+    private User assignee;
 
     @Column(nullable = false, length = 255)
     private String title;

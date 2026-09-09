@@ -17,6 +17,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u JOIN FETCH u.role WHERE u.deleted = false ORDER BY u.lastName, u.firstName")
     List<User> findAllActive();
 
+    @Query("SELECT u FROM User u WHERE u.id = :id AND u.deleted = false")
+    Optional<User> findActiveById(Long id);
+
     @Query(value = "SELECT u FROM User u JOIN FETCH u.role WHERE u.deleted = false",
            countQuery = "SELECT COUNT(u) FROM User u WHERE u.deleted = false")
     Page<User> findAllActivePaged(Pageable pageable);

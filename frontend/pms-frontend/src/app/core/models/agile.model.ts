@@ -30,6 +30,9 @@ export interface BacklogItem {
   /** Estimation en jours-homme (JH). */
   estimateDays?: number | null;
   status: BacklogItemStatus;
+  /** null = personne n'a encore pris l'élément en charge. */
+  assigneeId?: number | null;
+  assigneeName?: string | null;
 }
 
 export interface SprintPayload {
@@ -47,4 +50,5 @@ export interface BacklogItemPayload {
   estimateDays?: number | null;
   status: BacklogItemStatus;
   sprintId?: number | null;
+  assigneeId?: number | null;
 }

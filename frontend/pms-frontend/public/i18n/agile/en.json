@@ -38,7 +38,10 @@
     "sprint": "Sprint",
     "unassigned": "Product backlog",
     "delete": "Delete item",
-    "deleteConfirm": "Delete this backlog item?"
+    "deleteConfirm": "Delete this backlog item?",
+    "assignee": "Assigned to",
+    "unassigned2": "Unassigned",
+    "assigneeHint": "Only members of the project team can be assigned."
   },
   "priority": {
     "LOW": "Low",
