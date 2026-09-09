@@ -108,9 +108,9 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
                         <td>{{ j.datePrevue ?? '—' }}</td>
                         <td>{{ j.dateFacture ?? '—' }}</td>
                         <td>
-                          @if (j.statut === 'PAYE') { <span class="badge-active">Payé</span> }
-                          @else if (j.statut === 'FACTURE') { <span class="badge-completed">Facturé</span> }
-                          @else { <span class="badge-draft">Prévu</span> }
+                          @if (j.statut === 'PAYE') { <span class="badge-active">{{ 'milestoneStatus.PAYE' | transloco }}</span> }
+                          @else if (j.statut === 'FACTURE') { <span class="badge-completed">{{ 'milestoneStatus.FACTURE' | transloco }}</span> }
+                          @else { <span class="badge-draft">{{ 'milestoneStatus.PREVU' | transloco }}</span> }
                         </td>
                         <td class="text-end text-nowrap">
                           @if (canManage()) {
@@ -318,7 +318,7 @@ type AvenantSortCol = 'numero' | 'montant' | 'dateAvenant';
             <div class="modal-body">
               <p class="text-muted small mb-3">
                 Jalon <strong>{{ currentJalon()?.label }}</strong>
-                ({{ currentJalon()?.montant | number:'1.0-0' }} TND) → passe au statut <span class="badge-completed">Facturé</span>
+                ({{ currentJalon()?.montant | number:'1.0-0' }} TND) → passe au statut <span class="badge-completed">{{ 'milestoneStatus.FACTURE' | transloco }}</span>
               </p>
               <div class="mb-3">
                 <label class="form-label">Date de facture <span class="text-danger">*</span></label>

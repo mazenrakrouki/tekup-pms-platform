@@ -228,5 +228,44 @@
       "TRANSPORT": "Transport",
       "SEJOUR": "Séjour"
     }
+  },
+  "riskLevel": {
+    "FAIBLE": "Faible",
+    "MOYEN": "Moyen",
+    "ELEVE": "Élevé"
+  },
+  "riskStatus": {
+    "OUVERT": "Ouvert",
+    "MITIGE": "Mitigé",
+    "FERME": "Fermé"
+  },
+  "deliverableStatus": {
+    "EN_ATTENTE": "En attente",
+    "EN_COURS": "En cours",
+    "LIVRE": "Livré",
+    "VALIDE": "Validé"
+  },
+  "changeStatus": {
+    "EN_ATTENTE": "En attente",
+    "APPROUVE": "Approuvé",
+    "REJETE": "Rejeté"
+  },
+  "changePriority": {
+    "FAIBLE": "Faible",
+    "NORMALE": "Normale",
+    "ELEVEE": "Élevée",
+    "CRITIQUE": "Critique"
+  },
+  "milestoneStatus": {
+    "PREVU": "Prévu",
+    "FACTURE": "Facturé",
+    "PAYE": "Payé"
+  },
+  "componentType": {
+    "PERDIEM": "Per diem",
+    "BILLET": "Billet",
+    "TIMBRE": "Timbre",
+    "TRANSPORT": "Transport",
+    "SEJOUR": "Séjour"
   }
 }

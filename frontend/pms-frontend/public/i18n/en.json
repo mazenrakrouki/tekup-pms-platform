@@ -228,5 +228,44 @@
       "TRANSPORT": "Transport",
       "SEJOUR": "Accommodation"
     }
+  },
+  "riskLevel": {
+    "FAIBLE": "Low",
+    "MOYEN": "Medium",
+    "ELEVE": "High"
+  },
+  "riskStatus": {
+    "OUVERT": "Open",
+    "MITIGE": "Mitigated",
+    "FERME": "Closed"
+  },
+  "deliverableStatus": {
+    "EN_ATTENTE": "Pending",
+    "EN_COURS": "In progress",
+    "LIVRE": "Delivered",
+    "VALIDE": "Validated"
+  },
+  "changeStatus": {
+    "EN_ATTENTE": "Pending",
+    "APPROUVE": "Approved",
+    "REJETE": "Rejected"
+  },
+  "changePriority": {
+    "FAIBLE": "Low",
+    "NORMALE": "Normal",
+    "ELEVEE": "High",
+    "CRITIQUE": "Critical"
+  },
+  "milestoneStatus": {
+    "PREVU": "Planned",
+    "FACTURE": "Invoiced",
+    "PAYE": "Paid"
+  },
+  "componentType": {
+    "PERDIEM": "Per diem",
+    "BILLET": "Ticket",
+    "TIMBRE": "Stamp",
+    "TRANSPORT": "Transport",
+    "SEJOUR": "Accommodation"
   }
 }

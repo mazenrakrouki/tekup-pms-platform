@@ -110,7 +110,7 @@ import { ProjectPickerComponent } from '../../shared/project-picker/project-pick
                           <tbody>
                             @for (c of composantes(); track c.id) {
                               <tr>
-                                <td><span class="badge-draft">{{ c.typeComposante }}</span></td>
+                                <td><span class="badge-draft">{{ 'componentType.' + c.typeComposante | transloco }}</span></td>
                                 <td class="small">{{ c.description ?? '—' }}</td>
                                 <td class="text-end fw-semibold">{{ c.montant | number:'1.0-2' }}</td>
                                 <td>{{ c.devise }}</td>

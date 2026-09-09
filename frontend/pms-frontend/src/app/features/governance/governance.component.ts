@@ -84,13 +84,13 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                   @for (r of risks(); track r.id) {
                     <tr>
                       <td>{{ r.description }}</td>
-                      <td><span [class]="niveauBadge(r.probabilite)">{{ r.probabilite }}</span></td>
-                      <td><span [class]="niveauBadge(r.impact)">{{ r.impact }}</span></td>
+                      <td><span [class]="niveauBadge(r.probabilite)">{{ 'riskLevel.' + r.probabilite | transloco }}</span></td>
+                      <td><span [class]="niveauBadge(r.impact)">{{ 'riskLevel.' + r.impact | transloco }}</span></td>
                       <td class="text-muted small">{{ r.planMitigation ?? '—' }}</td>
                       <td>
-                        @if (r.statut === 'FERME') { <span class="badge-active">Fermé</span> }
-                        @else if (r.statut === 'MITIGE') { <span class="badge-on-hold">Mitigé</span> }
-                        @else { <span class="badge-cancelled">Ouvert</span> }
+                        @if (r.statut === 'FERME') { <span class="badge-active">{{ 'riskStatus.FERME' | transloco }}</span> }
+                        @else if (r.statut === 'MITIGE') { <span class="badge-on-hold">{{ 'riskStatus.MITIGE' | transloco }}</span> }
+                        @else { <span class="badge-cancelled">{{ 'riskStatus.OUVERT' | transloco }}</span> }
                       </td>
                       <td class="text-end">
                         @if (canManage()) {
@@ -140,7 +140,7 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                       <td class="fw-semibold">{{ l.titre }}</td>
                       <td class="text-muted small">{{ l.description ?? '—' }}</td>
                       <td>{{ l.dateEcheance ?? '—' }}</td>
-                      <td><span [class]="livrableBadge(l.statut)">{{ l.statut }}</span></td>
+                      <td><span [class]="livrableBadge(l.statut)">{{ 'deliverableStatus.' + l.statut | transloco }}</span></td>
                       <td>
                         @if (canManage()) {
                           @if (l.statut === 'EN_ATTENTE') {
@@ -203,12 +203,12 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                     <tr>
                       <td class="fw-semibold">{{ dc.titre }}</td>
                       <td>{{ dc.demandeurFullName }}</td>
-                      <td><span [class]="prioriteBadge(dc.priorite)">{{ dc.priorite }}</span></td>
+                      <td><span [class]="prioriteBadge(dc.priorite)">{{ 'changePriority.' + dc.priorite | transloco }}</span></td>
                       <td>{{ dc.dateDemande ?? '—' }}</td>
                       <td>
-                        @if (dc.statut === 'APPROUVE') { <span class="badge-active">Approuvé</span> }
-                        @else if (dc.statut === 'REJETE') { <span class="badge-cancelled">Rejeté</span> }
-                        @else { <span class="badge-on-hold">En attente</span> }
+                        @if (dc.statut === 'APPROUVE') { <span class="badge-active">{{ 'changeStatus.APPROUVE' | transloco }}</span> }
+                        @else if (dc.statut === 'REJETE') { <span class="badge-cancelled">{{ 'changeStatus.REJETE' | transloco }}</span> }
+                        @else { <span class="badge-on-hold">{{ 'changeStatus.EN_ATTENTE' | transloco }}</span> }
                       </td>
                       <td>
                         @if (canManage()) {
@@ -267,8 +267,8 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                       <td>{{ pp.fonction ?? '—' }}</td>
                       <td class="small">{{ pp.email ?? '—' }}</td>
                       <td class="small">{{ pp.telephone ?? '—' }}</td>
-                      <td><span [class]="niveauBadge(pp.influence)">{{ pp.influence }}</span></td>
-                      <td><span [class]="niveauBadge(pp.interet)">{{ pp.interet }}</span></td>
+                      <td><span [class]="niveauBadge(pp.influence)">{{ 'riskLevel.' + pp.influence | transloco }}</span></td>
+                      <td><span [class]="niveauBadge(pp.interet)">{{ 'riskLevel.' + pp.interet | transloco }}</span></td>
                       <td class="text-end">
                         @if (canManage()) {
                           <button class="btn btn-sm btn-outline-danger" (click)="deletePartie(pp)"
@@ -330,17 +330,17 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                 <div class="col-6">
                   <label class="form-label fw-semibold">Influence <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="partieForm.influence">
-                    <option value="FAIBLE">Faible</option>
-                    <option value="MOYEN">Moyen</option>
-                    <option value="ELEVE">Élevé</option>
+                    <option value="FAIBLE">{{ 'riskLevel.FAIBLE' | transloco }}</option>
+                    <option value="MOYEN">{{ 'riskLevel.MOYEN' | transloco }}</option>
+                    <option value="ELEVE">{{ 'riskLevel.ELEVE' | transloco }}</option>
                   </select>
                 </div>
                 <div class="col-6">
                   <label class="form-label fw-semibold">Intérêt <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="partieForm.interet">
-                    <option value="FAIBLE">Faible</option>
-                    <option value="MOYEN">Moyen</option>
-                    <option value="ELEVE">Élevé</option>
+                    <option value="FAIBLE">{{ 'riskLevel.FAIBLE' | transloco }}</option>
+                    <option value="MOYEN">{{ 'riskLevel.MOYEN' | transloco }}</option>
+                    <option value="ELEVE">{{ 'riskLevel.ELEVE' | transloco }}</option>
                   </select>
                 </div>
               </div>
@@ -377,17 +377,17 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                 <div class="col-6">
                   <label class="form-label fw-semibold">Probabilité <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="riskForm.probabilite">
-                    <option value="FAIBLE">Faible</option>
-                    <option value="MOYEN">Moyen</option>
-                    <option value="ELEVE">Élevé</option>
+                    <option value="FAIBLE">{{ 'riskLevel.FAIBLE' | transloco }}</option>
+                    <option value="MOYEN">{{ 'riskLevel.MOYEN' | transloco }}</option>
+                    <option value="ELEVE">{{ 'riskLevel.ELEVE' | transloco }}</option>
                   </select>
                 </div>
                 <div class="col-6">
                   <label class="form-label fw-semibold">Impact <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="riskForm.impact">
-                    <option value="FAIBLE">Faible</option>
-                    <option value="MOYEN">Moyen</option>
-                    <option value="ELEVE">Élevé</option>
+                    <option value="FAIBLE">{{ 'riskLevel.FAIBLE' | transloco }}</option>
+                    <option value="MOYEN">{{ 'riskLevel.MOYEN' | transloco }}</option>
+                    <option value="ELEVE">{{ 'riskLevel.ELEVE' | transloco }}</option>
                   </select>
                 </div>
               </div>
@@ -398,9 +398,9 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
               <div class="mb-3">
                 <label class="form-label fw-semibold">Statut <span class="text-danger">*</span></label>
                 <select class="form-select" [(ngModel)]="riskForm.statut">
-                  <option value="OUVERT">Ouvert</option>
-                  <option value="MITIGE">Mitigé</option>
-                  <option value="FERME">Fermé</option>
+                  <option value="OUVERT">{{ 'riskStatus.OUVERT' | transloco }}</option>
+                  <option value="MITIGE">{{ 'riskStatus.MITIGE' | transloco }}</option>
+                  <option value="FERME">{{ 'riskStatus.FERME' | transloco }}</option>
                 </select>
               </div>
               @if (modalError()) { <div class="alert alert-danger py-2">{{ modalError() }}</div> }
@@ -486,10 +486,10 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                 <div class="col-6">
                   <label class="form-label fw-semibold">Priorité <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="changeForm.priorite">
-                    <option value="FAIBLE">Faible</option>
-                    <option value="NORMALE">Normale</option>
-                    <option value="ELEVEE">Élevée</option>
-                    <option value="CRITIQUE">Critique</option>
+                    <option value="FAIBLE">{{ 'changePriority.FAIBLE' | transloco }}</option>
+                    <option value="NORMALE">{{ 'changePriority.NORMALE' | transloco }}</option>
+                    <option value="ELEVEE">{{ 'changePriority.ELEVEE' | transloco }}</option>
+                    <option value="CRITIQUE">{{ 'changePriority.CRITIQUE' | transloco }}</option>
                   </select>
                 </div>
                 <div class="col-6">

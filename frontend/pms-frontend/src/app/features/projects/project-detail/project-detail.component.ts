@@ -691,8 +691,8 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                     @for (r of risks(); track r.id) {
                       <tr>
                         <td class="small">{{ r.description }}</td>
-                        <td><span [class]="niveauBadge(r.probabilite)">{{ r.probabilite }}</span></td>
-                        <td><span [class]="niveauBadge(r.impact)">{{ r.impact }}</span></td>
+                        <td><span [class]="niveauBadge(r.probabilite)">{{ 'riskLevel.' + r.probabilite | transloco }}</span></td>
+                        <td><span [class]="niveauBadge(r.impact)">{{ 'riskLevel.' + r.impact | transloco }}</span></td>
                         <td>
                           @if (r.statut === 'FERME') {
                             <span class="badge-active">{{ 'labels.risk.FERME' | transloco }}</span>
@@ -757,7 +757,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       <tr>
                         <td class="fw-semibold small">{{ dc.titre }}</td>
                         <td class="small">{{ dc.demandeurFullName }}</td>
-                        <td><span [class]="prioriteBadge(dc.priorite)">{{ dc.priorite }}</span></td>
+                        <td><span [class]="prioriteBadge(dc.priorite)">{{ 'changePriority.' + dc.priorite | transloco }}</span></td>
                         <td class="small">{{ dc.dateDemande ?? '—' }}</td>
                         <td>
                           @if (dc.statut === 'APPROUVE') {
