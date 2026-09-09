@@ -116,7 +116,7 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
             <div class="modal-body">
               <div class="row g-3 mb-3">
                 <div class="col-md-5">
-                  <label class="form-label">Nom <span class="text-danger">*</span></label>
+                  <label class="form-label">{{ 'common.name' | transloco }} <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" [(ngModel)]="form.name"
                          placeholder="EX_NOUVEAU_ROLE" [disabled]="editing()?.system ?? false"
                          (ngModelChange)="form.name = $event.toUpperCase()">
@@ -145,7 +145,7 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
                       <span class="perm-group-title">{{ 'admin.modules.' + g.module | transloco }}</span>
                       <button type="button" class="btn btn-ghost btn-sm perm-toggle"
                               (click)="toggleModule(g)">
-                        {{ allSelected(g) ? 'Tout retirer' : 'Tout cocher' }}
+                        {{ (allSelected(g) ? 'admin.roles.form.deselectAll' : 'admin.roles.form.selectAll') | transloco }}
                       </button>
                     </div>
                     <div class="perm-grid">
@@ -166,7 +166,7 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
               <button class="btn btn-secondary" (click)="showModal.set(false)">{{ 'common.cancel' | transloco }}</button>
               <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
                 @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                Enregistrer
+                {{ 'common.save' | transloco }}
               </button>
             </div>
           </div>

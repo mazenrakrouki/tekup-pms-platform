@@ -104,7 +104,9 @@
       "name": "Nom",
       "nameLocked": "Nom verrouillé (rôle système).",
       "descriptionPlaceholder": "Rôle de l'utilisateur en une ligne",
-      "selected": "{{count}} sélectionnée(s)"
+      "selected": "{{count}} sélectionnée(s)",
+      "selectAll": "Tout cocher",
+      "deselectAll": "Tout retirer"
     },
     "empty": "Aucun rôle",
     "msg": {

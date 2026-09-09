@@ -16,6 +16,17 @@
 
 \input{./tpl/new_commands}
 
+% The class loads babel with the `arabic` option, which pulls in arabi; its
+% arabicfnt.sty redefines \times (and \texttimes) to an Arabic-font glyph that
+% has no counterpart in the Latin fonts, so every multiplication sign in the
+% document was typeset as an empty box — silently, with no compilation warning.
+% Restore the standard maths symbol. Done here rather than in the class file so
+% that the school template stays untouched.
+\AtBeginDocument{%
+  \let\times\relax
+  \DeclareMathSymbol{\times}{\mathbin}{symbols}{"02}%
+}
+
 % @author: Stoufa
 % the command `\makeindex` is mandatory to create the index file main.idx
 % https://tex.stackexchange.com/questions/9913/input-index-file-not-found

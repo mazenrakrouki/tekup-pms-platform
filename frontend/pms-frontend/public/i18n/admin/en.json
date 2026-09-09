@@ -104,7 +104,9 @@
       "name": "Name",
       "nameLocked": "Name locked (system role).",
       "descriptionPlaceholder": "One line describing this role",
-      "selected": "{{count}} selected"
+      "selected": "{{count}} selected",
+      "selectAll": "Select all",
+      "deselectAll": "Clear all"
     },
     "empty": "No roles",
     "msg": {
