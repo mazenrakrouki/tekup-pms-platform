@@ -75,7 +75,8 @@
     "manDays": "JH",
     "manDaysLong": "jours-homme",
     "viewProject": "Voir le projet",
-    "viewProjectAria": "Voir le projet {{code}}"
+    "viewProjectAria": "Voir le projet {{code}}",
+    "permissions": "Permissions"
   },
   "nav": {
     "section": {
@@ -510,7 +511,8 @@
     "okRequestCreated": "Demande de changement créée.",
     "okRequestApproved": "Demande approuvée.",
     "okRequestRejected": "Demande rejetée.",
-    "okRequestDeleted": "Demande supprimée."
+    "okRequestDeleted": "Demande supprimée.",
+    "reject": "Rejeter"
   },
   "missions": {
     "backToPicker": "Retour à la sélection de projet",

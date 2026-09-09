@@ -80,7 +80,10 @@
       "reactivateTitle": "Réactiver le compte",
       "reactivated": "Utilisateur réactivé.",
       "reactivateError": "Erreur lors de la réactivation."
-    }
+    },
+    "filterStatusAria": "Filtrer par statut",
+    "tempPassword": "Mot de passe temporaire",
+    "copyPassword": "Copier le mot de passe"
   },
   "roles": {
     "title": "Rôles",

@@ -131,3 +131,49 @@ interface, which is the exact failure mode this audit set out to remove, only re
 **Automated i18n tests are not yet written.** The practical substitute in place is
 `tools/i18n-audit.py`, which reports the remaining count and fails visibly when it grows, plus the
 key-parity check run after every catalogue edit (EN and FR key sets must be identical).
+
+---
+
+## 7. Follow-up — the audit tool was under-reporting
+
+**Reported:** the Governance tab of a project still showed French labels while the interface was in
+English.
+
+**Correct, and the reason matters more than the fix.** `tools/i18n-audit.py` looked for *evidence of
+French*: accented characters plus a list of French words. That is the wrong test. It cannot see
+`Ouvert`, `Registre des risques`, `Impact`, `Delivery`, `Snapshot` — strings that are hardcoded but
+carry no accent and are not on any word list. The tool reported the Governance tab as clean while
+five hardcoded strings were rendering in it.
+
+Worse, one class of defect was invisible to any language heuristic:
+
+```html
+<span [class]="livrableBadge(l.statut)">{{ l.statut | titlecase }}</span>
+```
+
+This renders the raw enum value through `titlecase`, producing `Valide` and `Livre` — identical in
+both languages, and missing their accents in French. It looks translated and is not.
+
+**New tool:** `tools/find-hardcoded-ui.py` asks the right question — *does this text node go through
+the translation system?* — regardless of language. It flags literal text between tags, text
+following an icon, and unbound `placeholder` / `title` / `aria-label` / `alt` attributes. Format
+examples (`email@example.com`, `EX-2024-001`) are excluded as language-neutral.
+
+First run: **67 hardcoded occurrences across 9 files**, including four files the previous audit had
+declared converted.
+
+**Fixed in this pass:** 67 → 38, and the 38 remaining are 28 in the Internal quote module plus ten
+format examples and one false positive.
+
+| Element | English | French |
+|---|---|---|
+| Card headers | Risk register · Deliverables · Change requests | Registre des risques · Livrables · Demandes de changement |
+| Risk status | Open · Mitigated · Closed | Ouvert · Mitigé · Fermé |
+| Deliverable status | Approved · Delivered | Validé · Livré |
+| Change request | Pending · Approved · Rejected | En attente · Approuvé · Rejeté |
+| Levels | Medium · High | Moyen · Élevé |
+
+Catalogue parity across all seven scopes: **972 keys, EN and FR identical**.
+
+**Lesson recorded:** measure whether text is wired to i18n, not whether it looks French. The first
+metric flatters the result; only the second matches what a user sees.

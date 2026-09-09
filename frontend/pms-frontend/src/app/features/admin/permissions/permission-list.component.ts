@@ -18,7 +18,7 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
       <div class="tb-breadcrumb">
         <i class="bi bi-key" style="font-size:13px;color:var(--text-3)"></i>
         <span class="bc-sep">›</span>
-        <span class="bc-curr">Permissions</span>
+        <span class="bc-curr">{{ 'common.permissions' | transloco }}</span>
       </div>
     </div>
 
@@ -54,7 +54,7 @@ interface ModuleGroup { module: string; permissions: PermissionWithRoles[]; }
                   <thead>
                     <tr>
                       <th style="width:230px">Code</th>
-                      <th>Description</th>
+                      <th>{{ 'common.description' | transloco }}</th>
                       <th>{{ 'admin.permissions.roles' | transloco }}</th>
                     </tr>
                   </thead>

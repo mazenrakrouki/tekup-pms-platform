@@ -80,7 +80,10 @@
       "reactivateTitle": "Reactivate the account",
       "reactivated": "User reactivated.",
       "reactivateError": "Could not reactivate the account."
-    }
+    },
+    "filterStatusAria": "Filter by status",
+    "tempPassword": "Temporary password",
+    "copyPassword": "Copy the password"
   },
   "roles": {
     "title": "Roles",

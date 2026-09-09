@@ -213,10 +213,10 @@ type GovTab = 'risks' | 'livrables' | 'changes' | 'parties';
                       <td>
                         @if (canManage()) {
                           @if (dc.statut === 'EN_ATTENTE') {
-                            <button class="btn btn-sm btn-outline-success me-1" (click)="approuver(dc)" title="Approuver">
+                            <button class="btn btn-sm btn-outline-success me-1" (click)="approuver(dc)" [title]="'governance.approve' | transloco">
                               <i class="bi bi-check-lg"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger me-1" (click)="rejeter(dc)" title="Rejeter">
+                            <button class="btn btn-sm btn-outline-danger me-1" (click)="rejeter(dc)" [title]="'governance.reject' | transloco">
                               <i class="bi bi-x-lg"></i>
                             </button>
                           }

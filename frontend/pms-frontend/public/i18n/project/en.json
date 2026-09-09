@@ -46,7 +46,12 @@
     "estimatedEndDate": "Estimated end date",
     "highlights": "Highlights",
     "consumedShort": "used",
-    "remainingShort": "ETC"
+    "remainingShort": "ETC",
+    "earnedValue": "Earned Value",
+    "caProduction": "Production revenue",
+    "faeStock": "Accrued / stock",
+    "evPlaceholder": "e.g. 75",
+    "snapshot": "Snapshot"
   },
   "team": {
     "title": "Team members",
@@ -62,7 +67,9 @@
     "rolePlaceholder": "e.g. Developer",
     "startDate": "Start date",
     "removeConfirm": "Remove {{name}} from the team?",
-    "assign": "Assign"
+    "assign": "Assign",
+    "remove": "Remove",
+    "removeAria": "Remove the member"
   },
   "workload": {
     "planTitle": "Workload plan",
@@ -115,7 +122,9 @@
   "manager": {
     "label": "Project manager",
     "noneFound": "No manager found",
-    "required": "Select a project manager."
+    "required": "Select a project manager.",
+    "assignTitle": "Assign a project manager",
+    "assign": "Assign a project manager"
   },
   "msg": {
     "snapshotCreated": "Snapshot created, the review indicators are frozen.",
@@ -183,5 +192,9 @@
     "okSaved": "Project saved.",
     "okCreated": "Project created.",
     "genericError": "Something went wrong."
+  },
+  "actions": {
+    "archive": "Archive",
+    "changeStatus": "Change status"
   }
 }

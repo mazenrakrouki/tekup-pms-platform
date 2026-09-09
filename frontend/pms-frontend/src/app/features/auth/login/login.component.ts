@@ -125,7 +125,7 @@ import { LanguageSwitcherComponent } from '../../../layout/language-switcher/lan
         <div class="position-relative d-flex flex-column align-items-center text-center">
           <img
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCw_yrHN-OmVPPni9xX2nNod_E6MTlwO1lflvFjx-0UznQ8bwUkA4RwBfzUcTVnbQ-5HH23gMON8novBTrdrNinlybsrRx6sUzhLrjTuN8UrDZFRnTOuB-TI3jfnxp7WcHqMwIRDv21_t0z5w__oYTKLe6WGemmNGbYMy7G0tBNC-hc4vnfeq_EM_3VW4O3rdQ8IxGtfB9nsEsgFShhYidPbQ52BLx6wfZLiluM4NwiUdsguWnzG3v7f8gq4nQOMZeqk2w1Rnazt3k"
-            alt="ST2I Logo"
+            [attr.alt]="'app.name' | transloco"
             style="width:160px;height:160px;object-fit:contain;filter:drop-shadow(0 8px 32px rgba(0,0,0,.5));margin-bottom:1.5rem"
           >
           <h2 class="login-hero-text mb-3">{{ 'app.name' | transloco }}</h2>

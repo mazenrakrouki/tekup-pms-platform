@@ -159,21 +159,21 @@ functional specification of the platform: it contains twenty-one sheets and more
 formulas that encode the company's real steering logic. Its analysis constituted the preparation
 phase of this project, and each PMS module derives directly from one or more of these sheets.
 
-The eight most representative sheets are presented below. The figures shown are
-\textbf{anonymised}: client name, contract reference, staff names and the amounts of the internal
-quote have been replaced by neutral values, as this information is covered by the confidentiality
-of the host company and of its client. The structure, the formulas and the business logic, the
-only elements relevant to this analysis, are preserved.
+The eleven most representative sheets are presented below, each illustrated by a capture of the
+real workbook. These captures are \textbf{redacted}: the client name, the contract reference, the
+staff names, the cost rates and the amounts of the internal quote are masked, as this information
+is covered by the confidentiality of the host company and of its client. What the redaction
+deliberately preserves is everything this analysis actually rests on: the structure of each sheet,
+its column headings, its formulas and its business logic.
 
 % ---------------------------------------------------------------
 \subsubsection{Project identification sheet}
-% TODO: capture the anonymised sheet as img/xl_identification.png, then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/xl_identification.png}
-%   \caption{Excel workbook --- ``Fiche identification'' sheet (anonymised)}
-%   \label{fig:xl-identification}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_identification.png}
+  \caption{Excel workbook --- ``Fiche identification'' sheet (anonymised)}
+  \label{fig:xl-identification}
+\end{figure}
 
 \textbf{What it represents.} The identity card of the project: client, contract reference, funder,
 business model (alone or in consortium), engagement type (fixed price or time~\&~material), project
@@ -195,13 +195,12 @@ code, client, funder, engagement type, multi-currency budget, provisions and sol
 
 % ---------------------------------------------------------------
 \subsubsection{Cost rate sheet (TCC)}
-% TODO: capture as img/xl_tcc.png (anonymise the cost values), then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.9\columnwidth]{img/xl_tcc.png}
-%   \caption{Excel workbook --- ``TCC'' sheet (anonymised)}
-%   \label{fig:xl-tcc}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\columnwidth]{img/xl_tcc.png}
+  \caption{Excel workbook --- ``TCC'' sheet (anonymised)}
+  \label{fig:xl-tcc}
+\end{figure}
 
 \textbf{What it represents.} The daily loaded cost (\emph{Taux de Coût Chargé}) of each resource,
 recorded per year.
@@ -222,13 +221,12 @@ externalised as configurable business parameters rather than hard-coded constant
 
 % ---------------------------------------------------------------
 \subsubsection{Planned workload sheet}
-% TODO: capture as img/xl_plan_charge.png, then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/xl_plan_charge.png}
-%   \caption{Excel workbook --- ``Co\^ut Pr\'evisionnel'' sheet (anonymised)}
-%   \label{fig:xl-plan}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_plan_charge.png}
+  \caption{Excel workbook --- ``Co\^ut Pr\'evisionnel'' sheet (anonymised)}
+  \label{fig:xl-plan}
+\end{figure}
 
 \textbf{What it represents.} A resource~$\times$~month matrix giving the man-days planned for each
 resource over the life of the project, together with the resulting forecast cost.
@@ -246,13 +244,12 @@ plan as a monthly time series per resource, and feeds the ETC used by the KPI en
 
 % ---------------------------------------------------------------
 \subsubsection{Actual workload sheet}
-% TODO: capture as img/xl_actual.png, then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/xl_actual.png}
-%   \caption{Excel workbook --- ``Co\^ut r\'eel Actualis\'e'' sheet (anonymised)}
-%   \label{fig:xl-actual}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_actual.png}
+  \caption{Excel workbook --- ``Co\^ut r\'eel Actualis\'e'' sheet (anonymised)}
+  \label{fig:xl-actual}
+\end{figure}
 
 \textbf{What it represents.} The mirror of the previous sheet, filled with the effort actually
 consumed: the man-days really booked by each resource, month by month.
@@ -272,13 +269,12 @@ actual cost that feeds the EAC.
 
 % ---------------------------------------------------------------
 \subsubsection{Billing progress sheet}
-% TODO: capture as img/xl_billing.png (anonymise amounts), then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/xl_billing.png}
-%   \caption{Excel workbook --- ``Avancement\_Facturation'' sheet (anonymised)}
-%   \label{fig:xl-billing}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_billing.png}
+  \caption{Excel workbook --- ``Avancement\_Facturation'' sheet (anonymised)}
+  \label{fig:xl-billing}
+\end{figure}
 
 \textbf{What it represents.} The billing milestones of the contract, expressed as a percentage of
 the total, with their amount, their status and the monthly cumulative invoiced total.
@@ -298,13 +294,12 @@ billing-progress indicator.
 
 % ---------------------------------------------------------------
 \subsubsection{Missions sheet}
-% TODO: capture as img/xl_missions.png, then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/xl_missions.png}
-%   \caption{Excel workbook --- ``Missions'' sheet (anonymised)}
-%   \label{fig:xl-missions}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_missions.png}
+  \caption{Excel workbook --- ``Missions'' sheet (anonymised)}
+  \label{fig:xl-missions}
+\end{figure}
 
 \textbf{What it represents.} The business trips carried out for the project, with their cost
 components: per diem, plane ticket, accommodation, transport and administrative stamp.
@@ -321,13 +316,12 @@ project and an employee, with multi-currency cost components and an automaticall
 
 % ---------------------------------------------------------------
 \subsubsection{Project dashboard sheet}
-% TODO: capture as img/xl_dashboard.png (anonymise amounts), then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/xl_dashboard.png}
-%   \caption{Excel workbook --- ``Dashboard'' sheet (anonymised)}
-%   \label{fig:xl-dashboard}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_dashboard.png}
+  \caption{Excel workbook --- ``Dashboard'' sheet (anonymised)}
+  \label{fig:xl-dashboard}
+\end{figure}
 
 \textbf{What it represents.} The steering board of a single project: margins, man-days consumed
 against sold, key dates and the overall health of the project.
@@ -345,13 +339,12 @@ board, and its portfolio-level counterpart for the director.
 
 % ---------------------------------------------------------------
 \subsubsection{Statistics sheet --- KPI evolution}
-% TODO: capture as img/xl_statistics.png (anonymise amounts), then uncomment.
-% \begin{figure}[H]
-%   \centering
-%   \includegraphics[width=0.95\columnwidth]{img/xl_statistics.png}
-%   \caption{Excel workbook --- ``Statistiques'' sheet (anonymised)}
-%   \label{fig:xl-statistics}
-% \end{figure}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_statistics.png}
+  \caption{Excel workbook --- ``Statistiques'' sheet (anonymised)}
+  \label{fig:xl-statistics}
+\end{figure}
 
 \textbf{What it represents.} The real computation engine of the workbook: the month-by-month
 evolution of the financial indicators of the project.
@@ -370,6 +363,87 @@ man-days between what was sold, consumed and remaining.
 origin of the hybrid design retained in PMS: indicators recomputed on read from the live data, plus
 a frozen monthly snapshot that preserves the official state of each review. This snapshot is the digital
 equivalent of the monthly column of this sheet.
+
+% ---------------------------------------------------------------
+\subsubsection{Deliverables sheet}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_deliverables.png}
+  \caption{Excel workbook --- ``Livrables projet'' sheet}
+  \label{fig:xl-deliverables}
+\end{figure}
+
+\textbf{What it represents.} The contractual deliverables of the project, each identified by a code
+(\texttt{L31}, \texttt{L32}, \dots) and tracked month by month as a completion percentage.
+
+\textbf{Business purpose.} It answers the question the client asks at every steering committee: what
+has actually been handed over? Because the deliverables are grouped by stage, the sheet also shows
+how far each stage has progressed.
+
+\textbf{Key information and calculations.} The completion percentages of this sheet feed the
+\emph{Delivery} indicator of the dashboard, computed as the ratio of delivered items to planned
+items. This is what makes a deliverable register a measurement instrument rather than
+documentation: a status that cannot be counted produces no indicator.
+
+\textbf{Derived PMS functionality.} The \emph{Deliverables} register of the governance module
+(Sprint~7), whose controlled status is consumed by the delivery rate of the indicator engine.
+
+% ---------------------------------------------------------------
+\subsubsection{Glossary of indicators}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_glossary.png}
+  \caption{Excel workbook --- ``Glossaire'' sheet: definition and calculation method of each indicator}
+  \label{fig:xl-glossary}
+\end{figure}
+
+\textbf{What it represents.} The definition of every indicator the workbook produces: its unit, its
+meaning, and above all its calculation method.
+
+\textbf{Business purpose.} It is the sheet that makes the others auditable. Two project managers
+reading the same margin figure need to agree on what it measures, and this sheet is where that
+agreement is written down.
+
+\textbf{Key information and calculations.} It states the formulas the platform had to reproduce
+exactly: \texttt{Delivery = delivered / planned $\times$ 100}, \texttt{RAF = remaining workload
+$-$ consumed}, \texttt{Drift = sold workload $-$ consumed $-$ RAF},
+\texttt{Production revenue = contract total $\times$ EV~\%}, \texttt{FAE = production revenue $-$
+invoiced}, \texttt{Actual cost = consumed workload $\times$ TCC}, \texttt{ETC = $\sum$ remaining
+workload $\times$ TCC}, \texttt{EAC = ETC + actual cost}. It also defines the TCC itself as the
+salary cost plus indirect costs, the latter estimated at around 70~\% of the salary cost.
+
+\textbf{Derived PMS functionality.} This sheet is the specification of the \emph{KPI engine}
+(Sprint~8). It is also the reason the earned value is entered by the project manager rather than
+derived: the glossary itself describes it as an estimate made from the project plan, not as a
+measurement the system can compute.
+
+% ---------------------------------------------------------------
+\subsubsection{Parameters sheet}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\columnwidth]{img/xl_parameters.png}
+  \caption{Excel workbook --- ``Paramètres'' sheet: the controlled vocabularies of the process}
+  \label{fig:xl-parameters}
+\end{figure}
+
+\textbf{What it represents.} The reference data of the workbook: the probability scale of a risk,
+its severity scale with the associated thresholds, the treatment options, the risk categories, the
+efficiency scale and the asset classes exposed to risk.
+
+\textbf{Business purpose.} It keeps the qualitative vocabulary of the process consistent from one
+project review to the next. A risk rated \emph{major} means the same thing on every project because
+the meaning is fixed here, together with its quantified threshold.
+
+\textbf{Key information and calculations.} Probability runs from \emph{risk closed} (0~\%) to
+\emph{proven} (100~\%) in five steps; severity runs from \emph{minor} to \emph{critical}, each level
+carrying both a client-side and a company-side interpretation and a numeric ceiling expressed in
+percentage and in value. Treatment is one of reduction, acceptance, avoidance or transfer.
+
+\textbf{Derived PMS functionality.} These vocabularies became the business enumerations of the
+platform, constrained in the database rather than left as free text (Sprint~7). The sheet is also
+the reason the risk register of PMS carries a probability, an impact and a mitigation plan as
+separate controlled fields: the workbook already treated them as three distinct pieces of
+information.
 
 % ---------------------------------------------------------------
 \subsubsection{Traceability towards the platform}
@@ -400,6 +474,15 @@ Missions & Travel cost components & Missions (S5) \\
 Dashboard & Per-project indicator board & KPI dashboards (S7) \\
 \hline
 Statistiques & Earned-value engine, EAC, margins, accrued income & KPI engine (S7) \\
+\hline
+Livrables projet & Contractual deliverables and their monthly completion & Deliverables register
+(S7), delivery rate of the KPI engine (S8) \\
+\hline
+Glossaire & Definition and calculation method of every indicator & Specification of the KPI engine
+(S8) \\
+\hline
+Param\`etres & Controlled vocabularies: risk probability, severity, treatment, categories &
+Business enumerations of the governance module (S7) \\
 \hline
 \caption{Traceability from the Excel workbook to the PMS modules}
 \label{tab:excel-traceability}

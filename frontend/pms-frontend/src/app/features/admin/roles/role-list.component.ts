@@ -45,8 +45,8 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
             <thead>
               <tr>
                 <th>{{ 'admin.roles.table.role' | transloco }}</th>
-                <th class="d-none d-md-table-cell">Description</th>
-                <th class="text-center">Permissions</th>
+                <th class="d-none d-md-table-cell">{{ 'common.description' | transloco }}</th>
+                <th class="text-center">{{ 'common.permissions' | transloco }}</th>
                 <th class="text-center">{{ 'admin.roles.table.users' | transloco }}</th>
                 <th class="text-end">{{ 'admin.roles.table.actions' | transloco }}</th>
               </tr>
@@ -127,14 +127,14 @@ interface ModuleGroup { module: string; permissions: Permission[]; }
                   }
                 </div>
                 <div class="col-md-7">
-                  <label class="form-label">Description</label>
+                  <label class="form-label">{{ 'common.description' | transloco }}</label>
                   <input type="text" class="form-control" [(ngModel)]="form.description"
                          [placeholder]="'admin.roles.form.descriptionPlaceholder' | transloco">
                 </div>
               </div>
 
               <div class="d-flex align-items-center justify-content-between mb-2">
-                <label class="form-label mb-0">Permissions</label>
+                <label class="form-label mb-0">{{ 'common.permissions' | transloco }}</label>
                 <span class="sel-count">{{ 'admin.roles.form.selected' | transloco: { count: selectedIds().size } }}</span>
               </div>
 

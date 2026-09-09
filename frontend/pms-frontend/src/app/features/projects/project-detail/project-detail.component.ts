@@ -99,7 +99,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
             </a>
             @if (project()?.status === 'COMPLETED') {
               <button class="btn btn-outline-secondary btn-sm" (click)="archiveProject()">
-                <i class="bi bi-archive"></i>Archiver
+                <i class="bi bi-archive"></i>{{ 'project.actions.archive' | transloco }}
               </button>
             }
           } @else {
@@ -121,14 +121,14 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
               @if (auth.hasPermission('EDIT_PROJECT') && !p.archived && allowedTransitions(p.status).length) {
                 <span class="status-ctl">
                   <button class="status-btn" (click)="statusMenuOpen.set(!statusMenuOpen())"
-                          [attr.aria-expanded]="statusMenuOpen()" aria-haspopup="menu" title="Changer le statut">
+                          [attr.aria-expanded]="statusMenuOpen()" aria-haspopup="menu" [title]="'project.actions.changeStatus' | transloco">
                     <span [class]="badge(p.status)">{{ 'status.' + p.status | transloco }}</span>
                     <i class="bi bi-chevron-down"></i>
                   </button>
                   @if (statusMenuOpen()) {
                     <div class="status-backdrop" (click)="statusMenuOpen.set(false)"></div>
                     <div class="status-menu" role="menu">
-                      <div class="status-menu-label">Changer le statut</div>
+                      <div class="status-menu-label">{{ 'project.actions.changeStatus' | transloco }}</div>
                       @for (s of allowedTransitions(p.status); track s) {
                         <button class="status-menu-item" role="menuitem" (click)="changeStatus(s)">
                           <span [class]="badge(s)">{{ 'status.' + s | transloco }}</span>
@@ -211,7 +211,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                   <dd class="col-7">
                     {{ p.chefProjetName ?? '—' }}
                     @if (auth.hasPermission('ASSIGN_CHEF_PROJET')) {
-                      <button class="btn btn-sm btn-link p-0 ms-2" (click)="openChefModal()" title="Assigner un chef de projet">
+                      <button class="btn btn-sm btn-link p-0 ms-2" (click)="openChefModal()" [title]="'project.manager.assign' | transloco">
                         <i class="bi bi-pencil-square"></i>
                       </button>
                     }
@@ -294,7 +294,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                     </div>
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile kpi-tile--neutral">
-                        <div class="small text-muted">Taux conso.</div>
+                        <div class="small text-muted">{{ 'project.kpi.consumptionRate' | transloco }}</div>
                         <div class="fs-5 fw-bold">{{ (kpi()!.tauxConsommation * 100) | number:'1.1-1' }}%</div>
                         <div class="progress mt-1" style="height:4px">
                           <div class="progress-bar" [style.width.%]="kpi()!.tauxConsommation * 100"></div>
@@ -307,16 +307,16 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                   <div class="row g-3">
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile kpi-tile--brand">
-                        <div class="small text-muted">Earned Value</div>
+                        <div class="small text-muted">{{ 'project.kpi.earnedValue' | transloco }}</div>
                         <div class="fs-5 fw-bold text-primary">
                           {{ kpi()!.evPct != null ? (kpi()!.evPct | number:'1.0-1') + ' %' : '—' }}
                         </div>
-                        <div class="small text-muted">saisie revue mensuelle</div>
+                        <div class="small text-muted">{{ 'project.kpi.monthlyReview' | transloco }}</div>
                       </div>
                     </div>
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile kpi-tile--success">
-                        <div class="small text-muted">Delivery</div>
+                        <div class="small text-muted">{{ 'project.kpi.delivery' | transloco }}</div>
                         <div class="fs-5 fw-bold text-success">
                           {{ kpi()!.deliveryPct != null ? (kpi()!.deliveryPct | number:'1.0-1') + ' %' : '—' }}
                         </div>
@@ -337,7 +337,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                     </div>
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile kpi-tile--teal">
-                        <div class="small text-muted">CA Production</div>
+                        <div class="small text-muted">{{ 'project.kpi.caProduction' | transloco }}</div>
                         <div class="fs-5 fw-bold text-info">
                           {{ kpi()!.caProduction != null ? (kpi()!.caProduction | number:'1.0-0') : '—' }}
                         </div>
@@ -346,7 +346,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                     </div>
                     <div class="col-6 col-md-4 text-center">
                       <div class="kpi-tile kpi-tile--warning">
-                        <div class="small text-muted">FAE / Stock</div>
+                        <div class="small text-muted">{{ 'project.kpi.faeStock' | transloco }}</div>
                         <div class="fs-5 fw-bold text-warning">
                           {{ kpi()!.fae != null ? (kpi()!.fae | number:'1.0-0') : '—' }}
                         </div>
@@ -385,20 +385,20 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       <div class="col-sm-3">
                         <label class="form-label small fw-semibold mb-1">EV % (avancement)</label>
                         <input type="number" class="form-control form-control-sm" min="0" max="100"
-                               [(ngModel)]="snapEvPct" placeholder="ex. 75">
+                               [(ngModel)]="snapEvPct" [placeholder]="'project.kpi.evPlaceholder' | transloco">
                       </div>
                       <div class="col-sm-3">
                         <label class="form-label small fw-semibold mb-1">{{ 'project.kpi.estimatedEndDate' | transloco }}</label>
                         <input type="date" class="form-control form-control-sm" [(ngModel)]="snapDateFin">
                       </div>
                       <div class="col-sm-4">
-                        <label class="form-label small fw-semibold mb-1">Faits marquants</label>
+                        <label class="form-label small fw-semibold mb-1">{{ 'project.kpi.highlights' | transloco }}</label>
                         <input class="form-control form-control-sm" [(ngModel)]="snapFaits" maxlength="2000">
                       </div>
                       <div class="col-sm-2 d-grid">
                         <button class="btn btn-sm btn-primary" (click)="createSnapshot()" [disabled]="snapshotLoading()">
                           @if (snapshotLoading()) { <span class="spinner-border spinner-border-sm me-1"></span> }
-                          <i class="bi bi-camera me-1"></i>Snapshot
+                          <i class="bi bi-camera me-1"></i>{{ 'project.kpi.snapshot' | transloco }}
                         </button>
                       </div>
                     </div>
@@ -445,7 +445,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                     <td>{{ m.endDate ?? 'Actif' }}</td>
                     @if (auth.hasPermission('ASSIGN_DEVELOPER')) {
                       <td class="text-end">
-                        <button class="btn btn-ghost btn-icon btn-sm act-danger" (click)="removeMember(m)" title="Retirer" aria-label="Retirer le membre">
+                        <button class="btn btn-ghost btn-icon btn-sm act-danger" (click)="removeMember(m)" [title]="'project.team.remove' | transloco" [attr.aria-label]="'project.team.removeAria' | transloco">
                           <i class="bi bi-person-dash"></i>
                         </button>
                       </td>
@@ -472,7 +472,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           <div class="col-12">
             <div class="card">
               <div class="card-header">
-                <i class="bi bi-calendar3 me-2"></i>Plan de charge
+                <i class="bi bi-calendar3 me-2"></i>{{ 'project.workload.planTitle' | transloco }}
               </div>
               <div class="table-responsive">
                 <table class="table table-hover mb-0 align-middle">
@@ -528,7 +528,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                           @if (c.validatedAt) {
                             <span class="badge-active">{{ 'labels.workload.VALIDEE' | transloco }}</span>
                           } @else {
-                            <span class="badge-on-hold">Soumise</span>
+                            <span class="badge-on-hold">{{ 'labels.workload.SOUMISE' | transloco }}</span>
                           }
                         </td>
                       </tr>
@@ -642,7 +642,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
       @if (tab() === 'missions') {
         <div class="card">
           <div class="card-header">
-            <i class="bi bi-airplane me-2"></i>Missions
+            <i class="bi bi-airplane me-2"></i>{{ 'project.tabs.missions' | transloco }}
           </div>
           <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
@@ -680,7 +680,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           <div class="col-lg-6">
             <div class="card h-100">
               <div class="card-header">
-                <i class="bi bi-exclamation-triangle me-2 text-warning"></i>Registre des risques
+                <i class="bi bi-exclamation-triangle me-2 text-warning"></i>{{ 'governance.riskRegister' | transloco }}
               </div>
               <div class="table-responsive">
                 <table class="table table-sm mb-0 align-middle">
@@ -699,7 +699,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                           } @else if (r.statut === 'MITIGE') {
                             <span class="badge-on-hold">{{ 'labels.risk.MITIGE' | transloco }}</span>
                           } @else {
-                            <span class="badge-cancelled">Ouvert</span>
+                            <span class="badge-cancelled">{{ 'labels.risk.OUVERT' | transloco }}</span>
                           }
                         </td>
                       </tr>
@@ -729,7 +729,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                       <tr>
                         <td class="fw-semibold small">{{ l.titre }}</td>
                         <td class="small">{{ l.dateEcheance ?? '—' }}</td>
-                        <td><span [class]="livrableBadge(l.statut)">{{ l.statut | titlecase }}</span></td>
+                        <td><span [class]="livrableBadge(l.statut)">{{ 'labels.deliverable.' + l.statut | transloco }}</span></td>
                       </tr>
                     }
                     @empty {
@@ -745,7 +745,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
           <div class="col-12">
             <div class="card">
               <div class="card-header">
-                <i class="bi bi-arrow-repeat me-2"></i>Demandes de changement
+                <i class="bi bi-arrow-repeat me-2"></i>{{ 'project.governance.changeRequests' | transloco }}
               </div>
               <div class="table-responsive">
                 <table class="table table-sm mb-0 align-middle">
@@ -765,7 +765,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
                           } @else if (dc.statut === 'REJETE') {
                             <span class="badge-cancelled">{{ 'labels.changeRequest.REJETE' | transloco }}</span>
                           } @else {
-                            <span class="badge-on-hold">En attente</span>
+                            <span class="badge-on-hold">{{ 'labels.changeRequest.EN_ATTENTE' | transloco }}</span>
                           }
                         </td>
                       </tr>
@@ -790,7 +790,7 @@ type Tab = 'info' | 'equipe' | 'charges' | 'facturation' | 'missions' | 'gouvern
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title">Assigner un chef de projet</h5>
+              <h5 class="modal-title">{{ 'project.manager.assignTitle' | transloco }}</h5>
               <button type="button" class="btn-close" (click)="showChefModal.set(false)"></button>
             </div>
             <div class="modal-body">

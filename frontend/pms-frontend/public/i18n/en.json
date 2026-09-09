@@ -75,7 +75,8 @@
     "manDays": "MD",
     "manDaysLong": "man-days",
     "viewProject": "View the project",
-    "viewProjectAria": "View the project {{code}}"
+    "viewProjectAria": "View the project {{code}}",
+    "permissions": "Permissions"
   },
   "nav": {
     "section": {
@@ -510,7 +511,8 @@
     "okRequestCreated": "Change request created.",
     "okRequestApproved": "Request approved.",
     "okRequestRejected": "Request rejected.",
-    "okRequestDeleted": "Request deleted."
+    "okRequestDeleted": "Request deleted.",
+    "reject": "Reject"
   },
   "missions": {
     "backToPicker": "Back to project selection",

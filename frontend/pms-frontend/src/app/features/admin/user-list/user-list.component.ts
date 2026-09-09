@@ -53,7 +53,7 @@ type SortDir = 'asc' | 'desc';
       </div>
       <div class="tb-right">
         <button class="btn btn-primary btn-sm" (click)="openCreate()">
-          <i class="bi bi-plus-lg"></i>Nouvel utilisateur
+          <i class="bi bi-plus-lg"></i>{{ 'admin.users.new' | transloco }}
         </button>
       </div>
     </div>
@@ -81,7 +81,7 @@ type SortDir = 'asc' | 'desc';
           </select>
 
           <select class="form-select form-select-sm" style="width:auto"
-                  [ngModel]="statusFilter()" (ngModelChange)="onStatusChange($event)" aria-label="Filtrer par statut">
+                  [ngModel]="statusFilter()" (ngModelChange)="onStatusChange($event)" [attr.aria-label]="'admin.users.filterStatusAria' | transloco">
             <option value="">{{ 'admin.users.filter.allStatuses' | transloco }}</option>
             <option value="true">{{ 'admin.users.state.active' | transloco }}</option>
             <option value="false">{{ 'admin.users.state.inactive' | transloco }}</option>
@@ -174,7 +174,7 @@ type SortDir = 'asc' | 'desc';
                           <div class="es-title">{{ 'admin.users.empty.noneTitle' | transloco }}</div>
                           <div class="es-desc">{{ 'admin.users.empty.noneDesc' | transloco }}</div>
                           <button class="btn btn-primary btn-sm mt-3" (click)="openCreate()">
-                            <i class="bi bi-plus-lg me-1"></i>Nouvel utilisateur
+                            <i class="bi bi-plus-lg me-1"></i>{{ 'admin.users.new' | transloco }}
                           </button>
                         </div>
                       }
@@ -215,8 +215,8 @@ type SortDir = 'asc' | 'desc';
                   {{ 'admin.users.reset.communicate' | transloco }}
                 </div>
                 <div class="input-group mt-2">
-                  <input type="text" class="form-control monospace" [value]="resetResult()!.pwd" readonly aria-label="Mot de passe temporaire">
-                  <button class="btn btn-outline-secondary" type="button" (click)="copyResetPassword()" title="Copier" aria-label="Copier le mot de passe">
+                  <input type="text" class="form-control monospace" [value]="resetResult()!.pwd" readonly [attr.aria-label]="'admin.users.tempPassword' | transloco">
+                  <button class="btn btn-outline-secondary" type="button" (click)="copyResetPassword()" [title]="'common.copy' | transloco" [attr.aria-label]="'admin.users.copyPassword' | transloco">
                     <i class="bi bi-clipboard"></i>
                   </button>
                 </div>
@@ -268,7 +268,7 @@ type SortDir = 'asc' | 'desc';
                   <strong>{{ 'admin.users.form.created' | transloco }}</strong> {{ 'admin.users.form.communicate' | transloco }}
                   <div class="input-group mt-2">
                     <input type="text" class="form-control monospace" [value]="initialPassword()" readonly [attr.aria-label]="'admin.users.form.created' | transloco">
-                    <button class="btn btn-outline-secondary" type="button" (click)="copyPassword()" title="Copier" aria-label="Copier le mot de passe">
+                    <button class="btn btn-outline-secondary" type="button" (click)="copyPassword()" [title]="'common.copy' | transloco" [attr.aria-label]="'admin.users.copyPassword' | transloco">
                       <i class="bi bi-clipboard"></i>
                     </button>
                   </div>

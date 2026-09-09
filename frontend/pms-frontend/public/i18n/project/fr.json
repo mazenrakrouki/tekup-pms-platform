@@ -46,7 +46,12 @@
     "estimatedEndDate": "Date fin estimée",
     "highlights": "Faits marquants",
     "consumedShort": "conso.",
-    "remainingShort": "RAF"
+    "remainingShort": "RAF",
+    "earnedValue": "Earned Value",
+    "caProduction": "CA Production",
+    "faeStock": "FAE / Stock",
+    "evPlaceholder": "ex. 75",
+    "snapshot": "Snapshot"
   },
   "team": {
     "title": "Membres de l'équipe",
@@ -62,7 +67,9 @@
     "rolePlaceholder": "Ex : Développeur",
     "startDate": "Date de début",
     "removeConfirm": "Retirer {{name}} de l'équipe ?",
-    "assign": "Affecter"
+    "assign": "Affecter",
+    "remove": "Retirer",
+    "removeAria": "Retirer le membre"
   },
   "workload": {
     "planTitle": "Plan de charge",
@@ -115,7 +122,9 @@
   "manager": {
     "label": "Chef de projet",
     "noneFound": "Aucun chef trouvé",
-    "required": "Sélectionnez un chef de projet."
+    "required": "Sélectionnez un chef de projet.",
+    "assignTitle": "Assigner un chef de projet",
+    "assign": "Assigner un chef de projet"
   },
   "msg": {
     "snapshotCreated": "Snapshot créé, les indicateurs de la revue sont figés.",
@@ -183,5 +192,9 @@
     "okSaved": "Projet enregistré.",
     "okCreated": "Projet créé.",
     "genericError": "Une erreur est survenue."
+  },
+  "actions": {
+    "archive": "Archiver",
+    "changeStatus": "Changer le statut"
   }
 }
