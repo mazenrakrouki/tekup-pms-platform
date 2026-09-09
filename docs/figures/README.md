@@ -6,6 +6,7 @@ screenshots.
 
 | Source | Rendered to | Used in |
 |---|---|---|
+| `st2i_organigramme.svg` | `img/st2i_organigramme.png` | 1.1.4 Organizational structure |
 | `scrum_cycle.svg` | `img/scrum_cycle.png` | 1.6.1 The Scrum framework |
 | `scrum_roles.svg` | `img/scrum_roles.png` | 1.6.2 Scrum roles |
 | `rbac_chain.svg` | `img/rbac_chain.png` | 2.5 The Dynamic Authorization Model |
@@ -33,6 +34,12 @@ The figures share one palette and one type stack so that they read as a set:
 - `#1F4E79` primary (the cover rule colour, close to the ST2i blue `#034D89`)
 - `#34719F` secondary, `#DCE7F1` / `#E8F0F7` / `#F4F8FB` tints
 - `#C4212A` used **once per figure**, on the one thing the figure exists to say
+
+The org chart is the one exception to the single-accent rule, and deliberately: its five activity
+lines each carry their own hue (`#1F4E79` blue, `#C4212A` red, `#1E7A6F` teal, `#B0761B` ochre,
+`#5B4A9E` violet), because the colour is what lets the reader follow a line down into the
+transversal band of technical teams. The red is still doing the accent's job — it is the line whose
+economics the platform steers.
 - `#16212B` text, `#5C6B7A` secondary text, `#AEBCC9` card borders
 - Segoe UI / Helvetica Neue / Arial, with Consolas for identifiers taken from the code
 

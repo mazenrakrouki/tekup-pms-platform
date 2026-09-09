@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="16 24 968 540">
+  <style>
+    text { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
+    .nm   { font-weight:700; font-size:17px; }
+    .ds   { fill:#6B7885; font-size:14px; }
+    .card { fill:#FFFFFF; stroke:#D5DEE6; stroke-width:1.4; }
+    .stem { fill:none; stroke-width:2.4; stroke-linecap:round; }
+    .feed { fill:none; stroke-width:2; stroke-dasharray:5 5; stroke-linecap:round; }
+  </style>
+
+  <!-- ============================ STUDI Group ============================= -->
+  <rect x="430" y="36" width="150" height="34" rx="6" fill="#FFFFFF" stroke="#C3CDD7" stroke-width="1.4"/>
+  <text x="505" y="58" text-anchor="middle" style="font-size:16px; fill:#7A8794;">STUDI Group</text>
+  <path d="M505 70 V 88" fill="none" stroke="#C3CDD7" stroke-width="2"/>
+
+  <!-- ======================== ST2i general management ===================== -->
+  <rect x="320" y="88" width="370" height="50" rx="7" fill="#1F4E79"/>
+  <text x="505" y="112" text-anchor="middle" style="font-size:21px; font-weight:700; fill:#FFFFFF; letter-spacing:0.5px;">ST2i</text>
+  <text x="505" y="130" text-anchor="middle" style="font-size:14.5px; fill:#B9D0E4;">General management</text>
+
+  <!-- distribution across the five activity lines -->
+  <path d="M505 138 V 168" fill="none" stroke="#1F4E79" stroke-width="2.4"/>
+  <path d="M117 168 H 893" fill="none" stroke="#C3CDD7" stroke-width="2"/>
+  <path class="stem" d="M117 168 V 190" stroke="#1F4E79"/>
+  <path class="stem" d="M311 168 V 190" stroke="#C4212A"/>
+  <path class="stem" d="M505 168 V 190" stroke="#1E7A6F"/>
+  <path class="stem" d="M699 168 V 190" stroke="#B0761B"/>
+  <path class="stem" d="M893 168 V 190" stroke="#5B4A9E"/>
+
+  <!-- ===================== 1. studies and consulting ====================== -->
+  <rect class="card" x="30" y="190" width="174" height="140" rx="7"/>
+  <path d="M37 190 H 197 A 7 7 0 0 1 204 197 V 200 H 30 V 197 A 7 7 0 0 1 37 190 z" fill="#1F4E79"/>
+  <text class="nm" x="42" y="226" fill="#1F4E79">Studies and</text>
+  <text class="nm" x="42" y="246" fill="#1F4E79">consulting</text>
+  <line x1="42" y1="270" x2="192" y2="270" stroke="#E6ECF2" stroke-width="1.4"/>
+  <text class="ds" x="42" y="294">strategic and</text>
+  <text class="ds" x="42" y="312">sectoral studies</text>
+
+  <!-- ============ 2. development and integration (this project) =========== -->
+  <rect x="224" y="190" width="174" height="140" rx="7" style="fill:#FBEFEF;stroke:#E7C3C5;stroke-width:1.4"/>
+  <path d="M231 190 H 391 A 7 7 0 0 1 398 197 V 200 H 224 V 197 A 7 7 0 0 1 231 190 z" fill="#C4212A"/>
+  <text class="nm" x="236" y="226" fill="#C4212A">Development and</text>
+  <text class="nm" x="236" y="246" fill="#C4212A">integration of</text>
+  <text class="nm" x="236" y="266" fill="#C4212A">solutions</text>
+  <line x1="236" y1="278" x2="386" y2="278" stroke="#EED4D6" stroke-width="1.4"/>
+  <text class="ds" x="236" y="300">design, integration</text>
+  <text class="ds" x="236" y="318">and deployment</text>
+
+  <!-- ============================ 3. geomatics =========================== -->
+  <rect class="card" x="418" y="190" width="174" height="140" rx="7"/>
+  <path d="M425 190 H 585 A 7 7 0 0 1 592 197 V 200 H 418 V 197 A 7 7 0 0 1 425 190 z" fill="#1E7A6F"/>
+  <text class="nm" x="430" y="226" fill="#1E7A6F">Geomatics</text>
+  <line x1="430" y1="270" x2="580" y2="270" stroke="#E6ECF2" stroke-width="1.4"/>
+  <text class="ds" x="430" y="294">geographic systems,</text>
+  <text class="ds" x="430" y="312">data to applications</text>
+
+  <!-- ===================== 4. project-owner assistance ==================== -->
+  <rect class="card" x="612" y="190" width="174" height="140" rx="7"/>
+  <path d="M619 190 H 779 A 7 7 0 0 1 786 197 V 200 H 612 V 197 A 7 7 0 0 1 619 190 z" fill="#B0761B"/>
+  <text class="nm" x="624" y="226" fill="#B0761B">Project-owner</text>
+  <text class="nm" x="624" y="246" fill="#B0761B">assistance</text>
+  <line x1="624" y1="270" x2="774" y2="270" stroke="#E6ECF2" stroke-width="1.4"/>
+  <text class="ds" x="624" y="294">controlled conduct</text>
+  <text class="ds" x="624" y="312">of complex projects</text>
+
+  <!-- ================= 5. distribution of technical software ============== -->
+  <rect class="card" x="806" y="190" width="174" height="140" rx="7"/>
+  <path d="M813 190 H 973 A 7 7 0 0 1 980 197 V 200 H 806 V 197 A 7 7 0 0 1 813 190 z" fill="#5B4A9E"/>
+  <text class="nm" x="818" y="226" fill="#5B4A9E">Distribution of</text>
+  <text class="nm" x="818" y="246" fill="#5B4A9E">technical</text>
+  <text class="nm" x="818" y="266" fill="#5B4A9E">software</text>
+  <line x1="818" y1="278" x2="968" y2="278" stroke="#E6ECF2" stroke-width="1.4"/>
+  <text class="ds" x="818" y="300">supply and support</text>
+  <text class="ds" x="818" y="318">of standard software</text>
+
+  <!-- ============ the teams, drawn transversally across the lines ========= -->
+  <path class="feed" d="M117 330 V 380" stroke="#1F4E79"/>
+  <path class="feed" d="M311 330 V 380" stroke="#C4212A"/>
+  <path class="feed" d="M505 330 V 380" stroke="#1E7A6F"/>
+  <path class="feed" d="M699 330 V 380" stroke="#B0761B"/>
+  <path class="feed" d="M893 330 V 380" stroke="#5B4A9E"/>
+
+  <rect x="30" y="380" width="950" height="72" rx="8" fill="#F7FAFC" stroke="#AEBCC9" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="52" y="410" style="font-size:19px; font-weight:700; fill:#1F4E79;">Multidisciplinary technical teams</text>
+  <text x="52" y="432" style="font-size:14.5px; fill:#6B7885;">assembled per project, across the activity lines</text>
+  <rect x="572" y="401" width="150" height="30" rx="15" fill="#FFFFFF" stroke="#C3CDD7" stroke-width="1.3"/>
+  <text x="647" y="421" text-anchor="middle" style="font-size:14px; fill:#4A5967;">geomatics experts</text>
+  <rect x="732" y="401" width="105" height="30" rx="15" fill="#FFFFFF" stroke="#C3CDD7" stroke-width="1.3"/>
+  <text x="784" y="421" text-anchor="middle" style="font-size:14px; fill:#4A5967;">developers</text>
+  <rect x="847" y="401" width="115" height="30" rx="15" fill="#FFFFFF" stroke="#C3CDD7" stroke-width="1.3"/>
+  <text x="904" y="421" text-anchor="middle" style="font-size:14px; fill:#4A5967;">technicians</text>
+
+  <!-- ============================== the point ============================= -->
+  <line x1="30" y1="478" x2="30" y2="548" stroke="#C4212A" stroke-width="3"/>
+  <text x="50" y="496" style="font-size:15px; fill:#C4212A;">Development and integration of solutions is the line whose economics this platform steers.</text>
+  <text x="50" y="520" style="font-size:15px; fill:#6B7885;">Teams are assembled per project across the lines, so one person serves several projects at once</text>
+  <text x="50" y="542" style="font-size:15px; fill:#6B7885;">and no single project manager sees the whole of their availability.</text>
+</svg>
