@@ -57,7 +57,7 @@ loaded cost rate stored per resource and per year & 2 \\
 The release opens with six weeks that produced no production code. They ran from 5~January to
 13~February and are listed as such in the schedule of Chapter~2
 (Table~\ref{tab:schedule}). Their purpose was to arrive at the first sprint already knowing what
-had to be built, on which architecture, and what it should look like.
+had to be built and on which architecture.
 
 \subsection{What the phase produced}
 Four deliverables came out of it, each of which is presented in full elsewhere in this report and
@@ -74,140 +74,107 @@ only summarised here.
   \item \textbf{The architecture and the technical stack.} The modular monolith, the dynamic
         authorization model, the hybrid indicator engine and the relational schema were decided
         before any of them was written. This is Chapter~3.
-  \item \textbf{The interface models.} Screen models were produced for the main workflows, so that
-        the sprints could be spent implementing an agreed interface rather than inventing one under
-        time pressure. These models are the subject of the rest of this section.
+  \item \textbf{Design sketches.} A set of throwaway sketches used to picture what a platform of
+        this kind might look like. They are the subject of the rest of this section.
 \end{itemize}
 
-\subsection{Interface models}
-The models were produced with \textbf{Google Stitch}, a generative interface design tool: each
-screen is described in natural language and the tool returns a working layout that can then be
-refined. It was chosen for a reason specific to this project, which had a single developer and no
-designer. Producing a credible screen in minutes rather than days made it affordable to explore
-several arrangements of the same information, and to discard the ones that did not work before any
-of them cost a sprint.
+\subsection{Design sketches}
+Before writing any interface, a set of sketches was produced with \textbf{Google Stitch}, a
+generative design tool in which a screen is described in a sentence and the tool returns a plausible
+layout. They served one purpose: to make the problem concrete. Reading a backlog of twenty-five user
+stories tells you what the platform must do; looking at a screen tells you how much information a
+single person is expected to hold at once, and whether four different audiences really need four
+different entry points or only one with filters.
 
-Two things should be said plainly about these models. They carry a provisional product name,
-\emph{ProjectControl}, and amounts in euros, because they were exploratory sketches rather than
-specifications; the delivered platform is named PMS and reports in Tunisian dinars. And they are
-models of \emph{layout and information hierarchy} only: no model describes a permission, a
-computation or a state transition, all of which come from the analysis rather than from the design
-tool.
+\textbf{These sketches are not the application, and nothing in the delivered interface derives from
+them.} They were never treated as specifications, never handed to a sprint as an input, and never
+implemented. The frontend presented in the rest of this report was designed and built
+independently, from the requirements and from the constraints of the authorization model. Any
+resemblance between a sketch and a delivered screen is the resemblance any two project-management
+interfaces have to each other, not a lineage.
 
-\subsubsection{Sign-in}
-The entry point of the platform was the first screen modelled, because it is the only one every
-user sees and the only one seen before any authorization applies.
+They are shown here because they were a real part of the preparation phase and because they carry
+its reasoning: what the sketches made visible, before a line of Angular existed, is that this
+platform has four distinct readers rather than one. A director scanning a portfolio, a project
+manager working inside a single project, a developer entering their own time, and an administrator
+editing the policy are four different information needs, and no single screen serves them all. That
+observation survived into the architecture; the pixels did not.
+
+Every figure in this section carries a banner and a watermark naming the tool, so that none of them
+can be mistaken for a screenshot of the delivered platform. Two further differences make the
+distinction visible in the images themselves: the sketches carry a provisional product name,
+\emph{ProjectControl}, and they show amounts in euros. The delivered platform is named PMS and
+reports in Tunisian dinars.
+
+\subsubsection{Sign-in and portfolio}
+The first sketches addressed the two screens with the widest audience: the entry point, and the
+overview a director would open first.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\columnwidth]{img/mk_login.png}
-  \caption{Interface model --- sign-in screen}
+  \includegraphics[width=0.86\columnwidth]{img/mk_login.png}
+  \caption{Design sketch --- sign-in screen}
   \label{fig:mk-login}
 \end{figure}
 
-\subsubsection{Steering screens}
-The director reads the portfolio; the project manager reads one project in depth. The models
-separated those two readings from the start, which is what later became the portfolio dashboard and
-the per-project indicator board of Sprint~8.
-
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\columnwidth]{img/mk_portfolio.png}
-  \caption{Interface model --- portfolio overview for the director}
+  \includegraphics[width=0.86\columnwidth]{img/mk_portfolio.png}
+  \caption{Design sketch --- portfolio overview}
   \label{fig:mk-portfolio}
 \end{figure}
 
+\subsubsection{Sketches of a single project}
+Two further sketches explored what one project looks like from the inside, on its financial side and
+on its workload side.
+
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\columnwidth]{img/mk_financial.png}
-  \caption{Interface model --- financial analysis of a single project}
+  \includegraphics[width=0.86\columnwidth]{img/mk_financial.png}
+  \caption{Design sketch --- financial analysis of a project}
   \label{fig:mk-financial}
 \end{figure}
 
-\subsubsection{Operational screens}
-The workload matrix and the billing timeline are the two screens that carry the most business
-logic, and both were modelled before being built.
-
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\columnwidth]{img/mk_workload.png}
-  \caption{Interface model --- resource workload matrix, planned against actual}
+  \includegraphics[width=0.86\columnwidth]{img/mk_workload.png}
+  \caption{Design sketch --- resource workload matrix}
   \label{fig:mk-workload}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\columnwidth]{img/mk_billing.png}
-  \caption{Interface model --- billing milestones and their progress}
+  \includegraphics[width=0.86\columnwidth]{img/mk_billing.png}
+  \caption{Design sketch --- billing milestones}
   \label{fig:mk-billing}
 \end{figure}
 
-\subsubsection{Screens of the restricted roles}
-Modelling the developer and administrator views early was what made the consequence of the
-authorization model visible before it was implemented: a role that holds few permissions does not
-get a reduced version of the same screen, it gets a different and much shorter menu.
+\subsubsection{Sketches of the restricted roles}
+The last two sketches pictured the two roles that see the least: a developer, and an administrator
+who manages the platform without steering any project.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\columnwidth]{img/mk_developer.png}
-  \caption{Interface model --- developer workspace, reduced to assignments and time entry}
+  \includegraphics[width=0.86\columnwidth]{img/mk_developer.png}
+  \caption{Design sketch --- developer workspace}
   \label{fig:mk-developer}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\columnwidth]{img/mk_admin.png}
-  \caption{Interface model --- administration panel}
+  \includegraphics[width=0.86\columnwidth]{img/mk_admin.png}
+  \caption{Design sketch --- administration panel}
   \label{fig:mk-admin}
 \end{figure}
 
-\subsection{From the models to the delivered interface}
-Table~\ref{tab:model-traceability} follows each model through to the screen that was actually
-delivered, and records where the two diverge. The divergences are the useful part: they are the
-places where implementation taught something the model could not.
+\subsection{Closing the phase}
+The sketches were set aside once the phase ended. What was carried into Sprint~1 was not a design
+but the four conclusions of the preparation phase: the business logic to reproduce, the backlog to
+build it from, the architecture to build it on, and the observation that the platform must serve
+four distinct readers.
 
-\begin{longtable}{|m{3.5cm}|m{3.4cm}|m{7.0cm}|}
-\hline
-\textbf{Model} & \textbf{Delivered screen} & \textbf{What changed, and why} \\
-\hline
-\endhead
-\endfoot
-\endlastfoot
-\hline
-Sign-in (Fig.~\ref{fig:mk-login}) & Fig.~\ref{fig:ui-login} & Kept almost unchanged. The forced
-password change on first login was added, because it comes from a security requirement the model
-did not express. \\
-\hline
-Portfolio overview (Fig.~\ref{fig:mk-portfolio}) & Fig.~\ref{fig:ui-portfolio} & The summary tiles
-survived. The flat project table became a ranking by margin with a portfolio health bar, because
-a director scanning eighty projects needs the worst ones first, not the newest. \\
-\hline
-Financial analysis (Fig.~\ref{fig:mk-financial}) & Fig.~\ref{fig:ui-kpi} & The indicator set was
-replaced by the one the workbook actually defines: EAC, ETC, accrued income and drift in man-days,
-rather than the generic cost breakdown the model proposed. \\
-\hline
-Workload matrix (Fig.~\ref{fig:mk-workload}) & Fig.~\ref{fig:ui-workload} & Confirmed. The
-planned-against-actual matrix by resource and by month is the arrangement the workbook already
-used, and the model made it visible early enough to build it once. \\
-\hline
-Billing (Fig.~\ref{fig:mk-billing}) & Fig.~\ref{fig:ui-billing} & The vertical timeline became a
-table. A milestone is compared with its neighbours far more often than it is read on its own, and a
-table compares better than a timeline. \\
-\hline
-Developer workspace (Fig.~\ref{fig:mk-developer}) & Fig.~\ref{fig:ui-dev-dashboard} & Confirmed in
-shape, and made a consequence of the permission model rather than a separate screen: the menu is
-built from the permissions the account holds. \\
-\hline
-Administration (Fig.~\ref{fig:mk-admin}) & Figs.~\ref{fig:ui-users} and~\ref{fig:ui-perm-catalogue}
-& Split in two. The single panel of the model hid the distinction the platform rests on, between
-managing accounts and editing the authorization policy. \\
-\hline
-\caption{From the interface models to the delivered screens}
-\label{tab:model-traceability}
-\end{longtable}
-
-The phase closed with the development environment in place: the repository, the database, the
-migration tool and the build, so that the first sprint began with a running, empty application
+The phase closed with the development environment in place, that is the repository, the database,
+the migration tool and the build, so that the first sprint began with a running, empty application
 rather than with its installation.
 
 % =====================================================================
