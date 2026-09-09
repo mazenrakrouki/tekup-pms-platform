@@ -137,6 +137,7 @@ PostgreSQL instance are already present. Sprint~10 removes that assumption.
 
 % =====================================================================
 \section{Sprint 10 --- Containerization and continuous delivery}
+\label{sec:sprint10}
 
 \subsection{Sprint 10 use case diagram}
 Like the previous one, this sprint adds no business use case. Its actor is not a user of the
@@ -144,6 +145,20 @@ platform but the person deploying it, and its scenarios are building the images,
 and verifying a change automatically. The deployment view of Chapter~3 is the relevant diagram.
 
 \subsection{Sprint 10 analysis and design}
+
+\subsubsection{Docker}
+\textbf{Docker} packages an application together with everything it needs to run --- runtime,
+libraries, configuration --- into an image that behaves the same way on any host. A running copy of
+that image is a container: isolated from the machine, started and stopped in seconds, and identical
+whether it runs on a laptop or on a server.
+
+It was chosen for the gap this sprint exists to close. Until now the platform assumed a host on
+which the right Java version, the right Node version and a correctly provisioned PostgreSQL were
+already present, which is an assumption that holds on the development machine and nowhere else.
+Describing those dependencies as images removes the assumption: the stack starts from one command,
+and the environment stops being something a person has to reproduce by hand. The alternative
+considered was a documented installation procedure, which was rejected because a procedure is only
+as reliable as the person following it.
 
 \begin{figure}[H]
   \centering
