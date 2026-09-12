@@ -21,45 +21,35 @@ is expanded into the technical work it required.
 \begin{longtable}{|m{1.5cm}|m{6.8cm}|m{5.2cm}|m{1.4cm}|}
 \caption{Backlog of release 2}\label{tab:backlog-r2}\\
 \hline
-\textbf{Story} & \textbf{Need} & \textbf{Technical work} & \textbf{Sprint} \\
+\textbf{Story} & \textbf{User story} & \textbf{Technical work} & \textbf{Sprint} \\
 \hline
 \endfirsthead
 \hline
-\textbf{Story} & \textbf{Need} & \textbf{Technical work} & \textbf{Sprint} \\
+\textbf{Story} & \textbf{User story} & \textbf{Technical work} & \textbf{Sprint} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-US-08 & Create a project with its contractual and financial identity & Project entity reproducing
-the identification sheet, effective budget derived from amendments & 3 \\
+US-10 & As a director, I want to create a project with its contractual and financial identity & Project entity reproducing the identification sheet, effective budget derived from amendments & 3 \\
 \hline
-US-09 & Prevent a project from reaching an inconsistent state & Status enumeration carrying its own
-legal transitions, refusal with 422 in the service layer & 3 \\
+US-11 & As a director, I want to prevent a project from reaching an inconsistent state & Status enumeration carrying its own legal transitions, refusal with 422 in the service layer & 3 \\
 \hline
-US-10 & Assign a project manager and keep the history & Assignment closed rather than overwritten,
-single active assignment enforced by a partial unique index & 3 \\
+US-12 & As a director, I want to assign a project manager and keep the history & Assignment closed rather than overwritten, single active assignment enforced by a partial unique index & 3 \\
 \hline
-US-11 & Build the project team & Team assignment with a validity period, permission and project
-scope both checked & 4 \\
+US-13 & As a project manager, I want to build the project team & Team assignment with a validity period, permission and project scope both checked & 4 \\
 \hline
-US-12 & Plan the monthly workload per resource & Workload plan stored as a monthly time series, one
-row per project, resource and month & 4 \\
+US-14 & As a project manager, I want to plan the monthly workload per resource & Workload plan stored as a monthly time series, one row per project, resource and month & 4 \\
 \hline
-US-13 & Record the effort actually consumed & Actual workload restricted to assigned projects,
-month normalised to its first day, uniqueness enforced by index & 4 \\
+US-15 & As a developer, I want to record the effort I actually consumed & Actual workload restricted to assigned projects, month normalised to its first day, uniqueness enforced by index & 4 \\
 \hline
-US-14 & Validate a period and freeze it & Validation by the project manager, immutability of a
-validated month & 4 \\
+US-16 & As a project manager, I want to validate a period and freeze it & Validation by the project manager, immutability of a validated month & 4 \\
 \hline
-US-27 & Organise the work into iterations & Sprint entity with goal, dates and lifecycle, scoped to
-a project & 5 \\
+US-17 & As a project manager, I want to organise the work into iterations & Sprint entity with goal, dates and lifecycle, scoped to a project & 5 \\
 \hline
-US-28 & Maintain a prioritised and estimated product backlog & Backlog item with priority and an
-estimate in man-days, unattached to any sprint until committed & 5 \\
+US-18 & As a project manager, I want to maintain a prioritised and estimated product backlog & Backlog item with priority and an estimate in man-days, unattached to any sprint until committed & 5 \\
 \hline
-US-29 & Follow the progress of the current iteration on a board & Board columns derived from the
-item status, move endpoint reassigning sprint and column together & 5 \\
+US-19 & As a developer, I want to follow the progress of the current iteration on a board & Board columns derived from the item status, move endpoint reassigning sprint and column together & 5 \\
 \hline
 \end{longtable}
 

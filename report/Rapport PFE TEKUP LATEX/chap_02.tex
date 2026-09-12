@@ -199,12 +199,13 @@ into a snapshot happens only at the monthly review.
 \end{figure}
 
 \section{Product Backlog}
-The product backlog gathers the functional needs expressed as user stories. Each item is attached
+The product backlog gathers the functional needs expressed as user stories, one
+action to a story. Each item is attached
 to the sprint that delivered it, which makes the incremental construction of the platform legible.
 Priority is derived from technical dependency: a story is high priority when subsequent increments
 depend on it.
 
-\begin{longtable}{|m{0.9cm}|m{9.4cm}|m{1.9cm}|m{1.6cm}|}
+\begin{longtable}{|m{1.1cm}|m{9.2cm}|m{1.9cm}|m{1.6cm}|}
 \caption{Product backlog of the PMS platform}\label{tab:backlog}\\
 \hline
 \textbf{Id} & \textbf{User story} & \textbf{Priority} & \textbf{Sprint} \\
@@ -217,92 +218,69 @@ depend on it.
 \endfoot
 \endlastfoot
 \hline
-US-01 & As a user, I want to sign in with my e-mail and password so that I can access the platform.
-& High & Sprint 1 \\
+US-01 & As a user, I want to sign in with my e-mail and password so that I can access the platform. & High & Sprint 1 \\
 \hline
-US-02 & As a user, I want to be forced to change my password on first login so that my account is
-secured. & High & Sprint 1 \\
+US-02 & As a user, I want to be forced to change my password on first login so that my account is secured. & High & Sprint 1 \\
 \hline
-US-03 & As an administrator, I want a user's sessions to be revoked immediately when needed so that
-access can be cut off without waiting for token expiry. & High & Sprint 1 \\
+US-03 & As an administrator, I want a user's sessions to be revoked immediately when needed so that access can be cut off without waiting for token expiry. & High & Sprint 1 \\
 \hline
-US-04 & As an administrator, I want to assign permissions to roles so that authorization evolves
-without redeploying the application. & High & Sprint 2 \\
+US-04 & As an administrator, I want to assign permissions to roles so that authorization evolves without redeploying the application. & High & Sprint 2 \\
 \hline
-US-05 & As a user, I want the menu to show only what I am entitled to so that the interface matches
-my rights. & High & Sprint 2 \\
+US-05 & As a user, I want the menu to show only what I am entitled to so that the interface matches my rights. & High & Sprint 2 \\
 \hline
-US-06 & As an administrator, I want to create, modify and deactivate user accounts so that I can
-manage platform access. & High & Sprint 2 \\
+US-06 & As an administrator, I want to create a user account with a temporary password so that a new colleague can reach the platform. & High & Sprint 2 \\
 \hline
-US-07 & As an administrator, I want to record resources and their yearly cost rate so that project
-costs can be computed. & High & Sprint 2 \\
+US-07 & As an administrator, I want to modify a user account so that its details and its role stay correct. & Medium & Sprint 2 \\
 \hline
-US-08 & As a director, I want to create and configure a project so that it can be tracked on the
-platform. & High & Sprint 3 \\
+US-08 & As an administrator, I want to deactivate a user account so that access ends without losing its history. & High & Sprint 2 \\
 \hline
-US-09 & As a director, I want a project to follow a controlled lifecycle so that no invalid status
-transition is possible. & Medium & Sprint 3 \\
+US-09 & As an administrator, I want to record resources and their yearly cost rate so that project costs can be computed. & High & Sprint 2 \\
 \hline
-US-10 & As a director, I want to assign a project manager to a project so that its operational
-steering is delegated. & High & Sprint 3 \\
+US-10 & As a director, I want to create a project with its contractual and financial identity so that it can be tracked on the platform. & High & Sprint 3 \\
 \hline
-US-11 & As a project manager, I want to build my project team so that I can allocate developers to
-it. & High & Sprint 4 \\
+US-11 & As a director, I want a project to follow a controlled lifecycle so that no invalid status transition is possible. & Medium & Sprint 3 \\
 \hline
-US-12 & As a project manager, I want to plan the monthly workload so that I can forecast the effort
-required. & High & Sprint 4 \\
+US-12 & As a director, I want to assign a project manager to a project so that its operational steering is delegated. & High & Sprint 3 \\
 \hline
-US-13 & As a developer, I want to submit the man-days I worked so that actual consumption is
-tracked. & High & Sprint 4 \\
+US-13 & As a project manager, I want to build my project team so that I can allocate developers to it. & High & Sprint 4 \\
 \hline
-US-14 & As a project manager, I want to validate the workload submitted so that only verified data
-feeds the indicators. & Medium & Sprint 4 \\
+US-14 & As a project manager, I want to plan the monthly workload so that I can forecast the effort required. & High & Sprint 4 \\
 \hline
-US-15 & As a project manager, I want to define billing milestones so that invoicing follows
-contractual progress. & High & Sprint 6 \\
+US-15 & As a developer, I want to submit the man-days I worked so that actual consumption is tracked. & High & Sprint 4 \\
 \hline
-US-16 & As a project manager, I want to record payments received against a milestone so that
-collection is tracked. & Medium & Sprint 6 \\
+US-16 & As a project manager, I want to validate the workload submitted so that only verified data feeds the indicators. & Medium & Sprint 4 \\
 \hline
-US-17 & As a project manager, I want to record amendments so that the revised budget reflects
-contractual changes. & Medium & Sprint 6 \\
+US-17 & As a project manager, I want to organise the work into iterations so that delivery is planned in sprints. & High & Sprint 5 \\
 \hline
-US-18 & As a project manager, I want to record missions and their expenses so that travel costs are
-included in the project cost. & Medium & Sprint 6 \\
+US-18 & As a project manager, I want a prioritised and estimated product backlog so that the remaining work is visible. & High & Sprint 5 \\
 \hline
-US-19 & As a project manager, I want to keep a risk register so that project risks are tracked and
-mitigated. & Medium & Sprint 7 \\
+US-19 & As a developer, I want to follow the current iteration on a board so that I know what is in progress. & Medium & Sprint 5 \\
 \hline
-US-20 & As a project manager, I want to track deliverables and their status so that delivery
-progress is measurable. & Medium & Sprint 7 \\
+US-20 & As a project manager, I want to define billing milestones so that invoicing follows contractual progress. & High & Sprint 6 \\
 \hline
-US-21 & As a project manager, I want to record stakeholders and change requests so that project
-governance is documented. & Low & Sprint 7 \\
+US-21 & As a project manager, I want to record payments received against a milestone so that collection is tracked. & Medium & Sprint 6 \\
 \hline
-US-22 & As a director, I want to define the internal quote so that the project has an economic
-baseline. & High & Sprint 8 \\
+US-22 & As a project manager, I want to record amendments so that the revised budget reflects contractual changes. & Medium & Sprint 6 \\
 \hline
-US-23 & As a project manager, I want the platform to compute the financial indicators automatically
-so that I no longer depend on the Excel workbook. & High & Sprint 8 \\
+US-23 & As a project manager, I want to record a mission with its cost components so that travel costs are included in the project cost. & Medium & Sprint 6 \\
 \hline
-US-24 & As a project manager, I want to freeze a monthly review so that the official state of the
-project is kept as history. & Medium & Sprint 8 \\
+US-24 & As a project manager, I want to keep a risk register so that project risks are tracked and mitigated. & Medium & Sprint 7 \\
 \hline
-US-25 & As a director, I want a portfolio dashboard so that I can supervise all projects at a
-glance. & High & Sprint 8 \\
+US-25 & As a project manager, I want to track deliverables and their status so that delivery progress is measurable. & Medium & Sprint 7 \\
 \hline
-US-26 & As a user, I want a consistent and responsive interface so that the platform is comfortable
-to use daily. & Medium & Sprint 9 \\
+US-32 & As a project manager, I want to document the project stakeholders so that responsibilities are recorded. & Low & Sprint 7 \\
 \hline
-US-27 & As a project manager, I want to organise the work into iterations so that delivery is
-planned in sprints. & High & Sprint 5 \\
+US-27 & As a project manager, I want to record change requests so that every scope change is traced to a decision. & Low & Sprint 7 \\
 \hline
-US-28 & As a project manager, I want a prioritised and estimated product backlog so that the
-remaining work is visible. & High & Sprint 5 \\
+US-28 & As a director, I want to define the internal quote so that the project has an economic baseline. & High & Sprint 8 \\
 \hline
-US-29 & As a developer, I want to follow the current iteration on a board so that I know what is
-in progress. & Medium & Sprint 5 \\
+US-29 & As a project manager, I want the platform to compute the financial indicators automatically so that I no longer depend on the Excel workbook. & High & Sprint 8 \\
+\hline
+US-30 & As a project manager, I want to freeze a monthly review so that the official state of the project is kept as history. & Medium & Sprint 8 \\
+\hline
+US-31 & As a director, I want a portfolio dashboard so that I can supervise all projects at a glance. & High & Sprint 8 \\
+\hline
+US-32 & As a user, I want a consistent and responsive interface so that the platform is comfortable to use daily. & Medium & Sprint 9 \\
 \hline
 \end{longtable}
 
@@ -325,22 +303,21 @@ whole.
 \endfoot
 \endlastfoot
 \hline
-\multirow{2}{*}{R1 --- Foundation} & Sprint 1 & Technical foundation, authentication & US-01 to
-US-03 \\
+\multirow{2}{*}{R1 --- Foundation} & Sprint 1 & Technical foundation, authentication & US-01 to US-03 \\
 \cline{2-4}
- & Sprint 2 & Dynamic RBAC, users, resources & US-04 to US-07 \\
+ & Sprint 2 & Dynamic RBAC, users, resources & US-04 to US-09 \\
 \hline
-\multirow{3}{*}{R2 --- Operations} & Sprint 3 & Projects and lifecycle & US-08 to US-10 \\
+\multirow{3}{*}{R2 --- Operations} & Sprint 3 & Projects and lifecycle & US-10 to US-12 \\
 \cline{2-4}
- & Sprint 4 & Teams and workload & US-11 to US-14 \\
+ & Sprint 4 & Teams and workload & US-13 to US-16 \\
 \cline{2-4}
- & Sprint 5 & Agile planning: backlog and iterations & US-27 to US-29 \\
+ & Sprint 5 & Agile planning: backlog and iterations & US-17 to US-19 \\
 \hline
-\multirow{3}{*}{R3 --- Finance} & Sprint 6 & Billing and missions & US-15 to US-18 \\
+\multirow{3}{*}{R3 --- Finance} & Sprint 6 & Billing and missions & US-20 to US-23 \\
 \cline{2-4}
- & Sprint 7 & Governance & US-19 to US-21 \\
+ & Sprint 7 & Governance & US-24 to US-27 \\
 \cline{2-4}
- & Sprint 8 & Internal quote and KPI engine & US-22 to US-25 \\
+ & Sprint 8 & Internal quote and KPI engine & US-28 to US-31 \\
 \hline
 \multirow{2}{*}{R4 --- Delivery} & Sprint 9 & Consolidation, tests, deployment & US-26 \\
 \cline{2-4}

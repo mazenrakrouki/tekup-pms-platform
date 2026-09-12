@@ -15,44 +15,40 @@ the operational modules of the next release consume.
 
 % =====================================================================
 \section{Release 1 backlog}
-The first release realises the seven user stories of the product backlog
+The first release realises the nine user stories of the product backlog
 (Table~\ref{tab:backlog}) that concern access to the platform. Because the author is the sole
 developer, each story is expanded into the technical work it required.
 
 \begin{longtable}{|m{1.5cm}|m{6.8cm}|m{5.2cm}|m{1.4cm}|}
 \caption{Backlog of release 1}\label{tab:backlog-r1}\\
 \hline
-\textbf{Story} & \textbf{Need} & \textbf{Technical work} & \textbf{Sprint} \\
+\textbf{Story} & \textbf{User story} & \textbf{Technical work} & \textbf{Sprint} \\
 \hline
 \endfirsthead
 \hline
-\textbf{Story} & \textbf{Need} & \textbf{Technical work} & \textbf{Sprint} \\
+\textbf{Story} & \textbf{User story} & \textbf{Technical work} & \textbf{Sprint} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-US-01 & Sign in with an e-mail and a password & Authentication service, BCrypt verification, JWT
-issuance signed with HMAC-SHA512, refresh cookie, token rotation & 1 \\
+US-01 & As a user, I want to sign in with an e-mail and a password & Authentication service, BCrypt verification, JWT issuance signed with HMAC-SHA512, refresh cookie, token rotation & 1 \\
 \hline
-US-02 & Be forced to change an imposed password on first login & \texttt{first\_login} flag,
-dedicated filter restricting the token to the password-change endpoint & 1 \\
+US-02 & As a user, I want to be forced to change an imposed password on first login & \texttt{first\_login} flag, dedicated filter restricting the token to the password-change endpoint & 1 \\
 \hline
-US-03 & Revoke a user's sessions immediately & Token version persisted per user, embedded in each
-token and compared on every request & 1 \\
+US-03 & As an administrator, I want to revoke a user's sessions immediately & Token version persisted per user, embedded in each token and compared on every request & 1 \\
 \hline
-US-04 & Assign permissions to roles without redeploying & \texttt{roles}, \texttt{permissions} and
-\texttt{role\_permissions} tables, permissions carried in the token and converted into Spring
-Security authorities & 2 \\
+US-04 & As an administrator, I want to assign permissions to roles without redeploying & \texttt{roles}, \texttt{permissions} and \texttt{role\_permissions} tables, permissions carried in the token and converted into Spring Security authorities & 2 \\
 \hline
-US-05 & See only the menu entries the account is entitled to & Context endpoint returning the held
-permissions, navigation built from that response & 2 \\
+US-05 & As a user, I want to see only the menu entries my account is entitled to & Context endpoint returning the held permissions, navigation built from that response & 2 \\
 \hline
-US-06 & Create, modify and deactivate user accounts & User module, creation with a temporary
-password, activation state, role assignment & 2 \\
+US-06 & As an administrator, I want to create a user account & User module, creation by the administrator with a generated temporary password & 2 \\
 \hline
-US-07 & Record resources and their yearly cost rate & Resource entity separate from the account,
-loaded cost rate stored per resource and per year & 2 \\
+US-07 & As an administrator, I want to modify a user account & Update endpoint preserving e-mail uniqueness, role reassignment & 2 \\
+\hline
+US-08 & As an administrator, I want to deactivate a user account & Activation state on the account: deactivation rather than deletion, history preserved & 2 \\
+\hline
+US-09 & As an administrator, I want to record resources and their yearly cost rate & Resource entity separate from the account, loaded cost rate stored per resource and per year & 2 \\
 \hline
 \end{longtable}
 
@@ -103,7 +99,7 @@ several arrangements of the same information and throw most of them away, and it
 away that has the value. It was chosen for exploration, not for production, and it was used
 accordingly.
 
-The sketches served one purpose: to make the problem concrete. Reading a backlog of twenty-five
+The sketches served one purpose: to make the problem concrete. Reading a backlog of thirty-odd
 user stories tells you what the platform must do; looking at a screen tells you how much information
 a single person is expected to hold at once, and whether four different audiences really need four
 different entry points or only one with filters.

@@ -73,6 +73,17 @@
 \pretocmd{\section}{\Needspace*{5\baselineskip}}{}{}
 \pretocmd{\subsection}{\Needspace*{5\baselineskip}}{}{}
 \pretocmd{\subsubsection}{\Needspace*{3\baselineskip}}{}{}
+% Same defect, different element: a longtable whose caption and column headings
+% are printed at the foot of a page with the first row overleaf. Ask for enough
+% room that the heading arrives with some of its table.
+\BeforeBeginEnvironment{longtable}{\Needspace*{8\baselineskip}}
+
+% Forbid a paragraph from leaving a single line behind on one page or carrying a
+% single line onto the next. The closing line of chapter 1 was landing alone on a
+% page of its own, which is the same complaint about empty space seen from the
+% other end.
+\widowpenalty=10000
+\clubpenalty=10000
 
 % @author: Stoufa
 % the command `\makeindex` is mandatory to create the index file main.idx
