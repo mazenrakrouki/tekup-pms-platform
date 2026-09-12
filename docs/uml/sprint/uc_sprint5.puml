@@ -3,6 +3,8 @@ title Sprint 5 — Agile planning
 
 left to right direction
 
+skinparam linetype polyline
+
 skinparam shadowing false
 skinparam packageStyle rectangle
 skinparam defaultFontName Helvetica
@@ -40,7 +42,7 @@ UC2 ..> UC0 : <<include>>
 UC3 ..> UC0 : <<include>>
 UC4 ..> UC0 : <<include>>
 
-note bottom of UC2
+note right of UC2
   An item with no iteration stays in the product
   backlog: not committed is a normal state.
 end note

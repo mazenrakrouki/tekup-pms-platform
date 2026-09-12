@@ -3,6 +3,8 @@ title Global Use Case Diagram --- PMS Platform
 
 left to right direction
 
+skinparam linetype polyline
+
 skinparam shadowing false
 skinparam packageStyle rectangle
 skinparam defaultFontName Helvetica

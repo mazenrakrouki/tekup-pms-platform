@@ -3,6 +3,8 @@ title Sprint 2 — Dynamic access control, users and resources
 
 left to right direction
 
+skinparam linetype polyline
+
 skinparam shadowing false
 skinparam packageStyle rectangle
 skinparam defaultFontName Helvetica
@@ -33,7 +35,7 @@ UC1 ..> UC0 : <<include>>
 UC2 ..> UC0 : <<include>>
 UC3 ..> UC0 : <<include>>
 
-note bottom of UC1
+note right of UC1
   The role--permission matrix is data, not code:
   changing it takes effect without redeployment.
 end note

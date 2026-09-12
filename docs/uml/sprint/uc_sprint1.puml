@@ -3,6 +3,8 @@ title Sprint 1 — Authentication
 
 left to right direction
 
+skinparam linetype polyline
+
 skinparam shadowing false
 skinparam packageStyle rectangle
 skinparam defaultFontName Helvetica
@@ -38,7 +40,7 @@ PM -- UC3
 Dev -- UC3
 UC2 ..> UC1 : <<extend>>
 
-note bottom of UC2
+note right of UC2
   Extends authentication: on a first login the
   server confines the session to this single case.
 end note
