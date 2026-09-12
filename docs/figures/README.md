@@ -6,7 +6,7 @@ screenshots.
 
 | Source | Rendered to | Used in |
 |---|---|---|
-| `gen_class_global.py` → `class_global.svg` | `img/class_global.png` | 3.3 Domain Model |
+| `gen_drawio_class.py` → `class_global.drawio` | `img/class_global.png` | 3.3 Domain Model |
 | `st2i_organigramme.svg` | `img/st2i_organigramme.png` | 1.1.4 Organizational structure |
 | `scrum_cycle.svg` | `img/scrum_cycle.png` | 1.6.1 The Scrum framework |
 | `scrum_roles.svg` | `img/scrum_roles.png` | 1.6.2 Scrum roles |
@@ -19,11 +19,22 @@ screenshots.
 
 ## The global class diagram is the exception
 
-`class_global.svg` is **generated**, not hand-written: run `python gen_class_global.py`,
-then render it like any other figure. It lives here rather than in `docs/uml/` because the
-supervisor asked for a layout PlantUML cannot produce — `Project` in the middle with the
-other classes arranged around it — and for the operations compartment to stay visible on
-every class even when empty (`hide empty methods` suppresses it).
+It is the one figure here that is **not** an SVG rendered by `render.js`. The supervisor
+asked for a layout PlantUML cannot produce (Project in the middle, the other classes
+around it) and for the operations compartment to stay visible on every class even when
+empty, so it is authored as a **draw.io** file and exported with the draw.io desktop CLI:
+
+```bash
+python gen_drawio_class.py
+"C:/Program Files/draw.io/draw.io.exe" -x -f png -s 2 -b 10 -o "<report>/img/class_global.png" class_global.drawio
+```
+
+The `.drawio` is an intermediate, not a checked-in source: regenerate it from the script,
+or open it in draw.io desktop if you want to move a box by hand.
+
+Type is sized against the canvas width on purpose. The figure prints 160 mm wide, so a
+16 px attribute lands near 4 pt on the page; widening the layout without raising the font
+sizes is what makes a class diagram unreadable in print.
 
 `docs/uml/17-class-global-simple.puml` remains the model of record and carries a note
 saying so. **The two must be kept in step:** a relation changed in one has to be changed in
