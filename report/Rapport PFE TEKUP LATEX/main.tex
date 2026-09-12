@@ -85,6 +85,11 @@
 \widowpenalty=10000
 \clubpenalty=10000
 
+% The class turns hyphenation off, so a line that will not fit has nowhere to
+% break and spills into the margin instead. Emergency stretch lets TeX widen
+% the inter-word space on a last pass rather than overflow the measure.
+\setlength{\emergencystretch}{3em}
+
 % @author: Stoufa
 % the command `\makeindex` is mandatory to create the index file main.idx
 % https://tex.stackexchange.com/questions/9913/input-index-file-not-found

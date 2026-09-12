@@ -8,7 +8,7 @@ authorization model that structures the whole platform, and derives from them th
 diagram. It closes with the product backlog and its distribution across the development
 sprints presented in the following chapters.
 
-\section{Actor Identification}
+\section{Actor identification}
 The system rests on four main roles. Each role is defined as much by what it may do as by what it
 is explicitly prevented from doing, a distinction that is central to a platform handling
 sensitive financial data.
@@ -40,7 +40,7 @@ financial data (budget, margin, EAC, billing). \\
 \hline
 \end{longtable}
 
-\section{Functional Requirements}
+\section{Functional requirements}
 Functional requirements are organised by module. They synthesise the requirements of the SRS
 document (FR-001 to FR-053) and the use cases (UC-001 to UC-020).
 
@@ -90,7 +90,7 @@ of the project, in line with the Excel workbook. \\
 \hline
 \end{longtable}
 
-\section{Non-Functional Requirements}
+\section{Non-functional requirements}
 \begin{itemize}
     \item \textbf{Performance}: response in under two seconds for routine operations (NFR-001).
     \item \textbf{Security}: mandatory JWT authentication, hashed passwords (NFR-002).
@@ -102,7 +102,7 @@ of the project, in line with the Excel workbook. \\
     \item \textbf{Usability}: intuitive and responsive interface (NFR-007).
 \end{itemize}
 
-\section{Business Rules}
+\section{Business rules}
 The business rules come from the BRS document (65 rules, BR-001 to BR-065), enriched by the rules
 extracted from the Excel file. The most structuring ones are summarised below.
 
@@ -146,7 +146,7 @@ computation; RBAC applied by permission; hashed passwords. \\
 \hline
 \end{longtable}
 
-\section{The Dynamic Authorization Model}
+\section{The dynamic authorization model}
 \label{sec:rbac}
 The central architectural requirement of the project is to \textbf{never couple a role directly to
 a module}. Such a coupling (``ROLE $\rightarrow$ MODULE'') would require modifying and redeploying
@@ -171,7 +171,7 @@ concrete right: the one that lets a project manager edit a project.
   \label{fig:rbac-model}
 \end{figure}
 
-\section{Global Use Case Diagram}
+\section{Global use case diagram}
 Figure~\ref{fig:uc} presents the global use case diagram of the platform. The four actors are
 associated with the business use cases falling within their perimeter, in strict accordance with
 the boundaries stated in Table~\ref{tab:acteurs}: the administrator holds no project use case, and
@@ -198,7 +198,7 @@ into a snapshot happens only at the monthly review.
   \label{fig:uc}
 \end{figure}
 
-\section{Product Backlog}
+\section{Product backlog}
 The product backlog gathers the functional needs expressed as user stories, one
 action to a story. Each item is attached
 to the sprint that delivered it, which makes the incremental construction of the platform legible.
@@ -284,7 +284,7 @@ US-32 & As a user, I want a consistent and responsive interface so that the plat
 \hline
 \end{longtable}
 
-\section{Release and Sprint Planning}
+\section{Release and sprint planning}
 The backlog is distributed across four releases grouping ten sprints. Each release brings the
 product to a coherent level of maturity: R1 makes the platform usable and secure, R2 opens
 operational steering, R3 delivers the financial and governance value, and R4 consolidates the

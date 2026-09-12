@@ -327,7 +327,7 @@ unrestricted token is issued.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\columnwidth]{img/ui_login.png}
+  \includegraphics[width=0.95\columnwidth]{img/ui_login.png}
   \caption{Login interface}
   \label{fig:ui-login}
 \end{figure}
@@ -335,11 +335,11 @@ unrestricted token is issued.
 \emph{\small Note on the screenshots. Every screen reproduced in this chapter and the following
 ones was captured against a demonstration dataset generated for the purpose. The project codes,
 client names, staff names and amounts they show are fictitious and correspond to no real engagement
-of the host organization. No production data appears in this document.}
+of the host organisation. No production data appears in this document.}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.8\columnwidth]{img/ui_change_password.png}
+  \includegraphics[width=0.95\columnwidth]{img/ui_change_password.png}
   \caption{Forced password change interface}
   \label{fig:ui-change-password}
 \end{figure}
@@ -369,7 +369,7 @@ between a role and its permissions is a table, so the policy is data.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.85\columnwidth]{img/class_rbac.png}
+  \includegraphics[width=0.95\columnwidth]{img/class_rbac.png}
   \caption{Class diagram of the authorization model}
   \label{fig:class-rbac}
 \end{figure}
@@ -389,9 +389,14 @@ right on their next token without any redeployment.
 \subsubsection{Design decisions}
 \textbf{Permissions rather than roles in the code.} No role name is ever tested in the application.
 Only permission codes are, through annotations of the form
-\texttt{@PreAuthorize("hasAuthority('CREATE\_PROJECT')")}. Testing a role would hard-code the policy
-into the source and make every change a release; testing a permission leaves the policy in the
-database.
+
+\begin{center}
+\texttt{@PreAuthorize("hasAuthority('CREATE\_PROJECT')")}
+\end{center}
+
+\noindent
+Testing a role would hard-code the policy into the source and make every change a release; testing
+a permission leaves the policy in the database.
 
 \textbf{A resource is not an account.} A resource represents a cost-bearing capacity and may exist
 without a platform account, since the workbook records people who never connect to any system.
@@ -427,7 +432,7 @@ policy; the two dashboards show what it produces.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.92\columnwidth]{img/ui_permissions.png}
+  \includegraphics[width=0.95\columnwidth]{img/ui_permissions.png}
   \caption{Permission catalogue: the policy as the administrator reads it, grouped by functional
            module, with the roles that hold each code}
   \label{fig:ui-perm-catalogue}
@@ -437,7 +442,7 @@ The first session is a project manager’s.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.92\columnwidth]{img/ui_pm_dashboard.png}
+  \includegraphics[width=0.95\columnwidth]{img/ui_pm_dashboard.png}
   \caption{Project manager view: the menu carries the finance and governance sections, and the
            workspace is limited to the projects the user manages}
   \label{fig:ui-pm-dashboard}
@@ -447,7 +452,7 @@ The second is a developer’s, on the same deployment and the same data.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.92\columnwidth]{img/ui_dev_dashboard.png}
+  \includegraphics[width=0.95\columnwidth]{img/ui_dev_dashboard.png}
   \caption{Developer view of the same application: no cost rates, no indicators, no billing and no
            governance, because the role holds none of those permission codes}
   \label{fig:ui-dev-dashboard}
@@ -468,7 +473,7 @@ objects are handled by MapStruct mappers.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\columnwidth]{img/ui_users.png}
+  \includegraphics[width=0.95\columnwidth]{img/ui_users.png}
   \caption{User management interface}
   \label{fig:ui-users}
 \end{figure}
@@ -477,7 +482,7 @@ The same module carries the screen on which roles are given their permissions.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\columnwidth]{img/ui_roles.png}
+  \includegraphics[width=0.95\columnwidth]{img/ui_roles.png}
   \caption{Role and permission management interface}
   \label{fig:ui-roles}
 \end{figure}
@@ -487,7 +492,7 @@ valued at.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.9\columnwidth]{img/ui_resources.png}
+  \includegraphics[width=0.95\columnwidth]{img/ui_resources.png}
   \caption{Resource and yearly cost rate interface}
   \label{fig:ui-resources}
 \end{figure}

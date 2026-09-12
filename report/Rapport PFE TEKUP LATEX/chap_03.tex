@@ -8,9 +8,9 @@ decisions that structure every module, the domain model, and the relational sche
 it. These choices are made once here and are then applied uniformly by the ten sprints of
 Chapters~4 to~7.
 
-\section{Architectural Style}
+\section{Architectural style}
 
-\subsection{A Three-Tier Modular Monolith}
+\subsection{A three-tier modular monolith}
 The platform follows a classical \textbf{three-tier} organisation (presentation, application,
 data), deployed as a \textbf{modular monolith}: a single deployable artefact whose code is
 partitioned into independent functional modules. Figure~\ref{fig:three-tier} shows the three
@@ -51,7 +51,7 @@ The dependency graph is deliberately acyclic and converges towards the \texttt{k
 consumes the others without being consumed by any: the indicator engine is the end of the chain,
 never a prerequisite.
 
-\subsection{Layered Organisation}
+\subsection{Layered organisation}
 Each module exposes the same internal layering:
 
 \begin{itemize}
@@ -73,22 +73,22 @@ happens.
   \label{fig:layers}
 \end{figure}
 
-\section{Cross-Cutting Design Decisions}
+\section{Cross-cutting design decisions}
 
-\subsection{Authentication and Session Revocation}
+\subsection{Authentication and session revocation}
 Authentication rests on a short-lived JWT access token paired with an opaque refresh token stored
 in an \texttt{HttpOnly} cookie. Revocation does not rely on a blacklist but on a version counter
 carried by the token and compared on every request, which allows a session to be cut off instantly
 without distributed state. The mechanism is detailed in Sprint~1.
 
-\subsection{Dynamic Authorization}
+\subsection{Dynamic authorization}
 The ``Role $\rightarrow$ Permission $\rightarrow$ Module'' model presented in
 Section~\ref{sec:rbac} is enforced by annotating every endpoint with the permission code it
 requires. No role name appears in application code. The role--permission matrix lives in the
 database, which makes the authorization policy configurable data. This is the single most
 structuring decision of the project and is validated in Sprint~2.
 
-\subsection{A Hybrid Indicator Engine}
+\subsection{A hybrid indicator engine}
 Financial indicators could be either recomputed on demand or persisted at each change. The design
 retained is \textbf{hybrid}:
 
@@ -111,19 +111,19 @@ Figure~\ref{fig:kpi-engine} summarises the two paths.
   \label{fig:kpi-engine}
 \end{figure}
 
-\subsection{Multi-Currency Handling}
+\subsection{Multi-currency handling}
 Projects may be contracted in a currency different from the reporting currency. Every amount
 therefore carries its currency, and conversions use a \textbf{dated rate}: each conversion applies
 the rate at the business date of the amount: the invoice date for billing, the month for monthly
 costs, the mission date for travel. Mission cost components are converted before summation, so that
 currencies are never mixed within a total.
 
-\subsection{Auditability and Logical Deletion}
+\subsection{Auditability and logical deletion}
 Every business table carries creation and modification metadata and an \texttt{active} /
 \texttt{deleted\_at} pair. No row is physically removed: a deletion is a state change. This
 satisfies the auditability requirement and preserves the history on which the indicators depend.
 
-\section{Domain Model}
+\section{Domain model}
 Figure~\ref{fig:class-global} gives the overall map of the domain. The project is the aggregation
 root: most business entities exist only within a project and are composed by it, while users,
 roles, permissions and resources form an independent reference core.
@@ -150,14 +150,14 @@ Sprint~8.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.75\columnwidth]{img/class_security.png}
+  \includegraphics[width=0.95\columnwidth]{img/class_security.png}
   \caption{Class diagram --- security and access control}
   \label{fig:class-sec}
 \end{figure}
 
-\section{Database Design}
+\section{Database design}
 
-\subsection{Modelling Conventions}
+\subsection{Modelling conventions}
 The schema targets PostgreSQL and follows uniform conventions:
 
 \begin{itemize}
@@ -171,7 +171,7 @@ The schema targets PostgreSQL and follows uniform conventions:
   \item audit columns and logical deletion on every business table.
 \end{itemize}
 
-\subsection{Logical Model}
+\subsection{Logical model}
 The core of the schema is the dynamic access control: \texttt{users} references \texttt{roles}, and
 \texttt{roles} relates to \texttt{permissions} through the \texttt{role\_permissions} association.
 A project references its director and groups its child entities: project manager assignment (a
@@ -217,7 +217,7 @@ Indicators & \texttt{kpi\_snapshots} & KPI \& Reporting \\
 \hline
 \end{longtable}
 
-\subsection{Monthly Time Series and Indicator Snapshots}
+\subsection{Monthly time series and indicator snapshots}
 The Excel workbook is a resource~$\times$~month grid. Rather than reproducing twenty-five month
 columns, the model is \textbf{normalised}: one row per (project, resource, month) in
 \texttt{workload\_plan} and \texttt{actual\_workload}. Adding a month becomes inserting a row rather
@@ -229,7 +229,7 @@ history needed for evolution curves and fast reads for dashboards. It deliberate
 expenses), the total aggregating the two. The original workbook blurred that distinction, which
 matters when analysing why a project drifts.
 
-\subsection{Reference Data and Migration Strategy}
+\subsection{Reference data and migration strategy}
 A seed dataset creates the four roles, the full permission catalogue, the default role--permission
 matrix, the currencies, the business parameters, the risk scales and a bootstrap administrator.
 
@@ -238,7 +238,7 @@ The schema is managed exclusively by \textbf{Flyway} versioned SQL migrations, w
 constitute the living documentation of the database and make every schema change reviewable and
 reproducible.
 
-\section{Deployment Architecture}
+\section{Deployment architecture}
 Figure~\ref{fig:deploy} shows the target deployment: a browser running the single-page
 application, an application server exposing the REST API, and a database server. The whole
 platform is a single deployable artefact, consistent with the modular monolith decision.
@@ -250,7 +250,7 @@ platform is a single deployable artefact, consistent with the modular monolith d
   \label{fig:deploy}
 \end{figure}
 
-\section{Working Environment}
+\section{Working environment}
 The technical stack was assembled under two constraints that never changed: a single developer with
 eight months, and a platform whose value lies in financial correctness rather than in scale. That
 combination consistently favoured mature, well-documented tools with a short path from decision to
@@ -261,7 +261,7 @@ named a technology, that choice was taken as given and is stated as such.
 Development was carried out on a workstation with an Intel Core~i7 processor, 16~GB of RAM and an
 NVMe SSD, under Windows~11. The memory matters more than it may appear: the backend, the Angular
 development server and a PostgreSQL instance run simultaneously throughout a working session, and
-the containerised stack of Sprint~10 adds three more processes on top of them.
+the containerized stack of Sprint~10 adds three more processes on top of them.
 
 \subsection{Programming languages}
 
