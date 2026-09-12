@@ -60,6 +60,20 @@
   \def\mlftitle{Figures}%
   \def\mlttitle{Tables}%
 }
+% A heading printed as the last thing on a page leaves its own text on the next
+% one, which is what happened to 2.3 at the foot of page 25. Require a few lines
+% of room before any heading is set; if they are not left, the heading moves to
+% the next page with the text it introduces. \pretocmd is used rather than
+% \renewcommand so that the starred forms (\section*{Introduction}) and the
+% optional short-title argument keep working. Five lines is the measured balance:
+% four leaves one heading stranded, six ejects a page that then prints almost
+% empty, which is the opposite complaint.
+\usepackage{etoolbox}
+\usepackage{needspace}
+\pretocmd{\section}{\Needspace*{5\baselineskip}}{}{}
+\pretocmd{\subsection}{\Needspace*{5\baselineskip}}{}{}
+\pretocmd{\subsubsection}{\Needspace*{3\baselineskip}}{}{}
+
 % @author: Stoufa
 % the command `\makeindex` is mandatory to create the index file main.idx
 % https://tex.stackexchange.com/questions/9913/input-index-file-not-found
