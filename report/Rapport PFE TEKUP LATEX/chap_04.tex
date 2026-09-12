@@ -438,7 +438,7 @@ policy; the two dashboards show what it produces.
   \label{fig:ui-perm-catalogue}
 \end{figure}
 
-The first session is a project manager’s.
+The first session is a project manager's.
 
 \begin{figure}[H]
   \centering
@@ -448,7 +448,7 @@ The first session is a project manager’s.
   \label{fig:ui-pm-dashboard}
 \end{figure}
 
-The second is a developer’s, on the same deployment and the same data.
+The second is a developer's, on the same deployment and the same data.
 
 \begin{figure}[H]
   \centering
@@ -500,7 +500,8 @@ valued at.
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
 Release~1 established the foundations on which the entire platform rests: a modular application
-skeleton with auditing and controlled migrations, a robust authentication chain, and above all a
+skeleton with auditing and controlled migrations, an authentication chain that rotates its tokens
+and can cut off a session instantly, and above all a
 dynamic authorization model that makes the security policy configurable data rather than compiled
 code. The platform now knows not only who the user is but what that user may do, and it holds the
 reference data the business modules consume. The next release exploits this foundation to deliver
