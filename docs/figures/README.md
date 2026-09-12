@@ -6,6 +6,7 @@ screenshots.
 
 | Source | Rendered to | Used in |
 |---|---|---|
+| `gen_class_global.py` → `class_global.svg` | `img/class_global.png` | 3.3 Domain Model |
 | `st2i_organigramme.svg` | `img/st2i_organigramme.png` | 1.1.4 Organizational structure |
 | `scrum_cycle.svg` | `img/scrum_cycle.png` | 1.6.1 The Scrum framework |
 | `scrum_roles.svg` | `img/scrum_roles.png` | 1.6.2 Scrum roles |
@@ -15,6 +16,18 @@ screenshots.
 | `indicator_engine.svg` | `img/indicator_engine.png` | 3.2.3 A Hybrid Indicator Engine |
 
 `img/` above is `report/Rapport PFE TEKUP LATEX/img/`.
+
+## The global class diagram is the exception
+
+`class_global.svg` is **generated**, not hand-written: run `python gen_class_global.py`,
+then render it like any other figure. It lives here rather than in `docs/uml/` because the
+supervisor asked for a layout PlantUML cannot produce — `Project` in the middle with the
+other classes arranged around it — and for the operations compartment to stay visible on
+every class even when empty (`hide empty methods` suppresses it).
+
+`docs/uml/17-class-global-simple.puml` remains the model of record and carries a note
+saying so. **The two must be kept in step:** a relation changed in one has to be changed in
+the other, or the printed figure and the source model will disagree.
 
 ## Rendering
 
