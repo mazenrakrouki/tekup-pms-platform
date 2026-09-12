@@ -14,6 +14,11 @@ is explicitly prevented from doing, a distinction that is central to a platform 
 sensitive financial data.
 
 \begin{longtable}{|m{3cm}|m{6.5cm}|m{5cm}|}
+\caption{PMS actors and their boundaries}\label{tab:acteurs}\\
+\hline
+\textbf{Actor} & \textbf{Mission} & \textbf{Boundary (cannot)} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Actor} & \textbf{Mission} & \textbf{Boundary (cannot)} \\
 \hline
@@ -33,8 +38,6 @@ profitability tracking. & Manage users, roles, cost rates and configuration. \\
 Developer & Entry of actual workload; consultation of own assignments and missions. & Access any
 financial data (budget, margin, EAC, billing). \\
 \hline
-\caption{PMS actors and their boundaries}
-\label{tab:acteurs}
 \end{longtable}
 
 \section{Functional Requirements}
@@ -42,6 +45,11 @@ Functional requirements are organised by module. They synthesise the requirement
 document (FR-001 to FR-053) and the use cases (UC-001 to UC-020).
 
 \begin{longtable}{|m{3.5cm}|m{11cm}|}
+\caption{Functional requirements by module}\label{tab:besoins-fonctionnels}\\
+\hline
+\textbf{Module} & \textbf{Main functional requirements} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Module} & \textbf{Main functional requirements} \\
 \hline
@@ -80,8 +88,6 @@ generation. \\
 Governance (amendments, risks, deliverables, stakeholders, changes) & Registers tracking the life
 of the project, in line with the Excel workbook. \\
 \hline
-\caption{Functional requirements by module}
-\label{tab:besoins-fonctionnels}
 \end{longtable}
 
 \section{Non-Functional Requirements}
@@ -101,6 +107,11 @@ The business rules come from the BRS document (65 rules, BR-001 to BR-065), enri
 extracted from the Excel file. The most structuring ones are summarised below.
 
 \begin{longtable}{|m{3.5cm}|m{11cm}|}
+\caption{Summary of business rules}\label{tab:regles-gestion}\\
+\hline
+\textbf{Domain} & \textbf{Main rules} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Domain} & \textbf{Main rules} \\
 \hline
@@ -133,8 +144,6 @@ computed automatically. \\
 KPI and security & Financial KPIs visible only to the director and the project manager; automatic
 computation; RBAC applied by permission; hashed passwords. \\
 \hline
-\caption{Summary of business rules}
-\label{tab:regles-gestion}
 \end{longtable}
 
 \section{The Dynamic Authorization Model}
@@ -196,6 +205,11 @@ Priority is derived from technical dependency: a story is high priority when sub
 depend on it.
 
 \begin{longtable}{|m{0.9cm}|m{9.4cm}|m{1.9cm}|m{1.6cm}|}
+\caption{Product backlog of the PMS platform}\label{tab:backlog}\\
+\hline
+\textbf{Id} & \textbf{User story} & \textbf{Priority} & \textbf{Sprint} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Id} & \textbf{User story} & \textbf{Priority} & \textbf{Sprint} \\
 \hline
@@ -290,8 +304,6 @@ remaining work is visible. & High & Sprint 5 \\
 US-29 & As a developer, I want to follow the current iteration on a board so that I know what is
 in progress. & Medium & Sprint 5 \\
 \hline
-\caption{Product backlog of the PMS platform}
-\label{tab:backlog}
 \end{longtable}
 
 \section{Release and Sprint Planning}
@@ -301,6 +313,11 @@ operational steering, R3 delivers the financial and governance value, and R4 con
 whole.
 
 \begin{longtable}{|m{3.2cm}|m{2.0cm}|m{4.2cm}|m{4.6cm}|}
+\caption{Distribution of the backlog across releases and sprints}\label{tab:planning}\\
+\hline
+\textbf{Release} & \textbf{Sprint} & \textbf{Scope} & \textbf{User stories} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Release} & \textbf{Sprint} & \textbf{Scope} & \textbf{User stories} \\
 \hline
@@ -329,8 +346,6 @@ US-03 \\
 \cline{2-4}
  & Sprint 10 & Containerization and continuous delivery & Technical sprint, no user story \\
 \hline
-\caption{Distribution of the backlog across releases and sprints}
-\label{tab:planning}
 \end{longtable}
 
 The internship ran from 5 January to 30 August 2026, that is thirty-four weeks. Six weeks were
@@ -342,6 +357,11 @@ internship, each chapter being drafted as the work it describes was carried out,
 as a whole at the end.
 
 \begin{longtable}{|m{4.0cm}|m{3.0cm}|m{3.0cm}|m{1.8cm}|}
+\caption{Schedule of the preparation phase and the ten sprints}\label{tab:schedule}\\
+\hline
+\textbf{Phase} & \textbf{Start} & \textbf{End} & \textbf{Weeks} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Phase} & \textbf{Start} & \textbf{End} & \textbf{Weeks} \\
 \hline
@@ -371,8 +391,6 @@ Sprint 9 & 27 July & 7 August & 2 \\
 \hline
 Sprint 10 & 10 August & 28 August & 3 \\
 \hline
-\caption{Schedule of the preparation phase and the ten sprints}
-\label{tab:schedule}
 \end{longtable}
 
 \section*{Conclusion}

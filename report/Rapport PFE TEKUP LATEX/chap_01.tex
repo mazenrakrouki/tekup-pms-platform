@@ -138,6 +138,11 @@ information: project identification and budget, resource cost rates, planned wor
 workload, billing milestones, missions, risks, deliverables and dashboards.
 
 \begin{longtable}{|m{4.5cm}|m{10.5cm}|}
+\caption{Functional structure of the Excel project review workbook}\label{tab:excel-structure}\\
+\hline
+\textbf{Tab family} & \textbf{Business role} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Tab family} & \textbf{Business role} \\
 \hline
@@ -161,8 +166,6 @@ Steering (Statistics, Dashboard, Glossary) & Consolidation of indicators and KPI
 Governance (Risks, Deliverables, Stakeholders, Changes, Amendments) & Registers tracking the life
 of the project. \\
 \hline
-\caption{Functional structure of the Excel project review workbook}
-\label{tab:excel-structure}
 \end{longtable}
 
 \subsection{Analysis of the reference workbook}
@@ -463,6 +466,11 @@ Table~\ref{tab:excel-traceability} summarises the correspondence established dur
 preparation phase between the sheets analysed and the modules built.
 
 \begin{longtable}{|m{4.3cm}|m{5.2cm}|m{4.6cm}|}
+\caption{Traceability from the Excel workbook to the PMS modules}\label{tab:excel-traceability}\\
+\hline
+\textbf{Excel sheet} & \textbf{Business logic captured} & \textbf{PMS module (sprint)} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Excel sheet} & \textbf{Business logic captured} & \textbf{PMS module (sprint)} \\
 \hline
@@ -496,8 +504,6 @@ Glossaire & Definition and calculation method of every indicator & Specification
 Param\`etres & Controlled vocabularies: risk probability, severity, treatment, categories &
 Business enumerations of the governance module (S7) \\
 \hline
-\caption{Traceability from the Excel workbook to the PMS modules}
-\label{tab:excel-traceability}
 \end{longtable}
 
 \subsection{Existing market solutions}
@@ -547,6 +553,12 @@ the workbook. The symbol $\bullet$ marks native support, $\circ$ support obtaina
 configuration or an add-on, and \textbf{--} the absence of the capability.
 
 \begin{longtable}{|m{5.4cm}|c|c|c|c|c|}
+\caption{Comparison of existing tools against the requirements of the reference workbook}\label{tab:market-comparison}\\
+\hline
+\textbf{Requirement from the workbook} & \textbf{MS Project} & \textbf{Jira} & \textbf{Odoo} &
+\textbf{monday} & \textbf{PMS} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Requirement from the workbook} & \textbf{MS Project} & \textbf{Jira} & \textbf{Odoo} &
 \textbf{monday} & \textbf{PMS} \\
@@ -574,8 +586,6 @@ Agile planning: backlog and sprints & $\circ$ & $\bullet$ & $\bullet$ & $\bullet
 \hline
 Scheduling and critical path & $\bullet$ & $\circ$ & $\bullet$ & $\circ$ & -- \\
 \hline
-\caption{Comparison of existing tools against the requirements of the reference workbook}
-\label{tab:market-comparison}
 \end{longtable}
 
 The table should be read in both directions. The existing tools are strong exactly where the

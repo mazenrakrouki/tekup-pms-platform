@@ -31,7 +31,9 @@
 % to English leaves it French — invisible for figures, whose label is spelt the
 % same in both languages, but not for tables. Override it here rather than in
 % the class file.
-\captionsetup[table]{name=Table}
+\captionsetup[table]{name=Table, position=top}
+% Table captions sit above the table, so the caption skip has to open below it
+% rather than above; position=top tells the caption package which side to pad.
 
 % Same root cause as above. arabi redefines the table of contents as
 %   {\select@language{\main@Arabi@language}\SAV@tableofcontents}

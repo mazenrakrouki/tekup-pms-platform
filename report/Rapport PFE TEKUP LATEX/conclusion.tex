@@ -6,62 +6,48 @@ The objective of this final year project was to replace a scattered, spreadsheet
 steering process with a centralised platform that preserves the richness of the existing financial
 model while removing its fragility. That objective is met: PMS covers the whole functional scope
 identified during the analysis of the reference workbook, from dynamic authorization to the
-earned-value indicator engine.
+earned-value indicator engine. The construction proceeded through ten increments, each demonstrable
+in isolation. The first release delivered the technical foundation, authentication and above all the
+dynamic authorization model; the second opened operational steering with projects, teams and
+workload; the third delivered the core business value, that is billing, missions, governance and the
+indicator engine; and the fourth consolidated the interface, verified the security model and made
+the platform reproducibly deployable through containerization and a continuous integration pipeline.
 
-\section*{Assessment}
-The construction proceeded through ten increments, each demonstrable in isolation. Release~1
-delivered the technical foundation, authentication and above all the dynamic authorization model.
-Release~2 opened operational steering with projects, teams and workload. Release~3 delivered the
-core business value: billing, missions, governance and the indicator engine. Release~4
-consolidated the interface, verified the security model, and made the platform reproducibly
-deployable through containerization and a continuous integration pipeline.
+Three design decisions structure that result and are, in retrospect, the ones that mattered most.
+The first is the \textbf{dynamic authorization model}: by inserting a permission level between roles
+and modules, and by keeping the role--permission matrix in the database, the platform makes its
+security policy configurable data rather than compiled code, so that granting a new right is an
+administrative act and not a release. The second is the \textbf{hybrid indicator engine}: rather
+than choosing between recomputing indicators on demand and persisting them, the platform does both,
+live computation guaranteeing that no dashboard displays a stale figure while a frozen monthly
+snapshot preserves the official state of each review, which reproduces the strength of the original
+workbook, a live dashboard with monthly history, without its fragility. The third is the
+\textbf{normalisation of the monthly time series}: replacing a grid of month columns with one row
+per project, resource and month turned a structural limitation of the spreadsheet into a simple
+insertion, and made integrity constraints expressible, so that no month is duplicated, no entry
+lands on an unassigned project, and no validated period is silently rewritten.
 
-Three design decisions structure the result and are, in retrospect, the ones that mattered most.
+Beyond the technologies used, the work required reading a real business model out of an artefact
+that was never written as a specification, and arbitrating between what the workbook did, what the
+written specifications said, and what the code could reasonably guarantee. It also required
+designing for confidentiality: deciding that commercially sensitive amounts should be computed on
+read rather than stored is an engineering decision with a business justification, not a technical
+preference. Those two demands, more than any framework, are what this project taught.
 
-The first is the \textbf{dynamic authorization model}. By inserting a permission level between
-roles and modules, and by keeping the role--permission matrix in the database, the platform makes
-its security policy configurable data rather than compiled code. Granting a new right is an
-administrative act, not a release.
+Several avenues remain open beyond the delivered scope, and they follow directly from choices made
+during the work rather than from gaps left in it. The most immediate is the automatic import of
+time-tracking data: the workload model was designed to accept a second data source alongside manual
+entry, so that effort recorded in an external tool could be imported and reconciled, and the
+mechanism is anticipated in the design though not implemented. Next comes reporting and export,
+since the platform computes and displays the indicators but does not yet generate the review
+documents in the format the company already circulates, which would shorten the last manual step of
+the monthly review. Further out lies integration with the wider information system, which the
+business rules explicitly anticipate towards accounting, human resources and enterprise systems, and
+for which the modular organisation of the code was chosen with reversibility in mind, a module being
+extractable behind an interface without restructuring the whole. Last is the question of scale: the
+current deployment targets the internal use of one company, and a significant growth in the number
+of projects or users would justify revisiting the modular monolith, a decision deliberately taken as
+reversible rather than permanent.
 
-The second is the \textbf{hybrid indicator engine}. Rather than choosing between recomputing
-indicators on demand and persisting them, the platform does both: live computation guarantees that
-no dashboard displays a stale figure, while a frozen monthly snapshot preserves the official state
-of each review. This reproduces the strength of the original workbook, a live dashboard with monthly
-history, without its fragility.
-
-The third is the \textbf{normalisation of the monthly time series}. Replacing a grid of month
-columns with one row per project, resource and month turned a structural limitation of the
-spreadsheet into a simple insertion, and made integrity constraints expressible: no duplicate
-month, no entry on an unassigned project, no silent rewriting of a validated period.
-
-\section*{Skills Acquired}
-Beyond the technologies used, this project required reading a real business model out of an
-artefact that was never written as a specification, and arbitrating between what the workbook did,
-what the written specifications said, and what the code could reasonably guarantee. It also
-required designing for confidentiality: deciding that commercially sensitive amounts should be
-computed on read rather than stored is an engineering decision with a business justification, not a
-technical preference.
-
-\section*{Limitations and Perspectives}
-Several avenues remain open.
-
-\textbf{Automatic time-tracking import.} The workload model was designed to accept a second data
-source alongside manual entry, so that effort recorded in an external time-tracking tool could be
-imported and reconciled. The mechanism is anticipated in the design but not implemented; it is the
-most immediate extension.
-
-\textbf{Reporting and export.} The platform computes and displays the indicators; generating
-exportable review documents in the format the company already circulates would shorten the last
-manual step of the monthly review.
-
-\textbf{Integration with the information system.} The business rules explicitly anticipate future
-integration points with accounting, human resources and enterprise systems. The modular
-organisation of the code was chosen with that reversibility in mind: a module can be extracted
-behind an interface without restructuring the whole.
-
-\textbf{Scaling the deployment.} The current deployment targets the internal use of one company. A
-significant growth in the number of projects or users would justify revisiting the modular monolith,
-a decision deliberately taken as reversible rather than permanent.
-
-The platform delivered is therefore both an answer to an immediate operational need and a
-foundation on which the company's project steering can continue to evolve.
+The platform delivered is therefore both an answer to an immediate operational need and a foundation
+on which the company's project steering can continue to evolve.

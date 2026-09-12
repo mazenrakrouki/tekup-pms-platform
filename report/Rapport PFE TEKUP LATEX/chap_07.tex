@@ -14,6 +14,11 @@ The last release carries a single user story. The remainder of its content is cr
 work that no functional story expresses, which is itself characteristic of a consolidation release.
 
 \begin{longtable}{|m{1.5cm}|m{6.8cm}|m{5.2cm}|m{1.4cm}|}
+\caption{Backlog of release 4}\label{tab:backlog-r4}\\
+\hline
+\textbf{Story} & \textbf{Need} & \textbf{Technical work} & \textbf{Sprint} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Story} & \textbf{Need} & \textbf{Technical work} & \textbf{Sprint} \\
 \hline
@@ -36,8 +41,6 @@ probes and startup ordering & 10 \\
 --- & Verify every change automatically & Continuous integration pipeline building, testing and
 assembling the stack & 10 \\
 \hline
-\caption{Backlog of release 4}
-\label{tab:backlog-r4}
 \end{longtable}
 
 % =====================================================================
@@ -97,6 +100,11 @@ ever see, this convergence matters as much to adoption as the correctness of the
 The application was reviewed against the common categories of web vulnerability.
 
 \begin{longtable}{|m{4.6cm}|m{10cm}|}
+\caption{Security review by vulnerability category}\label{tab:owasp}\\
+\hline
+\textbf{Category} & \textbf{Measure taken} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Category} & \textbf{Measure taken} \\
 \hline
@@ -121,8 +129,6 @@ permission; computed amounts never persisted \\
 Security misconfiguration & Schema managed by versioned migrations with the ORM in validation mode;
 secrets externalised as environment variables \\
 \hline
-\caption{Security review by vulnerability category}
-\label{tab:owasp}
 \end{longtable}
 
 \subsubsection{Packaging, and what it does not solve}
@@ -236,6 +242,11 @@ unified interface. Table~\ref{tab:final} summarises the path from the reference 
 delivered platform.
 
 \begin{longtable}{|m{2.0cm}|m{5.6cm}|m{6.8cm}|}
+\caption{From the reference workbook to the delivered platform}\label{tab:final}\\
+\hline
+\textbf{Sprint} & \textbf{Increment delivered} & \textbf{Excel logic replaced} \\
+\hline
+\endfirsthead
 \hline
 \textbf{Sprint} & \textbf{Increment delivered} & \textbf{Excel logic replaced} \\
 \hline
@@ -263,8 +274,6 @@ Sprint 9 & Interface consolidation, tests, security review & --- (quality) \\
 \hline
 Sprint 10 & Containerization and continuous delivery & --- (delivery chain) \\
 \hline
-\caption{From the reference workbook to the delivered platform}
-\label{tab:final}
 \end{longtable}
 
 \section*{Conclusion}
