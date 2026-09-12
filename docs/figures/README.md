@@ -7,6 +7,7 @@ screenshots.
 | Source | Rendered to | Used in |
 |---|---|---|
 | `gen_drawio_class.py` → `class_global.drawio` | `img/class_global.png` | 3.3 Domain Model |
+| `gen_drawio_usecase.py` | `img/use_case.png`, `img/uc_sprint1..8.png` | 2.6 and the ten sprints |
 | `st2i_organigramme.svg` | `img/st2i_organigramme.png` | 1.1.4 Organizational structure |
 | `scrum_cycle.svg` | `img/scrum_cycle.png` | 1.6.1 The Scrum framework |
 | `scrum_roles.svg` | `img/scrum_roles.png` | 1.6.2 Scrum roles |
@@ -17,12 +18,25 @@ screenshots.
 
 `img/` above is `report/Rapport PFE TEKUP LATEX/img/`.
 
-## The global class diagram is the exception
+## The draw.io diagrams
 
-It is the one figure here that is **not** an SVG rendered by `render.js`. The supervisor
-asked for a layout PlantUML cannot produce (Project in the middle, the other classes
-around it) and for the operations compartment to stay visible on every class even when
-empty, so it is authored as a **draw.io** file and exported with the draw.io desktop CLI:
+Two sets of figures here are authored as **draw.io** files rather than SVG, and
+exported with the draw.io desktop CLI.
+
+**The nine use case diagrams.** PlantUML hands placement to GraphViz, which routes
+every edge itself: splines by default, straight segments with a corner under
+`linetype polyline`. Neither is a ruler-straight association, and no PlantUML
+setting gives one, because the bend is the router answering for where it chose
+to put the nodes. Placing the nodes by hand removes the question: a draw.io edge
+with `edgeStyle=none` and no waypoints is one straight line, always. The layout
+rule that keeps it safe is that every use case sits in one column and every actor
+to the left of it, so a line only enters the column at its own target and cannot
+clip a neighbour.
+
+**The global class diagram.** The supervisor asked for a layout PlantUML cannot produce
+(Project in the middle, the other classes around it) and for the operations compartment
+to stay visible on every class even when empty, which `hide empty methods` suppresses.
+Generate and export it the same way:
 
 ```bash
 python gen_drawio_class.py
