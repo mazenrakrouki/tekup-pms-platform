@@ -29,12 +29,12 @@ rectangle "PMS Platform" {
   usecase "Authenticate" as UC0
 }
 
-PM --> UC1
-PM --> UC2
-PM --> UC3
-PM --> UC4
-Dir --> UC4
-Dev --> UC4
+PM -- UC1
+PM -- UC2
+PM -- UC3
+PM -- UC4
+Dir -- UC4
+Dev -- UC4
 UC1 ..> UC0 : <<include>>
 UC2 ..> UC0 : <<include>>
 UC3 ..> UC0 : <<include>>

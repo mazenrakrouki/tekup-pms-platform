@@ -28,14 +28,14 @@ rectangle "PMS Platform" {
   usecase "Terminate the session" as UC3
 }
 
-Admin --> UC1
-Dir --> UC1
-PM --> UC1
-Dev --> UC1
-Admin --> UC3
-Dir --> UC3
-PM --> UC3
-Dev --> UC3
+Admin -- UC1
+Dir -- UC1
+PM -- UC1
+Dev -- UC1
+Admin -- UC3
+Dir -- UC3
+PM -- UC3
+Dev -- UC3
 UC2 ..> UC1 : <<extend>>
 
 note bottom of UC2
