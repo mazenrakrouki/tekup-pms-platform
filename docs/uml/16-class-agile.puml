@@ -95,11 +95,10 @@ enum BacklogItemStatus {
   DONE
 }
 
-Project "1" *-- "0..*" Sprint      : plans >
-Project "1" *-- "0..*" BacklogItem : owns >
-Sprint  "0..1" o-- "0..*" BacklogItem : commits >
-BacklogItem "0..*" -- "0..1" User : assigned to >
-
+Project "1" *-- "0..*" Sprint      : plans
+Project "1" *-- "0..*" BacklogItem : owns
+Sprint  "0..1" o-- "0..*" BacklogItem : commits
+BacklogItem "0..*" -- "0..1" User : assigned to
 Sprint      .right.> SprintStatus
 BacklogItem .right.> BacklogItemStatus
 BacklogItem .down.>  BacklogPriority

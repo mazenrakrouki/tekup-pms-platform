@@ -91,12 +91,11 @@ class Resource {
 }
 
 Project ..> ProjectStatus
-Project "*" --> "1" User : director >
-Project "*" --> "0..1" User : project manager >
+Project "*" -- "1" User : director
+Project "*" -- "0..1" User : project manager
 Project "1" *-- "*" TeamAssignment
-TeamAssignment "*" --> "1" User : member >
-Resource "0..1" --> "1" User : cost of >
-
+TeamAssignment "*" -- "1" User : member
+Resource "0..1" -- "1" User : cost of
 note right of Project
   Effective budget = revisedBudget if set, otherwise initialBudget.
 end note

@@ -105,14 +105,13 @@ class Mission {
   - endDate : LocalDate
 }
 
-Project "1" *-- "*" BillingMilestone : milestones >
-BillingMilestone "1" *-- "*" Payment : payments >
+Project "1" *-- "*" BillingMilestone : milestones
+BillingMilestone "1" *-- "*" Payment : payments
 BillingMilestone ..> MilestoneStatus
-Project "1" *-- "*" Amendment : amendments >
-Project "1" *-- "*" QuoteLine : internal quote >
+Project "1" *-- "*" Amendment : amendments
+Project "1" *-- "*" QuoteLine : internal quote
 QuoteLine ..> QuoteSection
-Project "1" *-- "*" Mission : missions >
-
+Project "1" *-- "*" Mission : missions
 note right of BillingMilestone
   The sum of milestone percentages does not exceed 100% of the contract.
 end note

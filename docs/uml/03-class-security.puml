@@ -65,9 +65,8 @@ class Permission {
   - module : String
 }
 
-User "*" --> "1" Role : has >
-Role "*" -- "*" Permission : grants >
-
+User "*" -- "1" Role : has
+Role "*" -- "*" Permission : grants
 note bottom of User
   Incrementing tokenVersion revokes all active sessions.
 end note

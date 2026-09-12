@@ -155,13 +155,12 @@ Project "1" -- "1..*" WorkloadPlan : forecasts
 Project "1" -- "1..*" ActualWorkload : consumes
 Project "1" -- "1..*" BillingMilestone : invoiced by
 Project "1" -- "1..*" Mission : incurs
-Project "1" -- "1..*" Sprint : organised into
-Project "1" -- "1..*" BacklogItem : owns
+Project "1" *-- "1..*" BacklogItem : owns
 Project "1" -- "1..*" Deliverable : produces
 Project "1" -- "1..*" Risk : tracks
 Project "1" -- "1..*" KpiSnapshot : measured by
 
-Sprint "0..1" -- "1..*" BacklogItem : contains
+Sprint "0..1" o-- "1..*" BacklogItem : gathers
 
 note bottom of Permission
   The four roles are rows in the database,

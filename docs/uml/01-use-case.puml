@@ -27,7 +27,7 @@ rectangle "PMS Platform" {
   usecase "Manage users\nand access rights"     as UC1
   usecase "Manage resources\nand cost rates"    as UC2
   usecase "Manage projects"                     as UC3
-  usecase "Define the\ninternal quote"          as UC4
+  usecase "Define the\ninternal quote\n(restricted)"          as UC4
   usecase "Manage project\nexecution"           as UC5
   usecase "Record own\nworkload"                as UC6
   usecase "Manage financial\ntracking"          as UC7
@@ -38,21 +38,21 @@ rectangle "PMS Platform" {
   usecase "Authenticate"                        as AUTH
 }
 
-Admin --> UC1
-Admin --> UC2
+Admin -- UC1
+Admin -- UC2
 
-Dir --> UC3
-Dir --> UC4
-Dir --> UC5
-Dir --> UC9
+Dir -- UC3
+Dir -- UC4
+Dir -- UC5
+Dir -- UC9
 
-PM  --> UC5
-PM  --> UC7
-PM  --> UC8
-PM  --> UC9
+PM  -- UC5
+PM  -- UC7
+PM  -- UC8
+PM  -- UC9
 
-Dev --> UC6
-Dev --> UC9
+Dev -- UC6
+Dev -- UC9
 
 UC1 ..> AUTH : <<include>>
 UC2 ..> AUTH : <<include>>
@@ -63,11 +63,5 @@ UC6 ..> AUTH : <<include>>
 UC7 ..> AUTH : <<include>>
 UC8 ..> AUTH : <<include>>
 UC9 ..> AUTH : <<include>>
-
 UC9 <.. UC10 : <<extend>>
-
-note right of UC4
-  Restricted access: sensitive commercial data.
-end note
-
 @enduml

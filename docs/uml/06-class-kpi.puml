@@ -93,14 +93,13 @@ class KpiSnapshot {
   - highlights : String
 }
 
-Resource "0..1" --> "1" User : cost of >
-Resource "1" *-- "*" AnnualTcc : rate per year >
+Resource "0..1" -- "1" User : cost of
+Resource "1" *-- "*" AnnualTcc : rate per year
 Project "1" *-- "*" WorkloadPlan
-WorkloadPlan "*" --> "1" User : for >
+WorkloadPlan "*" -- "1" User : for
 Project "1" *-- "*" ActualWorkload
-ActualWorkload "*" --> "1" User : for >
-Project "1" *-- "*" KpiSnapshot : monthly reviews >
-
+ActualWorkload "*" -- "1" User : for
+Project "1" *-- "*" KpiSnapshot : monthly reviews
 note right of AnnualTcc
   The daily cost uses the TCC rate for the year of the reported period.
 end note
