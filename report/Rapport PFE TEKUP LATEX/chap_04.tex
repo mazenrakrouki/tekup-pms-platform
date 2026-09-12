@@ -69,7 +69,7 @@ only summarised here.
         analysis of Chapter~1, and it is the reason the platform reproduces the company's financial
         model rather than an approximation of it.
   \item \textbf{The requirements and the product backlog.} The rules extracted from the workbook
-        were turned into actors, functional and non-functional requirements, and twenty-five user
+        were turned into actors, functional and non-functional requirements, and thirty-two user
         stories distributed across four releases. This is Chapter~2.
   \item \textbf{The architecture and the technical stack.} The modular monolith, the dynamic
         authorization model, the hybrid indicator engine and the relational schema were decided
@@ -99,7 +99,7 @@ several arrangements of the same information and throw most of them away, and it
 away that has the value. It was chosen for exploration, not for production, and it was used
 accordingly.
 
-The sketches served one purpose: to make the problem concrete. Reading a backlog of thirty-odd
+The sketches served one purpose: to make the problem concrete. Reading a backlog of thirty-two
 user stories tells you what the platform must do; looking at a screen tells you how much information
 a single person is expected to hold at once, and whether four different audiences really need four
 different entry points or only one with filters.
@@ -125,75 +125,69 @@ distinction visible in the images themselves: the sketches carry a provisional p
 reports in Tunisian dinars.
 
 \subsubsection{Sign-in and portfolio}
-The first sketches addressed the two screens with the widest audience: the entry point, and the
-overview a director would open first.
+The first sketches addressed the two screens with the widest audience: the entry point, and
+the portfolio overview on which a director meets every project at once.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.62\columnwidth]{img/mk_login.png}
-  \caption{Design sketch --- sign-in screen}
-  \label{fig:mk-login}
-\end{figure}
-
-The second is the portfolio overview, the screen on which a director meets every project at
-once.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.62\columnwidth]{img/mk_portfolio.png}
-  \caption{Design sketch --- portfolio overview}
-  \label{fig:mk-portfolio}
+  \begin{minipage}{0.47\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/mk_login.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.47\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/mk_portfolio.png}
+  \end{minipage}
+  \caption{Design sketches --- sign-in screen (left) and portfolio overview (right)}
+  \label{fig:mk-signin}
 \end{figure}
 
 \subsubsection{Sketches of a single project}
-Three further sketches explored what one project looks like from the inside, on its financial
-side, on its workload side and on the billing that follows from both.
+Three further sketches explored what one project looks like from the inside. The first takes
+it on its financial side; the second resource by resource and month by month; the third
+follows the money out, as a list of billing milestones and their status.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.62\columnwidth]{img/mk_financial.png}
-  \caption{Design sketch --- financial analysis of a project}
-  \label{fig:mk-financial}
+  \begin{minipage}{0.47\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/mk_financial.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.47\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/mk_workload.png}
+  \end{minipage}
+  \caption{Design sketches --- financial analysis of a project (left) and resource workload matrix (right)}
+  \label{fig:mk-project}
 \end{figure}
 
-The second takes the same project from its workload side, resource by resource and month by
-month.
-
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.62\columnwidth]{img/mk_workload.png}
-  \caption{Design sketch --- resource workload matrix}
-  \label{fig:mk-workload}
-\end{figure}
-
-The third follows the money out, as a list of billing milestones and their status.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.62\columnwidth]{img/mk_billing.png}
+  \begin{minipage}{0.47\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/mk_billing.png}
+  \end{minipage}
   \caption{Design sketch --- billing milestones}
   \label{fig:mk-billing}
 \end{figure}
 
 \subsubsection{Sketches of the restricted roles}
-The last two sketches pictured the two roles that see the least: a developer, and an administrator
-who manages the platform without steering any project.
+The last two sketches pictured the two roles that see the least: a developer, and an
+administrator who manages accounts and the authorization policy without opening a single
+project.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.62\columnwidth]{img/mk_developer.png}
-  \caption{Design sketch --- developer workspace}
-  \label{fig:mk-developer}
-\end{figure}
-
-The administration panel is the other, managing accounts and the authorization policy without
-opening a single project.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.62\columnwidth]{img/mk_admin.png}
-  \caption{Design sketch --- administration panel}
-  \label{fig:mk-admin}
+  \begin{minipage}{0.47\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/mk_developer.png}
+  \end{minipage}\hfill
+  \begin{minipage}{0.47\columnwidth}
+    \centering
+    \includegraphics[width=\linewidth]{img/mk_admin.png}
+  \end{minipage}
+  \caption{Design sketches --- developer workspace (left) and administration panel (right)}
+  \label{fig:mk-roles}
 \end{figure}
 
 \subsection{Closing the phase}
