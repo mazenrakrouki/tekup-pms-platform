@@ -100,7 +100,8 @@ OPS_STYLE = ('text;strokeColor=none;fillColor=none;align=left;verticalAlign=midd
              'spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;'
              'rotatable=0;')
 CARD_STYLE = ('edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;'
-              'points=[];fontSize=14;fontColor=#33383D;')
+              'points=[];fontSize=14;fontColor=#33383D;'
+              'labelBackgroundColor=none;')
 
 
 def esc(t):
@@ -110,6 +111,34 @@ def esc(t):
 
 def height(name):
     return TITLE_H + ROW_H * len(CLASSES[name]) + SEP_H + OPS_H
+
+
+CARD_GAP = 17          # how far a multiplicity sits off its association
+
+
+def anchor(name, fx, fy):
+    px, py = POS[name]
+    return px + W * fx, py + height(name) * fy
+
+
+def perpendicular(a, ex, ey, b, nx, ny):
+    """Offset that puts a multiplicity beside its association rather than on it.
+
+    Perpendicular to the line, chosen so a near-horizontal association carries
+    its multiplicities above it and a near-vertical one carries them to the
+    right; that keeps every label on a predictable side of the diagram.
+    """
+    ax, ay = anchor(a, ex, ey)
+    bx, by = anchor(b, nx, ny)
+    dx, dy = bx - ax, by - ay
+    n = (dx * dx + dy * dy) ** .5 or 1.0
+    px, py = -dy / n, dx / n
+    if abs(py) >= abs(px):
+        if py > 0:
+            px, py = -px, -py
+    elif px < 0:
+        px, py = -px, -py
+    return int(round(px * CARD_GAP)), int(round(py * CARD_GAP))
 
 
 def main():
@@ -179,14 +208,18 @@ def main():
                  'source="c_%s" target="c_%s">' % (eid, esc(lab), style, a, b))
         x.append('          <mxGeometry relative="1" as="geometry" />')
         x.append('        </mxCell>')
-        # a cardinality sitting on top of a diamond has its white label
-        # background clip the diamond, so pull it in when one is present
-        src_pos = '-0.52' if dec else '-0.75'
-        for suffix, pos, card in (('s', src_pos, ca), ('t', '0.75', cb)):
+        # A multiplicity must sit BESIDE the association, not on it: left on the
+        # line it interrupts the stroke and reads as a break in the association.
+        # Offset each one perpendicular to the line it belongs to.
+        odx, ody = perpendicular(a, ex, ey, b, nx, ny)
+        # a cardinality on top of a diamond also has its label background clip
+        # the diamond, so pull that end in along the line as well
+        src_pos = '-0.52' if dec else '-0.78'
+        for suffix, pos, card in (('s', src_pos, ca), ('t', '0.78', cb)):
             x.append('        <mxCell id="%s_%s" value="%s" style="%s" vertex="1" '
                      'connectable="0" parent="%s">' % (eid, suffix, esc(card), CARD_STYLE, eid))
             x.append('          <mxGeometry x="%s" relative="1" as="geometry">' % pos)
-            x.append('            <mxPoint as="offset" />')
+            x.append('            <mxPoint x="%d" y="%d" as="offset" />' % (odx, ody))
             x.append('          </mxGeometry>')
             x.append('        </mxCell>')
 
