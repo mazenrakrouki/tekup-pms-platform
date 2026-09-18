@@ -2,13 +2,17 @@
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
-This chapter formalises the business analysis of the PMS system. It identifies the actors, lists
-the functional and non-functional requirements, presents the business rules and the dynamic
-authorization model that structures the whole platform, and derives from them the global use case
-diagram. It closes with the product backlog and its distribution across the development
-sprints presented in the following chapters.
+This chapter says what the PMS system has to do. It names the actors, lists the functional and
+non-functional requirements, and sets out the business rules. It then presents the dynamic
+authorization model, which shapes the whole platform, and the global use case diagram that follows
+from it. The chapter closes with the product backlog, and shows how its stories are spread over
+the sprints of the following chapters.
+\section{Requirements specification}
+This section states what the platform must do and for whom. It identifies the actors first, then
+the functions the platform owes them, then the qualities it must hold while delivering those
+functions, and last the business rules that constrain both.
 
-\section{Actor identification}
+\subsection{Actor identification}
 The system rests on four main roles. Each role is defined as much by what it may do as by what it
 is explicitly prevented from doing, a distinction that is central to a platform handling
 sensitive financial data.
@@ -40,7 +44,7 @@ financial data (budget, margin, EAC, billing). \\
 \hline
 \end{longtable}
 
-\section{Functional requirements}
+\subsection{Functional requirements}
 Functional requirements are organised by module. They synthesise the requirements of the SRS
 document (FR-001 to FR-053) and the use cases (UC-001 to UC-020).
 
@@ -90,7 +94,7 @@ of the project, in line with the Excel workbook. \\
 \hline
 \end{longtable}
 
-\section{Non-functional requirements}
+\subsection{Non-functional requirements}
 \begin{itemize}
     \item \textbf{Performance}: response in under two seconds for routine operations (NFR-001).
     \item \textbf{Security}: mandatory JWT authentication, hashed passwords (NFR-002).
@@ -102,7 +106,7 @@ of the project, in line with the Excel workbook. \\
     \item \textbf{Usability}: intuitive and responsive interface (NFR-007).
 \end{itemize}
 
-\section{Business rules}
+\subsection{Business rules}
 The business rules come from the BRS document (65 rules, BR-001 to BR-065), enriched by the rules
 extracted from the Excel file. The most structuring ones are summarised below.
 
@@ -146,31 +150,7 @@ computation; RBAC applied by permission; hashed passwords. \\
 \hline
 \end{longtable}
 
-\section{The dynamic authorization model}
-\label{sec:rbac}
-The central architectural requirement of the project is to \textbf{never couple a role directly to
-a module}. Such a coupling (``ROLE $\rightarrow$ MODULE'') would require modifying and redeploying
-the code every time the company decides that a given profile may access an additional function.
-
-The model retained therefore inserts an intermediate level:
-
-\begin{center}
-\textbf{Role $\rightarrow$ Permission $\rightarrow$ Module}
-\end{center}
-
-A role holds a set of permissions; each permission authorises a precise operation on a module. The
-role--permission matrix lives in the database, not in the source code: granting a new right becomes
-a data change, applied without redeployment. This principle governs the whole platform and is
-verified in Sprint~2 (Chapter~4). Figure~\ref{fig:rbac-model} contrasts the two models on one
-concrete right: the one that lets a project manager edit a project.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\columnwidth]{img/rbac_chain.png}
-  \caption{Binding a role to a module, and the permission level that replaces it}
-  \label{fig:rbac-model}
-\end{figure}
-
+% =====================================================================
 \section{Global use case diagram}
 Figure~\ref{fig:uc} presents the global use case diagram of the platform. The four actors are
 associated with the business use cases falling within their perimeter, in strict accordance with
@@ -198,7 +178,109 @@ into a snapshot happens only at the monthly review.
   \label{fig:uc}
 \end{figure}
 
-\section{Product backlog}
+% =====================================================================
+\section{Class diagram}
+\label{sec:class-diagram}
+Figure~\ref{fig:class-global} gives the overall map of the domain. The project is the aggregation
+root: most business entities exist only within a project and are composed by it, while users,
+roles, permissions and resources form an independent reference core.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/class_global.png}
+  \caption{Domain model --- principal classes and their associations}
+  \label{fig:class-global}
+\end{figure}
+
+One reading of the diagram deserves to be made explicit, because it is easy to expect the
+opposite. The four roles of the platform are not subclasses of \texttt{User}: they are rows of
+the \texttt{Role} class. A user holds a role, and a role grants permissions, so the authorization
+policy is data that an administrator edits rather than a hierarchy compiled into the application.
+Modelling the roles as types would have contradicted that, and would have made every change of
+policy a new version of the software.
+
+The diagram stays at the level of the principal classes and their key attributes. Each sub-domain
+is detailed by its own class diagram, presented in the sprint that builds it: projects and teams in Sprint~3, agile planning in
+Sprint~5, financial management in Sprint~6, governance in Sprint~7, and the indicator engine in
+Sprint~8.
+
+The authorization policy is the part of that model the rest of the platform depends on, and it is
+worth its own reading.
+
+The central architectural requirement of the project is to \textbf{never couple a role directly to
+a module}. Such a coupling (``ROLE $\rightarrow$ MODULE'') would require modifying and redeploying
+the code every time the company decides that a given profile may access an additional function.
+
+The model retained therefore inserts an intermediate level:
+
+\begin{center}
+\textbf{Role $\rightarrow$ Permission $\rightarrow$ Module}
+\end{center}
+
+A role holds a set of permissions; each permission authorises a precise operation on a module. The
+role--permission matrix lives in the database, not in the source code: granting a new right becomes
+a data change, applied without redeployment. This principle governs the whole platform and is
+verified in Sprint~2 (Chapter~4). Figure~\ref{fig:rbac-model} contrasts the two models on one
+concrete right: the one that lets a project manager edit a project.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/rbac_chain.png}
+  \caption{Binding a role to a module, and the permission level that replaces it}
+  \label{fig:rbac-model}
+\end{figure}
+
+Figure~\ref{fig:class-rbac} states the same model as a class diagram. A user holds one role, a
+role grants a set of permissions, and a permission belongs to a functional module. None of the
+four classes owns another, so every relation is a plain association.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/class_rbac.png}
+  \caption{Class diagram of the dynamic authorization model}
+  \label{fig:class-rbac}
+\end{figure}
+
+% =====================================================================
+\section{Project management with Scrum}
+The project was run with Scrum, in the reduced form Section~\ref{sec:scrum-adapt} describes. This
+section states who held which role, what the product backlog contains, and how it was distributed
+across the releases.
+
+\subsection{Project team and roles}
+Table~\ref{tab:scrum-roles} gives the distribution. It is short because the team was: one
+developer, one product owner, and an academic supervisor beside them.
+
+\begin{longtable}{|m{3.1cm}|m{4.4cm}|m{6.7cm}|}
+\caption{The Scrum roles and who held them}\label{tab:scrum-roles}\\
+\hline
+\textbf{Role} & \textbf{Held by} & \textbf{Responsibility} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Role} & \textbf{Held by} & \textbf{Responsibility} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+Product Owner & Mr. Ahmed Amine Amiri, industrial supervisor at ST2i & Expresses the business need, arbitrates the priorities of the backlog, and accepts or refuses each increment against what the company expects of it. \\
+\hline
+Scrum Master & Mazen Rakrouki, the author & With a single developer there is no separate facilitator. The author held the role: planning each sprint, keeping the backlog ordered, and resolving his own impediments. \\
+\hline
+Development team & Mazen Rakrouki, the author & Design, development, testing and deployment of every increment, across the backend, the frontend, the database and the delivery chain. \\
+\hline
+Academic supervision & Mrs. Zrelli Siwar, TEK-UP & Follows the engineering choices and the quality of the documentation, outside the Scrum roles proper. \\
+\hline
+\end{longtable}
+
+The reduction is worth naming rather than hiding. A Scrum team of one cannot hold a daily
+synchronisation and cannot hold a retrospective in the collective sense. What replaced the sprint
+review is stricter than either: every increment was checked against the reference workbook, by
+reproducing on the platform a computation the workbook already performed and comparing the two
+figures.
+
+\subsection{Product backlog}
 The product backlog gathers the functional needs expressed as user stories, one
 action to a story. Each item is attached
 to the sprint that delivered it, which makes the incremental construction of the platform legible.
@@ -268,7 +350,7 @@ US-24 & As a project manager, I want to keep a risk register so that project ris
 \hline
 US-25 & As a project manager, I want to track deliverables and their status so that delivery progress is measurable. & Medium & Sprint 7 \\
 \hline
-US-32 & As a project manager, I want to document the project stakeholders so that responsibilities are recorded. & Low & Sprint 7 \\
+US-26 & As a project manager, I want to document the project stakeholders so that responsibilities are recorded. & Low & Sprint 7 \\
 \hline
 US-27 & As a project manager, I want to record change requests so that every scope change is traced to a decision. & Low & Sprint 7 \\
 \hline
@@ -284,7 +366,7 @@ US-32 & As a user, I want a consistent and responsive interface so that the plat
 \hline
 \end{longtable}
 
-\section{Release and sprint planning}
+\subsection{Release planning}
 The backlog is distributed across four releases grouping ten sprints. Each release brings the
 product to a coherent level of maturity: R1 makes the platform usable and secure, R2 opens
 operational steering, R3 delivers the financial and governance value, and R4 consolidates the
@@ -319,7 +401,7 @@ whole.
 \cline{2-4}
  & Sprint 8 & Internal quote and KPI engine & US-28 to US-31 \\
 \hline
-\multirow{2}{*}{R4 --- Delivery} & Sprint 9 & Consolidation, tests, deployment & US-26 \\
+\multirow{2}{*}{R4 --- Delivery} & Sprint 9 & Consolidation, tests, deployment & US-32 \\
 \cline{2-4}
  & Sprint 10 & Containerization and continuous delivery & Technical sprint, no user story \\
 \hline
@@ -372,7 +454,8 @@ Sprint 10 & 10 August & 28 August & 3 \\
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
-This chapter established what the platform must do, for whom, and under which rules, and translated
-those requirements into a product backlog distributed across the development sprints. The next chapter
-presents the architecture and the design models, the data model and the database schema, on which this
-construction rests.
+This chapter set out what the platform must do, for whom, and under which rules. Those
+requirements became a product backlog, spread over the development sprints. The next chapter
+presents the architecture the construction rests on: the design models, the data model and the
+database schema.
+

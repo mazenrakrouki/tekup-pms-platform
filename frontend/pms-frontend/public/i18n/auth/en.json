@@ -8,6 +8,8 @@
     "sessionExpired": "Your session has expired. Please sign in again.",
     "email": "Email Address",
     "password": "Password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "forgotPassword": "Forgot password?",
     "rememberMe": "Remember me for 30 days",
     "submit": "Sign in",

@@ -32,7 +32,17 @@ public class Resource extends BaseEntity {
     @Column(name = "staffing_end")
     private LocalDate staffingEnd;
 
+    /** Jours ouvrés retenus pour l'estimation annuelle indicative (365 - week-ends - congés - fériés). */
+    public static final int JOURS_OUVRES_AN = 218;
+
+    /**
+     * Coût annuel chargé, indicatif : tarif de base × (1 + TCC) × jours ouvrés.
+     * Ne tient pas compte des tarifs par année (tcc_annuels) ; les calculs de marge,
+     * eux, passent par KpiService qui applique le tarif de l'année d'imputation.
+     */
     public BigDecimal getAnnualCost() {
-        return dailyRate.multiply(tccRate.add(BigDecimal.ONE)).multiply(BigDecimal.valueOf(218));
+        return dailyRate.multiply(tccRate.add(BigDecimal.ONE))
+                .multiply(BigDecimal.valueOf(JOURS_OUVRES_AN))
+                .setScale(2, java.math.RoundingMode.HALF_UP);
     }
 }

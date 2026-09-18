@@ -28,6 +28,10 @@ public class JwtService {
     @Value("${pms.jwt.refresh-token-expiration}")
     private long refreshTokenExpirySeconds;
 
+    /** Duree d'une session "se souvenir de moi". Doit correspondre au libelle affiche. */
+    @Value("${pms.jwt.remember-me-expiration:2592000}")
+    private long rememberMeExpirySeconds;
+
     private SecretKey signingKey;
 
     @PostConstruct
@@ -53,15 +57,36 @@ public class JwtService {
                 .compact();
     }
 
-    public String generateRefreshToken(User user) {
+    /**
+     * Jeton de rafraichissement.
+     *
+     * <p>Le drapeau {@code rememberMe} est inscrit dans le jeton lui-meme. C'est ce qui
+     * permet a la rotation de le preserver : sans cette revendication, le jeton emis au
+     * premier rafraichissement retomberait a la duree courte et la session longue
+     * disparaitrait sans que l'utilisateur comprenne pourquoi.
+     */
+    public String generateRefreshToken(User user, boolean rememberMe) {
+        long ttl = rememberMe ? rememberMeExpirySeconds : refreshTokenExpirySeconds;
         return Jwts.builder()
                 .subject(user.getEmail())
                 .claim("tokenVersion", user.getTokenVersion())
                 .claim("type", "refresh")
+                .claim("rememberMe", rememberMe)
                 .issuedAt(Date.from(Instant.now()))
-                .expiration(Date.from(Instant.now().plusSeconds(refreshTokenExpirySeconds)))
+                .expiration(Date.from(Instant.now().plusSeconds(ttl)))
                 .signWith(signingKey)
                 .compact();
+    }
+
+    /** Duree, en secondes, a appliquer au cookie pour que celui-ci n'excede pas le jeton. */
+    public int refreshMaxAge(boolean rememberMe) {
+        return (int) (rememberMe ? rememberMeExpirySeconds : refreshTokenExpirySeconds);
+    }
+
+    /** Relit le drapeau porte par un jeton de rafraichissement (absent = false). */
+    public boolean extractRememberMe(String token) {
+        Boolean flag = validateAndParse(token).get("rememberMe", Boolean.class);
+        return Boolean.TRUE.equals(flag);
     }
 
     public Claims validateAndParse(String token) {

@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 512">
+  <style>
+    text { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
+    .job   { font-weight:700; fill:#1F4E79; font-size:19px; }
+    .step  { fill:#41505F; font-size:15px; }
+    .gate  { fill:#8592A0; font-size:14px; font-style:italic; }
+    .stage { font-weight:700; fill:#8592A0; font-size:13px; letter-spacing:1.1px; }
+    .card  { fill:#FFFFFF; stroke:#AEBCC9; stroke-width:1.6; }
+    .head  { fill:#E8F0F7; }
+    .flow  { fill:none; stroke:#1F4E79; stroke-width:2.6; }
+    .cond  { fill:none; stroke:#8592A0; stroke-width:2.2; stroke-dasharray:7 5; }
+    .tick  { fill:#2E8B57; font-size:17px; font-weight:700; }
+  </style>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#1F4E79"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 4 L0 8 z" fill="#8592A0"/>
+    </marker>
+  </defs>
+
+  <text class="stage" x="26" y="40">TRIGGER</text>
+  <rect class="card" x="24" y="54" width="196" height="96" rx="7"/>
+  <rect class="head" x="24" y="54" width="196" height="30" rx="7"/>
+  <rect class="head" x="24" y="76" width="196" height="8"/>
+  <text class="job" x="38" y="76" font-size="16">on:</text>
+  <text class="step" x="38" y="106">push · pull request</text>
+  <text class="step" x="38" y="128">workflow_dispatch</text>
+
+  <!-- ============================== build stage ============================= -->
+  <text class="stage" x="286" y="40">BUILD AND TEST — IN PARALLEL</text>
+  <rect class="card" x="284" y="54" width="300" height="136" rx="7"/>
+  <rect class="head" x="284" y="54" width="300" height="30" rx="7"/>
+  <rect class="head" x="284" y="76" width="300" height="8"/>
+  <text class="job" x="298" y="76" font-size="16">backend</text>
+  <text class="step" x="298" y="108">mvn verify</text>
+  <text class="step" x="298" y="132">JaCoCo coverage report</text>
+  <text class="step" x="298" y="156">test reports published</text>
+
+  <rect class="card" x="284" y="212" width="300" height="136" rx="7"/>
+  <rect class="head" x="284" y="212" width="300" height="30" rx="7"/>
+  <rect class="head" x="284" y="234" width="300" height="8"/>
+  <text class="job" x="298" y="234" font-size="16">frontend</text>
+  <text class="step" x="298" y="266">npm ci</text>
+  <text class="step" x="298" y="290">production build</text>
+  <text class="step" x="298" y="314">API address substitution checked</text>
+
+  <!-- ================================ images =============================== -->
+  <text class="stage" x="650" y="40">PACKAGE</text>
+  <rect class="card" x="648" y="128" width="228" height="112" rx="7"/>
+  <rect class="head" x="648" y="128" width="228" height="30" rx="7"/>
+  <rect class="head" x="648" y="150" width="228" height="8"/>
+  <text class="job" x="662" y="150" font-size="16">images</text>
+  <text class="step" x="662" y="182">backend image</text>
+  <text class="step" x="662" y="206">frontend image</text>
+  <text class="gate" x="662" y="228">needs: backend, frontend</text>
+
+  <!-- ================================ smoke ================================ -->
+  <text class="stage" x="650" y="298">VERIFY THE STACK</text>
+  <rect class="card" x="648" y="312" width="228" height="184" rx="7"/>
+  <rect class="head" x="648" y="312" width="228" height="30" rx="7"/>
+  <rect class="head" x="648" y="334" width="228" height="8"/>
+  <text class="job" x="662" y="334" font-size="16">smoke</text>
+  <text class="step" x="662" y="366">docker compose up</text>
+  <text class="step" x="662" y="390">wait for the API to be healthy</text>
+  <text class="step" x="662" y="414">sign in through nginx</text>
+  <text class="step" x="662" y="438">Angular route fallback</text>
+  <text class="step" x="662" y="462">translation catalogues served</text>
+  <text class="gate" x="662" y="484">only on push</text>
+
+  <!-- =============================== publish =============================== -->
+  <text class="stage" x="940" y="298">RELEASE</text>
+  <rect class="card" x="938" y="312" width="218" height="112" rx="7"/>
+  <rect class="head" x="938" y="312" width="218" height="30" rx="7"/>
+  <rect class="head" x="938" y="334" width="218" height="8"/>
+  <text class="job" x="952" y="334" font-size="16">publish</text>
+  <text class="step" x="952" y="366">push both images</text>
+  <text class="step" x="952" y="390">to the registry</text>
+  <text class="gate" x="952" y="412">only on main</text>
+
+  <!-- ================================ flows ================================ -->
+  <path class="flow" d="M220 102 L272 102 L272 122 L278 122" marker-end="url(#ar)"/>
+  <path class="flow" d="M272 122 L272 280 L278 280" marker-end="url(#ar)"/>
+  <path class="flow" d="M584 122 L616 122 L616 184 L642 184" marker-end="url(#ar)"/>
+  <path class="flow" d="M584 280 L616 280 L616 184" fill="none" stroke="#1F4E79" stroke-width="2.6"/>
+  <path class="cond" d="M855 240 L855 306" marker-end="url(#ag)"/>
+  <path class="cond" d="M876 368 L932 368" marker-end="url(#ag)"/>
+
+</svg>

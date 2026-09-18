@@ -1,55 +1,77 @@
-\chapter{Consolidation, Delivery and Deployment}
+\chapter{Release 4: Consolidation, Delivery and Deployment}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
-The functional scope of the platform was completed at the end of Release~3. This final release makes
-it deliverable: a coherent and accessible user interface, a verified authorization policy, a
-security review, and a reproducible deployment. It gathers two sprints: Sprint~9 consolidates the
-interface and verifies the platform, Sprint~10 makes it reproducibly deployable and continuously
-verified. Neither delivers new business functionality; both deliver deliverability.
+The platform was functionally complete at the end of Release~3. This last release makes it ready
+to deliver. It brings one coherent and accessible interface, an authorization policy checked by
+tests, a security review, and a deployment anyone can reproduce. Two sprints do that work.
+Sprint~9 unifies the interface and verifies the platform. Sprint~10 makes it deployable on any
+host and checks every change automatically. Neither sprint adds a business feature. Together they
+turn a working application into one that can be handed over.
+\section{Sprint 9 --- Interface consolidation, testing and security}
 
-% =====================================================================
-\section{Release 4 backlog}
-The last release carries a single user story. The remainder of its content is cross-cutting quality
-work that no functional story expresses, which is itself characteristic of a consolidation release.
+\subsection{Sprint objectives}
+Sprint~9 ran from 27~July to 7~August, two weeks (Table~\ref{tab:schedule}). Its objective is to
+make the platform deliverable rather than merely complete: one visual language across the modules,
+an automated check on the authorization policy, and a review against the common web
+vulnerabilities.
 
-\begin{longtable}{|m{1.5cm}|m{6.8cm}|m{5.2cm}|m{1.4cm}|}
-\caption{Backlog of release 4}\label{tab:backlog-r4}\\
+\subsection{Sprint backlog}
+The sprint commits the following items of the product backlog (Table~\ref{tab:backlog}).
+
+\begin{longtable}{|m{1.6cm}|m{12.4cm}|}
+\caption{Sprint 9 backlog}\label{tab:sb9}\\
 \hline
-\textbf{Story} & \textbf{User story} & \textbf{Technical work} & \textbf{Sprint} \\
+\textbf{Story} & \textbf{User story} \\
 \hline
 \endfirsthead
 \hline
-\textbf{Story} & \textbf{User story} & \textbf{Technical work} & \textbf{Sprint} \\
+\textbf{Story} & \textbf{User story} \\
 \hline
 \endhead
 \endfoot
 \endlastfoot
 \hline
-US-32 & As a user, I want a consistent, accessible and responsive interface & Design system of tokens and shared components applied across every module & 9 \\
+US-32 & As a user, I want a consistent, accessible and responsive interface \\
 \hline
---- & Verify that the authorization model behaves as designed & Automated suite asserting, for each protected endpoint, that the permission grants and its absence refuses & 9 \\
+--- & Verify that the authorization model behaves as designed \\
 \hline
---- & Review the application against the common web vulnerabilities & Category-by-category review with the measure taken recorded for each & 9 \\
-\hline
---- & Deploy reproducibly on any host & Container image per component, orchestration with health probes and startup ordering & 10 \\
-\hline
---- & Verify every change automatically & Continuous integration pipeline building, testing and assembling the stack & 10 \\
+--- & Review the application against the common web vulnerabilities \\
 \hline
 \end{longtable}
 
-% =====================================================================
-\section{Sprint 9 --- Interface consolidation, testing and security}
+\subsection{Task planning}
+The author being the sole developer, each item was expanded directly into the technical work it
+required rather than distributed across a team.
 
-\subsection{Sprint 9 use case diagram}
+\begin{longtable}{|m{1.6cm}|m{12.4cm}|}
+\caption{Sprint 9 task planning}\label{tab:tp9}\\
+\hline
+\textbf{Story} & \textbf{Technical work} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Story} & \textbf{Technical work} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+US-32 & Design system of tokens and shared components applied across every module \\
+\hline
+--- & Automated suite asserting, for each protected endpoint, that the permission grants and its absence refuses \\
+\hline
+--- & Category-by-category review with the measure taken recorded for each \\
+\hline
+\end{longtable}
+
+\subsection{Design}
 This sprint adds no use case. It acts on those already delivered, by unifying the screens through
 which they are reached and by verifying that the authorization attached to each of them behaves as
 specified. The relevant view is therefore not a new use case diagram but the global one of
 Chapter~2, now entirely covered by the interface.
 
-\subsection{Sprint 9 analysis and design}
-
-\subsubsection{Where authorization is decided}
+\runin{Where authorization is decided}
 The interface consumes the permission list returned by the context endpoint and derives from it both
 the navigation menu and the visibility of individual actions. A button the user is not entitled to
 use is not merely disabled: it is absent.
@@ -59,7 +81,7 @@ This must be understood correctly, and the report states it explicitly: hiding a
 server on every request, as described in Sprint~2. The client-side rule exists so that the user is
 never offered an action that would be refused; it is never the thing that refuses it.
 
-\subsubsection{Design decisions}
+\runin{Design decisions}
 \textbf{A design system rather than eight sets of screens.} The modules were built successively,
 each with its own screens. Rather than harmonising them by hand, a token-based visual language,
 covering colours, typography, spacing and elevation, is declared once and consumed everywhere, with
@@ -76,22 +98,25 @@ that a caller holding the permission succeeds \emph{and} that a caller without i
 Testing only the success path would leave the platform's central claim unverified: it is the refusal
 that proves the policy is enforced.
 
-\subsection{Sprint 9 realization}
+\subsection{Implementation}
+The consolidation acted on the frontend as a whole rather than on any single module, and is
+followed here by the verification work and by what packaging alone does not settle.
 
-\subsubsection{Frontend structure and session handling}
+
+\runin{Frontend structure and session handling}
 The client is a single-page application organised by feature, mirroring the backend modules. The
 access token obtained at sign-in is kept in memory and attached to every request by an HTTP
 interceptor; the refresh token remains in its \texttt{HttpOnly} cookie, unreachable from JavaScript.
 When a request returns \texttt{401}, the interceptor attempts a single refresh before returning the
 user to the sign-in screen.
 
-\subsubsection{Interface consolidation}
+\runin{Interface consolidation}
 Beyond the visual language, the consolidation addressed accessibility and consistency: sortable
 table headers announcing their state, labelled icon-only controls, explicit empty states in place of
 blank tables, and a responsive layout. The interface being the only part of the platform its users
 ever see, this convergence matters as much to adoption as the correctness of the engine behind it.
 
-\subsubsection{Security review}
+\runin{Security review}
 The application was reviewed against the common categories of web vulnerability.
 
 \begin{longtable}{|m{4.6cm}|m{10cm}|}
@@ -126,7 +151,7 @@ secrets externalised as environment variables \\
 \hline
 \end{longtable}
 
-\subsubsection{Packaging, and what it does not solve}
+\runin{Packaging, and what it does not solve}
 At the close of this sprint the platform is packaged as an executable archive for the backend and a
 static build for the frontend, with the schema brought up to date by the migration tool at startup
 and all configuration supplied by environment variables. Startup is idempotent: deploying the same
@@ -137,18 +162,144 @@ This is sufficient to \emph{run} the application but not to \emph{deploy} it rep
 assumes a host on which the right Java version, the right Node version and a correctly provisioned
 PostgreSQL instance are already present. Sprint~10 removes that assumption.
 
+\subsection{Testing}
+The tests of this sprint sit beside the module they check, and they all run together. The suite
+was run again while this chapter was being written, and Figure~\ref{fig:cap-test-run} is the
+output of that run. It is a run on the development machine, not on the build server.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/cap_test_run.png}
+  \caption{Output of \texttt{mvn -B test}: the thirteen test classes one by one, then the total}
+  \label{fig:cap-test-run}
+\end{figure}
+
+Ninety-seven tests run in one minute and seven seconds and none of them fails. Counting tests is
+not the same as knowing what they reach, so the same run also produces a coverage report.
+Table~\ref{tab:coverage} puts the two side by side, module by module.
+
+\begin{longtable}{|m{3.4cm}|m{2.2cm}|m{1.9cm}|m{2.4cm}|m{2.6cm}|}
+\caption{Tests and coverage per module, from the run of 13~September~2026}\label{tab:coverage}\\
+\hline
+\textbf{Module} & \textbf{Test classes} & \textbf{Tests} & \textbf{Lines covered} & \textbf{Branches covered} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Module} & \textbf{Test classes} & \textbf{Tests} & \textbf{Lines covered} & \textbf{Branches covered} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+auth & 1 & 9 & 81\% & 60\% \\
+\hline
+kpi & 1 & 6 & 79\% & 36\% \\
+\hline
+team & 1 & 6 & 77\% & 44\% \\
+\hline
+agile & 1 & 8 & 75\% & 54\% \\
+\hline
+billing & 3 & 23 & 75\% & 49\% \\
+\hline
+project & 3 & 23 & 72\% & 46\% \\
+\hline
+workload & 2 & 14 & 62\% & 39\% \\
+\hline
+governance & 1 & 8 & 51\% & 33\% \\
+\hline
+\textbf{Total} & \textbf{13} & \textbf{97} & & \\
+\hline
+\end{longtable}
+
+Coverage is measured by JaCoCo, which instruments the test JVM and writes its own report.
+Figure~\ref{fig:cap-coverage} is that report, exactly as the tool produced it.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/cap_coverage.png}
+  \caption{The JaCoCo coverage report for the same run, 161 classes, with the total on the last line}
+  \label{fig:cap-coverage}
+\end{figure}
+
+The honest reading of these numbers matters more than the numbers. The eight modules the suite
+targets are covered between 51 and 81~per cent of their lines, and the modules that carry money
+and permissions sit at the top of that range. Three parts of the code are barely covered at all.
+\texttt{shared.config} is 1\,221 lines, most of it the demonstration data seeder used to produce
+the screenshots in this report. \texttt{user} and \texttt{mission} have no test class of their
+own. Counted over everything, including the seeder, the figure is 41~per cent of lines and 24~per
+cent of branches, which is what the last line of Figure~\ref{fig:cap-coverage} shows.
+
+The suite was written to cover two things: the authorization rule on every protected endpoint, and
+the business rules the workbook states but cannot enforce. It was not written to reach a
+percentage, and the percentage should be read with that in mind.
+
+\subsection{Sprint review}
+This sprint is its own review. Sprint~2 claimed that no role name is tested anywhere in the code.
+Until now that claim rested on the endpoints someone had opened and read. The suite checks all of
+them, so the claim is measured rather than believed, and Figure~\ref{fig:cap-test-run} is the
+measurement.
+
 % =====================================================================
 \section{Sprint 10 --- Containerization and continuous delivery}
 \label{sec:sprint10}
 
-\subsection{Sprint 10 use case diagram}
+\subsection{Sprint objectives}
+Sprint~10 ran from 10 to 28~August, three weeks (Table~\ref{tab:schedule}). Its objective is to
+remove the assumption that the host already has the right Java, the right Node and a provisioned
+database, and make every change verified without anyone having to remember to do it.
+
+\subsection{Sprint backlog}
+This sprint commits no user story. Its two items are technical, and neither is expressed as
+a need of an end user; they are listed here in the same place a sprint backlog would be.
+
+\begin{longtable}{|m{1.6cm}|m{12.4cm}|}
+\caption{Sprint 10 backlog}\label{tab:sb10}\\
+\hline
+\textbf{Task} & \textbf{Technical task} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Task} & \textbf{Technical task} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+T-01 & Deploy the platform reproducibly on any host \\
+\hline
+T-02 & Verify every proposed change automatically \\
+\hline
+\end{longtable}
+
+\subsection{Task planning}
+The author being the sole developer, each item was expanded directly into the technical work it
+required rather than distributed across a team.
+
+\begin{longtable}{|m{1.6cm}|m{12.4cm}|}
+\caption{Sprint 10 task planning}\label{tab:tp10}\\
+\hline
+\textbf{Task} & \textbf{Technical work} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Task} & \textbf{Technical work} \\
+\hline
+\endhead
+\endfoot
+\endlastfoot
+\hline
+T-01 & Container image per component, orchestration with health probes and startup ordering \\
+\hline
+T-02 & Continuous integration pipeline building, testing and assembling the stack \\
+\hline
+\end{longtable}
+
+\subsection{Design}
 Like the previous one, this sprint adds no business use case. Its actor is not a user of the
 platform but the person deploying it, and its scenarios are building the images, starting the stack
 and verifying a change automatically. The deployment view of Chapter~3 is the relevant diagram.
 
-\subsection{Sprint 10 analysis and design}
-
-\subsubsection{Docker}
+\runin{Docker}
 \textbf{Docker} packages an application together with everything it needs to run --- runtime,
 libraries, configuration --- into an image that behaves the same way on any host. A running copy of
 that image is a container: isolated from the machine, started and stopped in seconds, and identical
@@ -169,7 +320,7 @@ as reliable as the person following it.
   \label{fig:docker-logo}
 \end{figure}
 
-\subsubsection{A reconsidered architecture decision}
+\runin{A reconsidered architecture decision}
 The project had initially recorded a decision to run natively, without containers, justified by
 iteration speed on an already-provisioned machine. That decision served development well but left
 two gaps: no reproducible deployment, and a production profile that had never actually been
@@ -180,7 +331,7 @@ move to containers, states what it changes, and confirms what it does \emph{not}
 particular, three containers are \textbf{not} three microservices: the modular monolith decision
 stands. What is containerized is one application, its database and its static server.
 
-\subsubsection{Design decisions}
+\runin{Design decisions}
 \textbf{Two build stages, so the toolchain never reaches the runtime image.} The backend image
 contains a Java runtime and the application archive, with neither Maven nor sources; the frontend
 image contains a web server and the compiled assets, with no Node runtime.
@@ -202,9 +353,12 @@ reported ready too early. The backend exposes a health endpoint, deliberately un
 returning no detail, with a generous startup window because its first run applies the full set of
 schema migrations.
 
-\subsection{Sprint 10 realization}
+\subsection{Implementation}
+The exercise is reported in the order it happened: what containerization revealed about the
+application, then the pipeline that now runs on every change.
 
-\subsubsection{Defects revealed by the exercise}
+
+\runin{Defects revealed by the exercise}
 Preparing the pipeline exposed three pre-existing defects that native execution had concealed. The
 most consequential concerned the frontend build configuration: the production configuration never
 substituted the production environment file, so the production bundle embedded the development API
@@ -217,7 +371,7 @@ procedure requires.
 That these defects surfaced only when the delivery chain was automated is itself the argument for
 automating it.
 
-\subsubsection{Pipeline}
+\runin{Pipeline}
 The pipeline separates what must always hold from what is only meaningful on integration branches.
 Compilation, the backend test suite, the production frontend build and the construction of both
 images run on every proposed change: a component that only breaks after merging is not a gate. The
@@ -228,6 +382,93 @@ the main branch.
 The frontend job also carries an explicit guard against the defect described above: it fails if the
 development address reappears in the production bundle.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/ci_pipeline.png}
+  \caption[The five jobs of the pipeline]{The five jobs of the pipeline and the order they run in, as declared in
+           \texttt{.github/\allowbreak workflows/\allowbreak ci.yml}. A dashed
+           arrow carries a condition: the stack starts only on a push, and the images are
+           published only from the main branch}
+  \label{fig:ci-pipeline}
+\end{figure}
+
+\subsection{Testing}
+This sprint has no test class of its own. What it had to verify is that the delivery chain does
+what it says, and the chain verifies it by running. The pipeline runs the same 97 tests as
+Sprint~9, and adds three checks that only exist once the application is packaged: that the
+production frontend builds, that both images build, and that the assembled stack answers.
+
+The production build is the check that caught the worst defect of the sprint.
+Figure~\ref{fig:cap-frontend-build} is its output. It reports the size of every bundle and refuses
+to hide the one warning it raises: the initial bundle is 694.76~kB, which is 194.76~kB over the
+budget set in the Angular configuration. The budget is a warning and not an error, so the build
+passes; the overrun is recorded here rather than left out, because it is the next thing the
+interface should address.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/cap_frontend_build.png}
+  \caption{Output of \texttt{npm run build}: the initial bundles, the total, and the budget warning}
+  \label{fig:cap-frontend-build}
+\end{figure}
+
+Figure~\ref{fig:ci-pipeline} shows where that build sits among the five jobs, and what the
+pipeline does once it has passed. The job that matters most is the last verification one: it starts
+the whole stack and checks that it answers. That job was run here against the stack itself, and
+Figure~\ref{fig:cap-docker-stack} is the result.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/cap_docker_stack.png}
+  \caption[The stack under Docker]{The stack under Docker: three containers healthy, then the four checks the
+           pipeline runs against them}
+  \label{fig:cap-docker-stack}
+\end{figure}
+
+Three containers, none of them assuming anything of the host: PostgreSQL, the backend, and an nginx
+front that serves the built Angular application and forwards the API calls. Each declares a health
+probe, and the backend only starts once the database reports healthy, which is what removes the
+startup race the native deployment had. The four checks below them are the ones the pipeline runs.
+The first is the important one: a real sign-in that travels the whole chain, browser to nginx to the
+API to the database, and comes back with a token and the permissions of the account. The other three
+confirm that a deep link into the Angular application is served rather than answered with a 404, and
+that the translation catalogues are reachable. The token returned by the sign-in is cut short in
+the figure: a report should not carry a usable credential, even one belonging to a demonstration
+account.
+
+The same checks run on the build server, on a machine that has never seen this project.
+Figure~\ref{fig:cap-ci-run} is the run that built the commit this chapter was written on.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\columnwidth]{img/cap_ci_run.png}
+  \caption{Run~40 of the pipeline on GitHub Actions: four jobs green, the fifth skipped}
+  \label{fig:cap-ci-run}
+\end{figure}
+
+The run takes five minutes and thirty-nine seconds from the push to the verdict. The two build jobs
+go first and in parallel, one minute forty-one for the backend and its 97 tests, thirty-seven
+seconds for the production frontend. The images are built next, in forty-seven seconds, and the
+end-to-end job then spends two minutes thirty-one starting the stack from those images and running
+the four checks of Figure~\ref{fig:cap-docker-stack} against it.
+
+The fifth job carries a grey mark rather than a green one. It is not a failure: publication is
+reserved for the main branch, this run is on \texttt{develop}, and the condition on the job
+therefore skipped it, exactly as Figure~\ref{fig:ci-pipeline} declares. A skipped job that
+should have been skipped is the pipeline behaving as specified.
+
+This figure and Figure~\ref{fig:cap-docker-stack} are the same checks run twice, and the pair
+is the point of the sprint. One is the stack on the development machine, where every tool the
+project needs happens to be installed. The other is the same stack on a runner that starts empty
+and is destroyed afterwards. A deployment that only works on the machine it was built on is the
+defect this sprint set out to remove, and the second figure is the evidence that it is removed.
+
+\subsection{Sprint review}
+The sprint reviewed itself by failing. Building the pipeline brought out three defects that
+running the application by hand had hidden. The worst was a production bundle that still pointed
+at the development API address. None of the three appeared until the delivery chain was automated,
+which is the best argument for automating it.
+
 % =====================================================================
 \section{Final state of the product}
 At the end of the ten sprints, PMS covers the whole scope identified during the analysis of the
@@ -235,6 +476,9 @@ Excel workbook: dynamic authorization, project and team management, workload pla
 agile planning, billing, missions, governance and the earned-value indicator engine, all behind a
 unified interface. Table~\ref{tab:final} summarises the path from the reference workbook to the
 delivered platform.
+
+This section closes the four release chapters rather than this one alone, which is why it
+carries no sprint template: it states what the ten sprints together produced.
 
 \begin{longtable}{|m{2.0cm}|m{5.6cm}|m{6.8cm}|}
 \caption{From the reference workbook to the delivered platform}\label{tab:final}\\
@@ -273,8 +517,8 @@ Sprint 10 & Containerization and continuous delivery & --- (delivery chain) \\
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
-Release~4 closed the construction of the platform by addressing what functionality alone does not
-deliver: a coherent interface, a verified security model and a reproducible deployment. The
-incremental path followed since Release~1 (foundation, operations, finance, consolidation) produced
-a platform whose every increment was demonstrable in isolation, and whose final state covers the
-entire business logic previously carried by the Excel workbook.
+Release~4 closed the construction by delivering what functionality alone does not: one coherent
+interface, a security model checked by tests, and a deployment anyone can reproduce. The four
+releases followed the same order throughout, from foundation to operations, then finance, then
+consolidation. Each one could be shown on its own, and together they cover the whole business
+logic the Excel workbook used to carry.

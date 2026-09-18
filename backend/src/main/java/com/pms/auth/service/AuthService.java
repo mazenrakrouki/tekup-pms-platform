@@ -72,7 +72,7 @@ public class AuthService {
         }
 
         loginAttemptTracker.reset(request.email());
-        return buildBundle(user);
+        return buildBundle(user, request.rememberMe());
     }
 
     /**
@@ -91,6 +91,8 @@ public class AuthService {
         if (!"refresh".equals(jwtService.extractType(refreshTokenValue))) {
             throw new JwtException("Type de token incorrect");
         }
+
+        boolean rememberMe = jwtService.extractRememberMe(refreshTokenValue);
 
         String email = jwtService.extractEmail(refreshTokenValue);
         User user = userRepository.findActiveByEmailWithRole(email)
@@ -116,7 +118,10 @@ public class AuthService {
             cache.evict(email + ":" + oldVersion);
         }
 
-        return buildBundle(saved);
+        // La rotation conserve la portee de la session : un utilisateur ayant coche
+        // "se souvenir de moi" ne doit pas etre deconnecte au bout de la duree courte
+        // simplement parce que son jeton a ete renouvele entre-temps.
+        return buildBundle(saved, rememberMe);
     }
 
     @Transactional
@@ -159,9 +164,9 @@ public class AuthService {
         log.info("Mot de passe changé pour : {}", email);
     }
 
-    private TokenBundle buildBundle(User user) {
+    private TokenBundle buildBundle(User user, boolean rememberMe) {
         String accessToken  = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user, rememberMe);
         Set<String> permissions = user.getRole().getPermissions().stream()
                 .map(Permission::getCode)
                 .collect(Collectors.toSet());
@@ -174,6 +179,6 @@ public class AuthService {
                 user.getRole().getName(),
                 permissions
         );
-        return new TokenBundle(body, refreshToken);
+        return new TokenBundle(body, refreshToken, jwtService.refreshMaxAge(rememberMe));
     }
 }

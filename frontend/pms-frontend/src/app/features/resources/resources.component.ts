@@ -113,7 +113,7 @@ type SortDir = 'asc' | 'desc';
                   <tr class="row-link" (click)="openTcc(r)">
                     <td class="fw-semibold">{{ r.userFullName }}</td>
                     <td class="text-end num">{{ r.dailyRate | number:'1.2-2' }}</td>
-                    <td class="text-end num">{{ r.tccRate | number:'1.2-2' }}</td>
+                    <td class="text-end num">{{ r.tccRate | number:'1.2-4' }}</td>
                     <td class="text-end num">{{ r.annualCost ? (r.annualCost | number:'1.0-0') : '—' }}</td>
                     <td class="d-none d-lg-table-cell text-muted small">
                       {{ r.staffingStart ?? '—' }}
@@ -186,14 +186,14 @@ type SortDir = 'asc' | 'desc';
                       @if (canManage) {
                         <td><input type="number" class="form-control form-control-sm" [(ngModel)]="t.annee" min="2000" max="2100" style="width:110px" [attr.aria-label]="'resources.modal.yearAria' | transloco"></td>
                         <td><input type="number" class="form-control form-control-sm text-end" [(ngModel)]="t.dailyRate" min="0" [attr.aria-label]="'resources.modal.dailyRateAria' | transloco"></td>
-                        <td><input type="number" class="form-control form-control-sm text-end" [(ngModel)]="t.tccRate" min="0" step="0.01" [attr.aria-label]="'resources.modal.tccRateAria' | transloco"></td>
+                        <td><input type="number" class="form-control form-control-sm text-end" [(ngModel)]="t.tccRate" min="0" max="9.9999" step="0.0001" [attr.aria-label]="'resources.modal.tccRateAria' | transloco"></td>
                         <td class="text-end">
                           <button class="btn btn-sm btn-outline-danger" (click)="removeRow(i)" [title]="'resources.modal.removeTitle' | transloco" [attr.aria-label]="'resources.modal.removeAria' | transloco"><i class="bi bi-trash"></i></button>
                         </td>
                       } @else {
                         <td class="fw-semibold">{{ t.annee }}</td>
                         <td class="text-end num">{{ t.dailyRate | number:'1.2-2' }}</td>
-                        <td class="text-end num">{{ t.tccRate | number:'1.2-2' }}</td>
+                        <td class="text-end num">{{ t.tccRate | number:'1.2-4' }}</td>
                       }
                     </tr>
                   }

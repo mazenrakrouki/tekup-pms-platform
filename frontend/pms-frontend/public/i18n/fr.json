@@ -213,7 +213,14 @@
     "csvPlan": "Plan",
     "csvActual": "Réel",
     "csvMonthlyTotals": "Totaux mensuels",
-    "monthlyTotals": "Totaux mensuels"
+    "monthlyTotals": "Totaux mensuels",
+    "pendingTitle": "Charges réelles à valider",
+    "pendingHint": "Tant qu'une charge n'est pas validée, elle ne compte pas dans le coût consommé, l'EAC ni la marge.",
+    "period": "Période",
+    "actualDays": "Jours réels",
+    "validate": "Valider",
+    "okValidated": "Charge de {{name}} ({{period}}) validée.",
+    "errValidate": "Erreur lors de la validation."
   },
   "labels": {
     "engagement": {

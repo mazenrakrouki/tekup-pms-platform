@@ -88,6 +88,37 @@ import { LanguageSwitcherComponent } from '../../../layout/language-switcher/lan
       outline: none;
     }
 
+    /* Room on the right so a long password never runs under the eye button. */
+    .input-icon-wrap input.has-reveal { padding-right: 2.5rem; }
+    .input-icon-wrap .reveal {
+      position: absolute; right: .35rem; top: 50%;
+      transform: translateY(-50%);
+      display: flex; align-items: center; justify-content: center;
+      /* The icon only needs 2rem, but a finger needs more: the tappable box is
+         stretched to 44px, the size Apple and Material both ask for, while the
+         eye keeps its small visual size. */
+      width: 2.75rem; height: 2.75rem;
+      padding: 0; border: none; background: none; border-radius: 6px;
+      /* --text-3 is what the decorative lock and envelope icons use, but it
+         only reaches 2.56:1 on the light background. This eye is a control the
+         user has to find and click, so it takes --text-2 (4.76:1) to clear the
+         3:1 minimum WCAG asks of interactive elements. */
+      color: var(--text-2, #64748B); font-size: 14px; line-height: 1;
+      cursor: pointer;
+      transition: color 140ms ease, background 140ms ease;
+    }
+    .input-icon-wrap .reveal:hover { color: var(--text-1, #E6EDF3); }
+    /* The button sits on top of the input, which already draws its own focus
+       ring, so give the button a visible ring of its own for keyboard users. */
+    .input-icon-wrap .reveal:focus-visible {
+      outline: none;
+      color: #2563EB;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.28);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .input-icon-wrap .reveal { transition: none; }
+    }
+
     .btn-login {
       width: 100%; padding: .55rem 1rem;
       background: #2563EB; color: #fff;
@@ -186,18 +217,32 @@ import { LanguageSwitcherComponent } from '../../../layout/language-switcher/lan
               <div class="input-icon-wrap">
                 <i class="bi bi-lock icon"></i>
                 <input id="loginPassword"
-                       type="password"
-                       class="form-control"
+                       [type]="showPassword() ? 'text' : 'password'"
+                       class="form-control has-reveal"
                        name="password"
                        [(ngModel)]="password"
                        required
                        autocomplete="current-password"
                        placeholder="••••••••">
+                <!-- type="button" matters: inside a form a bare <button> submits it,
+                     so revealing the password would try to log you in. -->
+                <button type="button"
+                        class="reveal"
+                        (click)="showPassword.set(!showPassword())"
+                        [attr.aria-label]="(showPassword() ? 'auth.login.hidePassword'
+                                                          : 'auth.login.showPassword') | transloco"
+                        [attr.title]="(showPassword() ? 'auth.login.hidePassword'
+                                                      : 'auth.login.showPassword') | transloco"
+                        [attr.aria-pressed]="showPassword()">
+                  <i class="bi" [class.bi-eye]="!showPassword()"
+                                [class.bi-eye-slash]="showPassword()"></i>
+                </button>
               </div>
             </div>
 
             <div class="mb-4 form-check">
-              <input type="checkbox" class="form-check-input" id="rememberMe">
+              <input type="checkbox" class="form-check-input" id="rememberMe"
+                     name="rememberMe" [(ngModel)]="rememberMe">
               <label class="form-check-label" style="font-size:13px;color:var(--text-2)" for="rememberMe">
                 {{ 'auth.login.rememberMe' | transloco }}
               </label>
@@ -244,9 +289,12 @@ import { LanguageSwitcherComponent } from '../../../layout/language-switcher/lan
 export class LoginComponent implements OnInit {
   email = '';
   password = '';
+  rememberMe = false;
   loading      = signal(false);
   error        = signal('');
   sessionExpired = signal(false);
+  /** Reveals the password in clear text while the user checks what they typed. */
+  showPassword = signal(false);
 
   readonly theme = inject(ThemeService);
 
@@ -265,7 +313,7 @@ export class LoginComponent implements OnInit {
   submit(): void {
     this.loading.set(true);
     this.error.set('');
-    this.auth.login({ email: this.email, password: this.password }).subscribe({
+    this.auth.login({ email: this.email, password: this.password, rememberMe: this.rememberMe }).subscribe({
       next: res => {
         this.loading.set(false);
         if (res.firstLogin) {

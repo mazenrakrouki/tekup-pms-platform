@@ -1,13 +1,11 @@
-\chapter{System Architecture and Design}
+\chapter{Application Architecture and Technical Environment}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
-This chapter translates the requirements of Chapter~2 into a technical design. It presents the
-architectural style retained, the layered organisation of the application, the cross-cutting design
-decisions that structure every module, the domain model, and the relational schema that supports
-it. These choices are made once here and are then applied uniformly by the ten sprints of
-Chapters~4 to~7.
-
+This chapter turns the requirements of Chapter~2 into a technical design. It presents the
+architecture chosen, the layers the application is organised in, and the design decisions that
+apply to every module. It then gives the domain model and the relational schema that carries it.
+These choices are made once, here, and the ten sprints of Chapters~4 to~7 all follow them.
 \section{Architectural style}
 
 \subsection{A three-tier modular monolith}
@@ -83,7 +81,7 @@ without distributed state. The mechanism is detailed in Sprint~1.
 
 \subsection{Dynamic authorization}
 The ``Role $\rightarrow$ Permission $\rightarrow$ Module'' model presented in
-Section~\ref{sec:rbac} is enforced by annotating every endpoint with the permission code it
+Section~\ref{sec:class-diagram} is enforced by annotating every endpoint with the permission code it
 requires. No role name appears in application code. The role--permission matrix lives in the
 database, which makes the authorization policy configurable data. This is the single most
 structuring decision of the project and is validated in Sprint~2.
@@ -124,36 +122,12 @@ Every business table carries creation and modification metadata and an \texttt{a
 satisfies the auditability requirement and preserves the history on which the indicators depend.
 
 \section{Domain model}
-Figure~\ref{fig:class-global} gives the overall map of the domain. The project is the aggregation
-root: most business entities exist only within a project and are composed by it, while users,
-roles, permissions and resources form an independent reference core.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\columnwidth]{img/class_global.png}
-  \caption{Domain model --- principal classes and their associations}
-  \label{fig:class-global}
-\end{figure}
-
-One reading of the diagram deserves to be made explicit, because it is easy to expect the
-opposite. The four roles of the platform are not subclasses of \texttt{User}: they are rows of
-the \texttt{Role} class. A user holds a role, and a role grants permissions, so the authorization
-policy is data that an administrator edits rather than a hierarchy compiled into the application.
-Modelling the roles as types would have contradicted that, and would have made every change of
-policy a new version of the software.
-
-The diagram stays at the level of the principal classes and their key attributes. Each sub-domain
-is detailed by its own class diagram, presented in the sprint that builds it: security in
-Sprint~2 (Figure~\ref{fig:class-sec}), projects and teams in Sprint~3, agile planning in
-Sprint~5, financial management in Sprint~6, governance in Sprint~7, and the indicator engine in
-Sprint~8.
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=0.95\columnwidth]{img/class_security.png}
-  \caption{Class diagram --- security and access control}
-  \label{fig:class-sec}
-\end{figure}
+The domain model was established during the analysis and is presented in
+Section~\ref{sec:class-diagram} with the class diagram of the authorization policy. It is not
+repeated here. What this chapter adds to it is the decision that the model rests on, that the
+project is the aggregation root: most business classes exist only inside a project and are
+composed by it, while users, roles, permissions and resources form a reference core that stands on
+its own.
 
 \section{Database design}
 
@@ -434,9 +408,11 @@ platform contains the company's financial logic.
 \subsection{Modelling tools}
 
 \noindent\textbf{PlantUML}\\
-Rendering of the UML diagrams from a plain-text description, so that they are versioned as source
-next to the code: a diagram that is a text file is reviewed, diffed and corrected like anything
-else, whereas an exported image quietly goes out of date.
+Renders the sequence, state, activity and deployment diagrams from a plain-text description, so
+that they are versioned as source next to the code. A diagram that is a text file is reviewed,
+diffed and corrected like anything else, whereas an exported image quietly goes out of date. It
+places the elements itself, which suits these diagrams: the order of a sequence is given by the
+messages, not by the author.
 
 \begin{figure}[H]
   \centering
@@ -445,16 +421,19 @@ else, whereas an exported image quietly goes out of date.
   \label{fig:logo-plantuml}
 \end{figure}
 
-\noindent\textbf{Lucidchart}\\
-Diagramming application used for the global class diagram of Figure~\ref{fig:class-global}. That one
-diagram is the map of the whole domain and needed to be laid out by hand, grouping the classes as a
-reader thinks about them rather than as an automatic layout engine places them.
+\noindent\textbf{draw.io}\\
+Diagramming application used for the class diagrams and for the use case diagrams. Those two
+families are laid out by hand, because a class diagram reads well when the classes are grouped the
+way a reader thinks about them, and an automatic engine groups them the way that minimises its own
+crossings. The \texttt{.drawio} files are themselves generated by a script from one description of
+the classes and their relations, so changing a relation everywhere is an edit of one line rather
+than an afternoon of dragging boxes, and the export to PNG is a command.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[height=2.0cm,keepaspectratio]{img/logo_lucidchart.png}
-  \caption{Logo of Lucidchart}
-  \label{fig:logo-lucidchart}
+  \includegraphics[height=2.0cm,keepaspectratio]{img/logo_drawio.png}
+  \caption{Logo of draw.io}
+  \label{fig:logo-drawio}
 \end{figure}
 
 The design sketches of the preparation phase were produced with Google Stitch, presented in
@@ -464,8 +443,8 @@ rather than one taken at the outset.
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
-The architecture retained, a three-tier modular monolith with dynamic authorization, a hybrid
-indicator engine and a normalised time-series schema, answers the requirements of Chapter~2
-while remaining proportionate to the scale of the target deployment. These decisions are now
-applied: the following chapters present the progressive construction of the platform, release by
+The chosen architecture is a three-tier modular monolith. It carries dynamic authorization, a
+hybrid indicator engine and a normalised time-series schema. It answers the requirements of
+Chapter~2, and it stays in proportion to the size of the deployment it targets. The following
+chapters put these decisions into practice and present the platform as it was built, release by
 release and sprint by sprint.

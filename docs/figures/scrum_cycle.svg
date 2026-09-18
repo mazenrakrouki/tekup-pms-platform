@@ -1,87 +1,97 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 100 1157 396">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 566">
   <style>
-    text { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
-    .h  { font-weight:700; fill:#1F4E79; font-size:21px; }
-    .s  { fill:#5C6B7A; font-size:16.5px; }
-    .card { fill:#FFFFFF; stroke:#AEBCC9; stroke-width:1.6; }
-    .flow { fill:none; stroke:#1F4E79; stroke-width:2.6; }
-    .loop { fill:none; stroke:#C4212A; stroke-width:2.2; }
+    text  { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
+    .cap  { font-weight:700; font-size:19px; fill:#16212B; }
+    .sub  { font-size:16px; fill:#5C6B7A; }
+    .big  { font-weight:700; font-size:38px; fill:#1F4E79; letter-spacing:2px; }
+    .mid  { font-size:20px; fill:#5C6B7A; }
+    .tiny { font-weight:700; font-size:17px; fill:#1F4E79; }
+    .badge{ fill:#FFFFFF; stroke:#1F4E79; stroke-width:3.2; }
+    .ic   { fill:none; stroke:#1F4E79; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
+    .icf  { fill:#1F4E79; }
+    .bar  { fill:#1F4E79; }
+    .ring { fill:none; stroke:#A8C4DD; stroke-width:34; }
+    .darc { fill:none; stroke:#1F4E79; stroke-width:15; }
   </style>
   <defs>
-    <marker id="a" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
-      <path d="M0 0 L10 4 L0 8 z" fill="#1F4E79"/>
+    <marker id="ltip" viewBox="0 0 16 14" refX="7" refY="7" markerWidth="2.0" markerHeight="1.8" orient="auto">
+      <path d="M0 0 L16 7 L0 14 z" fill="#A8C4DD"/>
     </marker>
-    <marker id="ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="8" markerHeight="7" orient="auto">
-      <path d="M0 0 L10 4 L0 8 z" fill="#C4212A"/>
-    </marker>
-    <marker id="am" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="8" orient="auto">
-      <path d="M0 0 L10 4 L0 8 z" fill="#34719F"/>
+    <marker id="dtip" viewBox="0 0 16 14" refX="7" refY="7" markerWidth="2.4" markerHeight="2.1" orient="auto">
+      <path d="M0 0 L16 7 L0 14 z" fill="#1F4E79"/>
     </marker>
   </defs>
 
-  <!-- ============ product backlog ============ -->
-  <rect class="card" x="40" y="128" width="180" height="224" rx="7"/>
-  <text class="h" x="130" y="158" text-anchor="middle">Product backlog</text>
-  <text class="s" x="130" y="180" text-anchor="middle">ordered by value</text>
-  <rect x="58" y="196" width="144" height="18" rx="3" fill="#1F4E79"/>
-  <rect x="58" y="219" width="144" height="18" rx="3" fill="#2C6294"/>
-  <rect x="58" y="242" width="144" height="18" rx="3" fill="#4A7FAE"/>
-  <rect x="58" y="265" width="144" height="18" rx="3" fill="#7BA5C8"/>
-  <rect x="58" y="288" width="144" height="18" rx="3" fill="#A8C4DC"/>
-  <rect x="58" y="311" width="144" height="18" rx="3" fill="#CBDCEA"/>
+  <!-- ====================== the three accountabilities ====================== -->
+  <circle class="badge" cx="105" cy="112" r="44"/>
+  <circle class="ic" cx="105" cy="99" r="11"/>
+  <path class="ic" d="M85 134 a20 20 0 0 1 40 0"/>
+  <path class="icf" d="M105 113 l7 5 -7 14 -7 -14 z"/>
+  <text class="cap" x="105" y="182" text-anchor="middle">Product</text>
+  <text class="cap" x="105" y="203" text-anchor="middle">Owner</text>
 
-  <path class="flow" d="M220 241 H 256" marker-end="url(#a)"/>
+  <circle class="badge" cx="232" cy="112" r="44"/>
+  <circle class="icf" cx="232" cy="94" r="7"/>
+  <circle class="icf" cx="213" cy="126" r="7"/>
+  <circle class="icf" cx="251" cy="126" r="7"/>
+  <path class="ic" d="M232 101 L215 120 M232 101 L249 120 M218 128 L246 128"/>
+  <text class="cap" x="232" y="182" text-anchor="middle">Development</text>
+  <text class="cap" x="232" y="203" text-anchor="middle">Team</text>
 
-  <!-- ============ sprint planning ============ -->
-  <rect class="card" x="262" y="202" width="170" height="78" rx="7"/>
-  <text class="h" x="347" y="236" text-anchor="middle">Sprint planning</text>
-  <text class="s" x="347" y="258" text-anchor="middle">select and commit</text>
+  <circle class="badge" cx="359" cy="112" r="44"/>
+  <circle class="ic" cx="351" cy="99" r="10"/>
+  <path class="ic" d="M333 132 a18 18 0 0 1 36 0"/>
+  <rect class="ic" x="364" y="100" width="20" height="26" rx="3"/>
+  <path class="ic" d="M369 108 h10 M369 115 h10"/>
+  <text class="cap" x="359" y="182" text-anchor="middle">Scrum</text>
+  <text class="cap" x="359" y="203" text-anchor="middle">Master</text>
 
-  <path class="flow" d="M432 241 H 466" marker-end="url(#a)"/>
+  <!-- ========================= the intake, left to right ==================== -->
+  <path class="bar" d="M62 392 H455 V372 L516 412 L455 452 V432 H62 Z"/>
 
-  <!-- ============ sprint backlog ============ -->
-  <rect class="card" x="472" y="158" width="168" height="164" rx="7"/>
-  <text class="h" x="556" y="188" text-anchor="middle">Sprint backlog</text>
-  <text class="s" x="556" y="210" text-anchor="middle">committed items</text>
-  <rect x="490" y="226" width="132" height="18" rx="3" fill="#1F4E79"/>
-  <rect x="490" y="249" width="132" height="18" rx="3" fill="#4A7FAE"/>
-  <rect x="490" y="272" width="132" height="18" rx="3" fill="#7BA5C8"/>
-  <rect x="490" y="295" width="132" height="18" rx="3" fill="#A8C4DC"/>
+  <circle class="badge" cx="105" cy="412" r="44"/>
+  <rect class="ic" x="89" y="392" width="32" height="40" rx="3"/>
+  <path class="ic" d="M96 402 h18 M96 410 h18 M96 418 h12"/>
+  <text class="cap" x="105" y="482" text-anchor="middle">Product</text>
+  <text class="cap" x="105" y="503" text-anchor="middle">backlog</text>
 
-  <path class="flow" d="M640 241 H 672" marker-end="url(#a)"/>
+  <circle class="badge" cx="232" cy="412" r="44"/>
+  <rect class="ic" x="216" y="392" width="32" height="40" rx="3"/>
+  <path class="ic" d="M223 403 h14 M223 411 h14"/>
+  <path class="ic" d="M221 422 l5 5 9 -11" stroke-width="3"/>
+  <text class="cap" x="232" y="482" text-anchor="middle">Sprint</text>
+  <text class="cap" x="232" y="503" text-anchor="middle">planning</text>
 
-  <!-- ============ the sprint ============ -->
-  <circle cx="800" cy="240" r="122" fill="#F4F8FB" stroke="none"/>
-  <path class="flow" d="M878.4 146.6 A 122 122 0 1 1 721.6 146.6" marker-end="url(#a)"/>
-  <text class="h" x="800" y="188" text-anchor="middle" style="font-size:30px; letter-spacing:3px;">SPRINT</text>
-  <text class="s" x="800" y="212" text-anchor="middle" style="font-size:17px;">three weeks</text>
-  <circle cx="800" cy="292" r="50" fill="#FFFFFF" stroke="none"/>
-  <path d="M832.1 253.7 A 50 50 0 1 1 767.9 253.7" fill="none" stroke="#34719F" stroke-width="2.2" marker-end="url(#am)"/>
-  <text x="800" y="288" text-anchor="middle" style="font-size:17px; font-weight:700; fill:#34719F;">Daily</text>
-  <text x="800" y="307" text-anchor="middle" style="font-size:17px; font-weight:700; fill:#34719F;">scrum</text>
+  <circle class="badge" cx="359" cy="412" r="44"/>
+  <rect class="ic" x="337" y="388" width="30" height="38" rx="3"/>
+  <rect class="ic" x="347" y="398" width="30" height="38" rx="3" fill="#FFFFFF"/>
+  <path class="ic" d="M354 409 h16 M354 417 h16 M354 425 h10"/>
+  <text class="cap" x="359" y="482" text-anchor="middle">Sprint</text>
+  <text class="cap" x="359" y="503" text-anchor="middle">backlog</text>
 
-  <path class="flow" d="M922 241 H 956" marker-end="url(#a)"/>
+  <!-- ============================ the iteration ============================= -->
+  <path class="ring" d="M 700 165 A 135 135 0 1 1 596 383" marker-end="url(#ltip)"/>
+  <text class="big" x="700" y="291" text-anchor="middle">SPRINT</text>
+  <text class="mid" x="700" y="325" text-anchor="middle">one to four weeks</text>
 
-  <!-- ============ increment ============ -->
-  <rect class="card" x="962" y="198" width="195" height="86" rx="7"/>
-  <text class="h" x="1059" y="234" text-anchor="middle">Increment</text>
-  <text class="s" x="1059" y="256" text-anchor="middle">demonstrable software</text>
+  <!-- the day inside the iteration -->
+  <path class="darc" d="M 838 116 A 52 52 0 0 1 926 138" marker-end="url(#dtip)"/>
+  <text class="cap" x="882" y="62" text-anchor="middle">Daily scrum</text>
+  <text class="tiny" x="882" y="136" text-anchor="middle">24 h</text>
 
-  <path class="flow" d="M1059 284 V 388" marker-end="url(#a)"/>
+  <!-- ====================== what the iteration produces ===================== -->
+  <circle class="badge" cx="1040" cy="190" r="44"/>
+  <circle class="ic" cx="1040" cy="190" r="14" stroke-width="5"/>
+  <path class="ic" stroke-width="5.5" d="M1040 170 v-7 M1040 210 v7 M1020 190 h-7
+                  M1060 190 h7 M1026 176 l-5 -5 M1054 204 l5 5 M1054 176 l5 -5
+                  M1026 204 l-5 5"/>
+  <text class="cap" x="1040" y="262" text-anchor="middle">Sprint review</text>
+  <text class="cap" x="1040" y="283" text-anchor="middle">and retrospective</text>
 
-  <!-- ============ review ============ -->
-  <rect class="card" x="962" y="394" width="195" height="78" rx="7"/>
-  <text class="h" x="1059" y="428" text-anchor="middle">Sprint review</text>
-  <text class="s" x="1059" y="450" text-anchor="middle">increment shown</text>
-
-  <path class="flow" d="M962 433 H 918" marker-end="url(#a)"/>
-
-  <!-- ============ retrospective ============ -->
-  <rect class="card" x="680" y="394" width="232" height="78" rx="7"/>
-  <text class="h" x="796" y="428" text-anchor="middle">Sprint retrospective</text>
-  <text class="s" x="796" y="450" text-anchor="middle">the process itself</text>
-
-  <!-- ============ adaptation loop ============ -->
-  <path class="loop" d="M680 433 H 150 Q 130 433 130 413 V 360" marker-end="url(#ar)"/>
-  <text x="405" y="419" text-anchor="middle" style="font-size:16.5px; fill:#C4212A;">adaptation happens between iterations, not inside one</text>
+  <path class="bar" d="M812 392 H930 V372 L984 412 L930 452 V432 H812 Z"/>
+  <circle class="badge" cx="1040" cy="412" r="44"/>
+  <circle class="ic" cx="1040" cy="412" r="19"/>
+  <path class="ic" stroke-width="4" d="M1030 412 l7 8 14 -17"/>
+  <text class="cap" x="1040" y="482" text-anchor="middle">Increment</text>
+  <text class="sub" x="1040" y="503" text-anchor="middle">demonstrable software</text>
 </svg>

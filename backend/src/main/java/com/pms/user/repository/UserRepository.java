@@ -11,7 +11,16 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    @Query("SELECT u FROM User u JOIN FETCH u.role r JOIN FETCH r.permissions WHERE u.email = :email AND u.deleted = false")
+    /**
+     * Chargement du compte pour l'authentification.
+     *
+     * <p>Le fetch sur {@code r.permissions} doit rester un LEFT JOIN. Un rôle peut
+     * légitimement n'avoir aucune permission — c'est l'état d'un rôle que l'on vient
+     * de créer, ou dont la matrice vient d'être vidée. Avec une jointure interne, un
+     * tel compte ne remonte pas du tout et la connexion échoue sur « Identifiants
+     * incorrects », ce qui désigne le mot de passe alors que le mot de passe est bon.
+     */
+    @Query("SELECT u FROM User u JOIN FETCH u.role r LEFT JOIN FETCH r.permissions WHERE u.email = :email AND u.deleted = false")
     Optional<User> findActiveByEmailWithRole(String email);
 
     @Query("SELECT u FROM User u JOIN FETCH u.role WHERE u.deleted = false ORDER BY u.lastName, u.firstName")

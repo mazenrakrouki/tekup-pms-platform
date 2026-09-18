@@ -31,6 +31,7 @@ pms:
     secret: dev-only-secret-not-for-production-dev-only-secret-not-for-production-0123456789
     access-token-expiration: 3600   # 1 heure en dev (plus pratique pour tester)
     refresh-token-expiration: 86400 # 1 jour en dev
+    remember-me-expiration:  2592000 # 30 jours (identique a la prod, pour tester le comportement reel)
 
 logging:
   level:

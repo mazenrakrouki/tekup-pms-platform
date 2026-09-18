@@ -1,6 +1,8 @@
 export interface LoginRequest {
   email: string;
   password: string;
+  /** Session longue (30 jours) au lieu de la duree de rafraichissement par defaut. */
+  rememberMe: boolean;
 }
 
 export interface AuthResponse {

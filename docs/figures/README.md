@@ -15,6 +15,11 @@ screenshots.
 | `three_tier.svg` | `img/three_tier.png` | 3.1.1 A Three-Tier Modular Monolith |
 | `layered_architecture.svg` | `img/layered_architecture.png` | 3.1.2 Layered Organisation |
 | `indicator_engine.svg` | `img/indicator_engine.png` | 3.2.3 A Hybrid Indicator Engine |
+| `ci_pipeline.svg` | `img/ci_pipeline.png` | 7.2 Sprint 10, the pipeline |
+| `make_console.py` + `console/logs/mvn_test.log` | `img/cap_test_run.png` | 7.1.6 Testing |
+| `make_console.py` + `console/logs/npm_build.log` | `img/cap_frontend_build.png` | 7.2.6 Testing |
+| `make_console.py` + `console/logs/docker_stack.log` | `img/cap_docker_stack.png` | 7.2.6 Testing |
+| headless Chrome on the public Actions page | `img/cap_ci_run.png` | 7.2.6 Testing |
 
 `img/` above is `report/Rapport PFE TEKUP LATEX/img/`.
 
@@ -85,3 +90,58 @@ Font sizes are chosen for the width each figure is included at: roughly 21 units
 16–17 for a label, on a canvas about 1150 units wide included at `\columnwidth`, which lands near
 8 pt and 6.5 pt on the page. Making a canvas narrower without scaling its type down is what makes
 a figure's text too large next to the body text.
+
+## The evidence captures in chapter 7
+
+Chapter 7 claims a test suite, a production build, containerization and a pipeline.
+It used to show none of them, so the three captures below were produced by running
+the commands and keeping the output.
+
+`console/logs/` holds the raw logs of those runs. `make_console.py` turns a log into
+a terminal-styled HTML page under `console/`, copying the lines verbatim and marking
+any stretch it leaves out; `render_html.py` shoots those pages with headless Chrome
+and trims the result with Pillow. Nothing is retyped, and the warnings are kept: the
+frontend build really does exceed its bundle budget, and a figure that hid that would
+be worth nothing.
+
+```
+cd backend && mvn -B test            # writes the log, and target/site/jacoco
+cd frontend/pms-frontend && npm run build
+python make_console.py && python render_html.py
+```
+
+The coverage figure `img/cap_coverage.png` is a headless-Chrome shot of JaCoCo's own
+`backend/target/site/jacoco/index.html`, taken after that test run. JaCoCo is wired
+into `backend/pom.xml`; it was added for this evidence and runs in the `test` phase.
+
+The Docker capture is the same treatment applied to a whole session rather than one
+command. With the stack up, `docker compose ps` and the four checks of the pipeline's
+`smoke` job were run against it and the output kept:
+
+```
+docker compose up -d --build     # the engine has to be running already
+docker compose ps
+curl -X POST http://localhost:8081/api/auth/login   # nginx -> API -> database
+curl http://localhost:8081/projects                # Angular route fallback
+curl http://localhost:8081/i18n/fr.json            # translation catalogue
+```
+
+The access token in that log is cut to its first characters before it is written.
+Nothing in `console/logs/` should ever hold a credential that still works.
+
+The pipeline capture is a headless-Chrome shot of the run page itself, taken once the
+repository was made public so an anonymous browser could load it:
+
+```
+chrome --headless=new --force-device-scale-factor=2 --window-size=1500,1500 \
+       --virtual-time-budget=20000 --screenshot=img/cap_ci_run.png \
+       https://github.com/mazenrakrouki/tekup-pms-platform/actions/runs/34715444844
+```
+
+It is then cropped to the repository header, the run verdict and the job graph;
+GitHub's own global navigation above and the annotation and artifact lists below
+carry nothing the report needs. Re-taking it for a later run only means changing the
+run id, and redoing the crop: where GitHub puts things on the page is not something
+a script should assume.
+
+Every figure in chapter 7 is now a real run. Nothing is left pending.

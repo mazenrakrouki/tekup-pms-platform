@@ -68,3 +68,7 @@ _build_*
 # Sauvegardes locales (ne jamais versionner)
 *.bak
 *.bak-*
+
+# Python caches (scripts de generation des figures)
+__pycache__/
+*.pyc

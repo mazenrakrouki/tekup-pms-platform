@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="31.1.8">
+  <diagram name="Classes — workload and indicator engine">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Classes — workload and indicator engine" style="text;html=1;align=center;verticalAlign=middle;fontSize=26;fontStyle=1;fontColor=#16212B;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="0" y="10" width="1590" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project" value="Project" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="480" y="60" width="259" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project_a0" value="- code : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Project">
+          <mxGeometry y="48" width="259" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project_a1" value="- soldWorkloadDays : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Project">
+          <mxGeometry y="72" width="259" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_Project">
+          <mxGeometry y="106" width="259" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Project">
+          <mxGeometry y="114" width="259" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_WorkloadPlan" value="WorkloadPlan" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="60" y="320" width="236" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="c_WorkloadPlan_a0" value="- period : date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_WorkloadPlan">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_WorkloadPlan_a1" value="- plannedDays : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_WorkloadPlan">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_WorkloadPlan_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_WorkloadPlan">
+          <mxGeometry y="106" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_WorkloadPlan_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_WorkloadPlan">
+          <mxGeometry y="114" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_ActualWorkload" value="ActualWorkload" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="400" y="320" width="236" height="188" as="geometry" />
+        </mxCell>
+        <mxCell id="c_ActualWorkload_a0" value="- period : date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_ActualWorkload">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_ActualWorkload_a1" value="- actualDays : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_ActualWorkload">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_ActualWorkload_a2" value="- submittedAt : datetime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_ActualWorkload">
+          <mxGeometry y="96" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_ActualWorkload_a3" value="- validatedAt : datetime" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_ActualWorkload">
+          <mxGeometry y="120" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_ActualWorkload_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_ActualWorkload">
+          <mxGeometry y="154" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_ActualWorkload_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_ActualWorkload">
+          <mxGeometry y="162" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot" value="KpiSnapshot" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="800" y="320" width="267" height="308" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_a0" value="- snapshotDate : date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="48" width="267" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_a1" value="- evPct : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="72" width="267" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_a2" value="- deliveryPct : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="96" width="267" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_a3" value="- driftDays : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="120" width="267" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_a4" value="- productionRevenue : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="144" width="267" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_a5" value="- unbilledRevenue : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="168" width="267" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_a6" value="- eac : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="192" width="267" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_a7" value="- margin : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="216" width="267" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_a8" value="- highlights : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="240" width="267" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="274" width="267" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_KpiSnapshot_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_KpiSnapshot">
+          <mxGeometry y="282" width="267" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User" value="User" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="240" y="720" width="236" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User_a0" value="- email : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_User">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_User">
+          <mxGeometry y="82" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_User">
+          <mxGeometry y="90" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Resource" value="Resource" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="620" y="720" width="236" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Resource_a0" value="- dailyRate : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Resource">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Resource_a1" value="- tccRate : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Resource">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Resource_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_Resource">
+          <mxGeometry y="106" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Resource_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Resource">
+          <mxGeometry y="114" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_AnnualTcc" value="AnnualTcc" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="620" y="940" width="236" height="164" as="geometry" />
+        </mxCell>
+        <mxCell id="c_AnnualTcc_a0" value="- year : int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_AnnualTcc">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_AnnualTcc_a1" value="- dailyRate : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_AnnualTcc">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_AnnualTcc_a2" value="- tccRate : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_AnnualTcc">
+          <mxGeometry y="96" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_AnnualTcc_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_AnnualTcc">
+          <mxGeometry y="130" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_AnnualTcc_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_AnnualTcc">
+          <mxGeometry y="138" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=diamondThin;startFill=1;startSize=18;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_Project" target="c_WorkloadPlan">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e0_s" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e0">
+          <mxGeometry x="-0.52" relative="1" as="geometry">
+            <mxPoint x="-9" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e0_t" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e0">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="-9" y="-15" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=diamondThin;startFill=1;startSize=18;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_Project" target="c_ActualWorkload">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_s" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e1">
+          <mxGeometry x="-0.52" relative="1" as="geometry">
+            <mxPoint x="14" y="10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1_t" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e1">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="14" y="10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=diamondThin;startFill=1;startSize=18;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_Project" target="c_KpiSnapshot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_s" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e2">
+          <mxGeometry x="-0.52" relative="1" as="geometry">
+            <mxPoint x="11" y="-13" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2_t" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e2">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="11" y="-13" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="plans for" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=none;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_WorkloadPlan" target="c_User">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3_s" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e3">
+          <mxGeometry x="-0.78" relative="1" as="geometry">
+            <mxPoint x="15" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3_t" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e3">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="15" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="reported by" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=none;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_ActualWorkload" target="c_User">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4_s" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e4">
+          <mxGeometry x="-0.78" relative="1" as="geometry">
+            <mxPoint x="15" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4_t" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e4">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="15" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" value="prices" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=none;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_Resource" target="c_User">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5_s" value="0..1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e5">
+          <mxGeometry x="-0.78" relative="1" as="geometry">
+            <mxPoint x="1" y="-17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5_t" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e5">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="1" y="-17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=diamondThin;startFill=1;startSize=18;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_Resource" target="c_AnnualTcc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6_s" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e6">
+          <mxGeometry x="-0.52" relative="1" as="geometry">
+            <mxPoint x="17" y="0" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6_t" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e6">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="17" y="0" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="note0" value="A day of effort is valued at the cost rate of the year it was booked in. The snapshot freezes a monthly review: the indicators computed plus the earned value the project manager entered." style="shape=note;whiteSpace=wrap;html=1;size=14;fontSize=14;fontColor=#4A5967;strokeColor=#AAAAAA;fillColor=#FAFAFA;align=left;spacingLeft=8;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="1060" y="700" width="460" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="nl0" style="edgeStyle=none;rounded=0;html=1;dashed=1;endArrow=none;startArrow=none;strokeColor=#AAAAAA;strokeWidth=1;" edge="1" parent="1" source="note0" target="c_KpiSnapshot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

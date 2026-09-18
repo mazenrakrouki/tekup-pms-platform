@@ -213,7 +213,14 @@
     "csvPlan": "Plan",
     "csvActual": "Actual",
     "csvMonthlyTotals": "Monthly totals",
-    "monthlyTotals": "Monthly totals"
+    "monthlyTotals": "Monthly totals",
+    "pendingTitle": "Actual workload waiting for validation",
+    "pendingHint": "Until you validate a line, it does not count towards the consumed cost, the EAC or the margin.",
+    "period": "Period",
+    "actualDays": "Actual days",
+    "validate": "Validate",
+    "okValidated": "{{name}}'s workload ({{period}}) validated.",
+    "errValidate": "Validation failed."
   },
   "labels": {
     "engagement": {

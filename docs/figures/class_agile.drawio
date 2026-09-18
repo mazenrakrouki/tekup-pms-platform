@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="31.1.8">
+  <diagram name="Classes — product backlog and sprints">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="1169" pageHeight="826" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Classes — product backlog and sprints" style="text;html=1;align=center;verticalAlign=middle;fontSize=26;fontStyle=1;fontColor=#16212B;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="0" y="10" width="1490" height="44" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project" value="Project" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="300" y="60" width="236" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project_a0" value="- code : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Project">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project_a1" value="- name : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Project">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_Project">
+          <mxGeometry y="106" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Project_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Project">
+          <mxGeometry y="114" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Sprint" value="Sprint" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="60" y="420" width="236" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Sprint_a0" value="- name : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Sprint">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Sprint_a1" value="- goal : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Sprint">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Sprint_a2" value="- startDate : date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Sprint">
+          <mxGeometry y="96" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Sprint_a3" value="- endDate : date" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Sprint">
+          <mxGeometry y="120" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Sprint_a4" value="- status : SprintStatus" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Sprint">
+          <mxGeometry y="144" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Sprint_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_Sprint">
+          <mxGeometry y="178" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_Sprint_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_Sprint">
+          <mxGeometry y="186" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItem" value="BacklogItem" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="540" y="420" width="259" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItem_a0" value="- title : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItem">
+          <mxGeometry y="48" width="259" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItem_a1" value="- description : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItem">
+          <mxGeometry y="72" width="259" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItem_a2" value="- priority : BacklogPriority" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItem">
+          <mxGeometry y="96" width="259" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItem_a3" value="- estimateDays : decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItem">
+          <mxGeometry y="120" width="259" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItem_a4" value="- status : BacklogItemStatus" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItem">
+          <mxGeometry y="144" width="259" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItem_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_BacklogItem">
+          <mxGeometry y="178" width="259" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItem_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItem">
+          <mxGeometry y="186" width="259" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User" value="User" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="960" y="60" width="236" height="164" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User_a0" value="- lastName : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_User">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User_a1" value="- firstName : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_User">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User_a2" value="- email : string" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_User">
+          <mxGeometry y="96" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_User">
+          <mxGeometry y="130" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_User_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_User">
+          <mxGeometry y="138" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_SprintStatus" value="SprintStatus" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="60" y="780" width="236" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c_SprintStatus_a0" value="PLANNED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_SprintStatus">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_SprintStatus_a1" value="ACTIVE" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_SprintStatus">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_SprintStatus_a2" value="CLOSED" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_SprintStatus">
+          <mxGeometry y="96" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_SprintStatus_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_SprintStatus">
+          <mxGeometry y="130" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_SprintStatus_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_SprintStatus">
+          <mxGeometry y="138" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItemStatus" value="BacklogItemStatus" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="540" y="780" width="236" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItemStatus_a0" value="TODO" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItemStatus">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItemStatus_a1" value="IN_PROGRESS" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItemStatus">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItemStatus_a2" value="DONE" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItemStatus">
+          <mxGeometry y="96" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItemStatus_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_BacklogItemStatus">
+          <mxGeometry y="130" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogItemStatus_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogItemStatus">
+          <mxGeometry y="138" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogPriority" value="BacklogPriority" style="swimlane;fontStyle=1;align=center;verticalAlign=middle;startSize=38;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#33383D;fontColor=#16212B;fontSize=19;" vertex="1" parent="1">
+          <mxGeometry x="900" y="780" width="236" height="154" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogPriority_a0" value="LOW" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogPriority">
+          <mxGeometry y="48" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogPriority_a1" value="MEDIUM" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogPriority">
+          <mxGeometry y="72" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogPriority_a2" value="HIGH" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogPriority">
+          <mxGeometry y="96" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogPriority_a3" value="CRITICAL" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;spacingRight=6;overflow=hidden;html=1;fontSize=16;fontColor=#16212B;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogPriority">
+          <mxGeometry y="120" width="236" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogPriority_sep" value="" style="line;strokeWidth=1;strokeColor=#33383D;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" vertex="1" parent="c_BacklogPriority">
+          <mxGeometry y="154" width="236" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="c_BacklogPriority_ops" value="" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=8;html=1;fontSize=16;points=[];portConstraint=eastwest;rotatable=0;" vertex="1" parent="c_BacklogPriority">
+          <mxGeometry y="162" width="236" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=diamondThin;startFill=1;startSize=18;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.6;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_Project" target="c_Sprint">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e0_s" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e0">
+          <mxGeometry x="-0.52" relative="1" as="geometry">
+            <mxPoint x="16" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e0_t" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e0">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="16" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=diamondThin;startFill=1;startSize=18;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.6;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_Project" target="c_BacklogItem">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_s" value="1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e1">
+          <mxGeometry x="-0.52" relative="1" as="geometry">
+            <mxPoint x="15" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1_t" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e1">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="15" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" value="commits" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=none;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_Sprint" target="c_BacklogItem">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2_s" value="0..1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e2">
+          <mxGeometry x="-0.78" relative="1" as="geometry">
+            <mxPoint x="0" y="-17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2_t" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e2">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="0" y="-17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="assigned to" style="edgeStyle=none;rounded=0;html=1;endArrow=none;startArrow=none;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_BacklogItem" target="c_User">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3_s" value="0..*" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e3">
+          <mxGeometry x="-0.78" relative="1" as="geometry">
+            <mxPoint x="-11" y="-13" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3_t" value="0..1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=14;fontColor=#33383D;labelBackgroundColor=none;" vertex="1" connectable="0" parent="e3">
+          <mxGeometry x="0.78" relative="1" as="geometry">
+            <mxPoint x="-11" y="-13" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endFill=0;endSize=10;startArrow=none;dashed=1;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_Sprint" target="c_SprintStatus">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endFill=0;endSize=10;startArrow=none;dashed=1;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_BacklogItem" target="c_BacklogItemStatus">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="" style="edgeStyle=none;rounded=0;html=1;endArrow=open;endFill=0;endSize=10;startArrow=none;dashed=1;strokeColor=#33383D;strokeWidth=1.6;fontSize=15;fontColor=#16212B;labelBackgroundColor=#FFFFFF;exitX=1;exitY=0.8;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="c_BacklogItem" target="c_BacklogPriority">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="note0" value="An item with no sprint is still in the product backlog, which is a normal state. Deleting a sprint returns its items there rather than destroying them, so the sprint commits its items and does not own them. The project owns both registers." style="shape=note;whiteSpace=wrap;html=1;size=14;fontSize=14;fontColor=#4A5967;strokeColor=#AAAAAA;fillColor=#FAFAFA;align=left;spacingLeft=8;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="960" y="420" width="460" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="nl0" style="edgeStyle=none;rounded=0;html=1;dashed=1;endArrow=none;startArrow=none;strokeColor=#AAAAAA;strokeWidth=1;" edge="1" parent="1" source="note0" target="c_BacklogItem">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

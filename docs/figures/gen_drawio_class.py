@@ -54,10 +54,19 @@ def esc(t):
 class Diagram(object):
     def __init__(self, spec):
         self.title = spec['title']
-        self.classes = spec['classes']
+        self.enums = set(spec.get('enums', ()))
+        # UML writes private visibility as a minus sign. PlantUML drew it as a small
+        # red square, which the supervisor read as decoration rather than notation;
+        # the specs therefore carry bare attributes and the sign is added here, so
+        # no diagram can be written without it. Enumeration literals have no
+        # visibility and keep none.
+        self.classes = {}
+        for name, attrs in spec['classes'].items():
+            self.classes[name] = (list(attrs) if name in self.enums
+                                  else ['- ' + a for a in attrs])
         self.pos = spec['pos']
         self.rel = spec['rel']
-        self.note = spec.get('note')
+        self.notes = spec.get('notes') or ([spec['note']] if spec.get('note') else [])
         self.box = {}
         for n in self.classes:
             self.box[n] = self.pos[n] + self.size(n)
@@ -65,7 +74,12 @@ class Diagram(object):
     def size(self, name):
         lines = self.classes[name]
         w = max(MIN_W, int(max(len(t) for t in lines + [name]) * CHAR_W) + 34)
-        h = HEAD_H + PAD_Y * 2 + ROW_H * len(lines) + EMPTY_H
+        h = HEAD_H + PAD_Y * 2 + ROW_H * len(lines)
+        # An enumeration has literals, not operations, so it gets no operations
+        # compartment. A class keeps its own even when empty, which is what the
+        # supervisor's reference diagram shows.
+        if name not in self.enums:
+            h += EMPTY_H
         return w, h
 
     def anchor(self, name, fx, fy):
@@ -98,8 +112,7 @@ class Diagram(object):
     def render(self):
         w_total = max(x + w for x, y, w, h in self.box.values()) + 70
         h_total = max(y + h for x, y, w, h in self.box.values()) + 70
-        if self.note:
-            _, nx, ny, nw, nh, _ = self.note
+        for _, nx, ny, nw, nh, _ in self.notes:
             w_total = max(w_total, nx + nw + 70)
             h_total = max(h_total, ny + nh + 70)
 
@@ -174,15 +187,14 @@ class Diagram(object):
                 x.append('          </mxGeometry>')
                 x.append('        </mxCell>')
 
-        if self.note:
-            text, nx, ny, nw, nh, anchor = self.note
-            x.append('        <mxCell id="note" value="%s" style="%s" vertex="1" parent="1">'
-                     % (esc(text), NOTE_STYLE))
+        for k, (text, nx, ny, nw, nh, anchor) in enumerate(self.notes):
+            x.append('        <mxCell id="note%d" value="%s" style="%s" vertex="1" parent="1">'
+                     % (k, esc(text), NOTE_STYLE))
             x.append('          <mxGeometry x="%d" y="%d" width="%d" height="%d" as="geometry" />'
                      % (nx, ny, nw, nh))
             x.append('        </mxCell>')
-            x.append('        <mxCell id="nl" style="%s" edge="1" parent="1" source="note" '
-                     'target="c_%s">' % (NOTELINK, anchor))
+            x.append('        <mxCell id="nl%d" style="%s" edge="1" parent="1" source="note%d" '
+                     'target="c_%s">' % (k, NOTELINK, k, anchor))
             x.append('          <mxGeometry relative="1" as="geometry" />')
             x.append('        </mxCell>')
 
@@ -190,118 +202,9 @@ class Diagram(object):
         return NL.join(x) + NL
 
 
-# ------------------------------------------------------------ global model --
-CLASS_GLOBAL = {
-    'title': 'Global class diagram — PMS',
-    'classes': {
-        'Resource':         ['id : int', 'dailyRate : decimal', 'tccRate : decimal'],
-        'User':             ['id : int', 'lastName : string', 'firstName : string',
-                             'email : string', 'active : boolean'],
-        'Role':             ['id : int', 'name : string', 'description : string'],
-        'Permission':       ['id : int', 'code : string', 'module : string'],
-        'TeamAssignment':   ['id : int', 'roleInTeam : string', 'startDate : date',
-                             'endDate : date'],
-        'ActualWorkload':   ['id : int', 'period : date', 'actualDays : decimal',
-                             'validatedAt : date'],
-        'WorkloadPlan':     ['id : int', 'period : date', 'plannedDays : decimal'],
-        'Project':          ['id : int', 'code : string', 'client : string',
-                             'status : string', 'initialBudget : decimal',
-                             'currency : string'],
-        'KpiSnapshot':      ['id : int', 'snapshotDate : date', 'eac : decimal',
-                             'margin : decimal'],
-        'BillingMilestone': ['id : int', 'label : string', 'percentage : decimal',
-                             'amount : decimal', 'status : string'],
-        'BacklogItem':      ['id : int', 'title : string', 'priority : string',
-                             'estimateDays : decimal', 'status : string'],
-        'Mission':          ['id : int', 'subject : string', 'startDate : date',
-                             'endDate : date'],
-        'Deliverable':      ['id : int', 'title : string', 'dueDate : date',
-                             'status : string'],
-        'Risk':             ['id : int', 'description : string',
-                             'probability : string', 'impact : string'],
-        'Sprint':           ['id : int', 'name : string', 'startDate : date',
-                             'endDate : date', 'status : string'],
-    },
-    'pos': {
-        'Resource': (40, 100), 'User': (520, 60), 'Role': (1000, 100),
-        'Permission': (1480, 100), 'TeamAssignment': (40, 410),
-        'ActualWorkload': (1000, 400), 'WorkloadPlan': (40, 730),
-        'Project': (520, 700), 'KpiSnapshot': (1000, 720),
-        'BillingMilestone': (40, 1000), 'BacklogItem': (1000, 1010),
-        'Mission': (180, 1390), 'Deliverable': (460, 1390),
-        'Risk': (740, 1390), 'Sprint': (1020, 1390),
-    },
-    'rel': [
-        ('User', 1, .45, 'Role', 0, .45, 'holds', '1..*', '1', None),
-        ('Role', 1, .45, 'Permission', 0, .45, 'grants', '1..*', '1', None),
-        ('Resource', 1, .40, 'User', 0, .30, 'cost of', '0..1', '1', None),
-        ('Project', .30, 0, 'User', .30, 1, 'directed by', '1..*', '1', None),
-        ('Project', .70, 0, 'User', .70, 1, 'managed by', '1..*', '0..1', None),
-        ('TeamAssignment', 1, .25, 'User', 0, .75, 'member', '1..*', '1', None),
-        ('Project', 0, .25, 'TeamAssignment', 1, .70, 'staffed by', '1', '1..*', None),
-        ('Project', 0, .50, 'WorkloadPlan', 1, .45, 'forecasts', '1', '1..*', None),
-        ('Project', 0, .78, 'BillingMilestone', 1, .30, 'invoiced by', '1', '1..*', None),
-        ('Project', 1, .25, 'ActualWorkload', 0, .70, 'consumes', '1', '1..*', None),
-        ('Project', 1, .50, 'KpiSnapshot', 0, .45, 'measured by', '1', '1..*', None),
-        ('Project', 1, .78, 'BacklogItem', 0, .30, 'owns', '1', '1..*', 'comp'),
-        ('Project', .25, 1, 'Mission', .55, 0, 'incurs', '1', '1..*', None),
-        ('Project', .50, 1, 'Deliverable', .50, 0, 'produces', '1', '1..*', None),
-        ('Project', .75, 1, 'Risk', .40, 0, 'tracks', '1', '1..*', None),
-        ('Sprint', .50, 0, 'BacklogItem', .50, 1, 'gathers', '0..1', '1..*', 'aggr'),
-    ],
-}
-
-# ------------------------------------------------------- sprint 7 governance --
-# Project carries its real identity here rather than two fields, and the four
-# governance registers are spread wide beneath it, so each composition leaves
-# Project at its own point instead of four diamonds stacking in one corner.
-CLASS_GOVERNANCE = {
-    'title': 'Classes — Project governance',
-    'classes': {
-        'Project':            ['id : int', 'code : string', 'client : string',
-                               'status : string', 'initialBudget : decimal',
-                               'currency : string'],
-        'Deliverable':        ['title : string', 'dueDate : date',
-                               'status : DeliverableStatus'],
-        'Risk':               ['description : string', 'probability : RiskLevel',
-                               'impact : RiskLevel', 'status : RiskStatus',
-                               'mitigationPlan : string'],
-        'Stakeholder':        ['name : string', 'role : string',
-                               'influence : RiskLevel'],
-        'ChangeRequest':      ['title : string', 'priority : ChangePriority',
-                               'status : ChangeStatus', 'requestDate : date',
-                               'decisionDate : date'],
-        'DeliverableStatus':  ['PENDING', 'IN_PROGRESS', 'DELIVERED', 'VALIDATED'],
-        'RiskStatus':         ['OPEN', 'MITIGATED', 'CLOSED'],
-        'RiskLevel':          ['LOW', 'MEDIUM', 'HIGH'],
-        'ChangePriority':     ['LOW', 'NORMAL', 'HIGH', 'CRITICAL'],
-        'ChangeStatus':       ['PENDING', 'APPROVED', 'REJECTED'],
-    },
-    'pos': {
-        'Project': (640, 150),
-        'Deliverable': (40, 560), 'Risk': (400, 560),
-        'Stakeholder': (800, 560), 'ChangeRequest': (1160, 560),
-        'DeliverableStatus': (40, 960), 'RiskStatus': (360, 960),
-        'RiskLevel': (680, 960), 'ChangePriority': (1000, 960),
-        'ChangeStatus': (1320, 960),
-    },
-    'rel': [
-        ('Project', .12, 1, 'Deliverable', .55, 0, 'produces', '1', '*', 'comp'),
-        ('Project', .37, 1, 'Risk', .55, 0, 'tracks', '1', '*', 'comp'),
-        ('Project', .63, 1, 'Stakeholder', .45, 0, 'involves', '1', '*', 'comp'),
-        ('Project', .88, 1, 'ChangeRequest', .45, 0, 'records', '1', '*', 'comp'),
-        ('Deliverable', .50, 1, 'DeliverableStatus', .50, 0, '', '', '', 'dep'),
-        ('Risk', .30, 1, 'RiskStatus', .60, 0, '', '', '', 'dep'),
-        ('Risk', .70, 1, 'RiskLevel', .25, 0, 'probability, impact', '', '', 'dep'),
-        ('Stakeholder', .35, 1, 'RiskLevel', .75, 0, 'influence', '', '', 'dep'),
-        ('ChangeRequest', .30, 1, 'ChangePriority', .70, 0, '', '', '', 'dep'),
-        ('ChangeRequest', .70, 1, 'ChangeStatus', .40, 0, '', '', '', 'dep'),
-    ],
-    'note': ('EVM Delivery % = delivered or validated deliverables '
-             '÷ planned deliverables × 100.', 40, 180, 420, 80, 'Deliverable'),
-}
-
-SPECS = {'class_global': CLASS_GLOBAL, 'class_governance': CLASS_GOVERNANCE}
+# The seven specs live beside this file: one place where a rule about relations
+# or attributes applies to every diagram at once.
+from class_specs import SPECS  # noqa: E402
 
 
 def main():

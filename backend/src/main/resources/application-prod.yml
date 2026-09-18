@@ -33,6 +33,7 @@ pms:
     secret: ${JWT_SECRET}               # Jamais en clair dans le code
     access-token-expiration: 900        # 15 minutes
     refresh-token-expiration: 604800    # 7 jours
+    remember-me-expiration:  2592000    # 30 jours
   security:
     bcrypt-strength: 12
     cookie-secure: ${COOKIE_SECURE:false}   # true dès que le stack est derrière HTTPS

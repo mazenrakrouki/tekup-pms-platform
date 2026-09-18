@@ -392,5 +392,54 @@ Remaining UX work is tracked per-screen in [`UX_UI_AUDIT.md`](UX_UI_AUDIT.md) §
 
 ---
 
+## Landed — « Se souvenir de moi » rendu fonctionnel (2026-09-18)
+
+- **Problem:** the checkbox on the login page was purely decorative. It carried no
+  `[(ngModel)]` binding, `rememberMe` appeared nowhere else in the frontend, and the word
+  did not exist anywhere in the backend. Every session lasted the short duration no matter
+  what the user ticked.
+- **Solution:** `rememberMe` added to `LoginRequest` (with a two-arg convenience constructor so
+  existing call sites keep compiling), carried as a **claim inside the refresh token**, and used
+  by `JwtService.refreshMaxAge()`. New `TokenBundle` record carries the cookie lifetime alongside
+  the token so the JWT `exp` and the cookie `Max-Age` cannot drift apart.
+- **Why the claim matters:** refresh rotation mints a brand-new token on every call. Had the
+  session length not been carried by the token itself, the user would have silently dropped to
+  the short duration on their first refresh and been logged out days early, with nothing in the
+  UI to explain it.
+- **Also note:** the authoritative `Set-Cookie` header is written by hand in `AuthController`;
+  it overrides the Servlet `Cookie` API, so setting `cookie.setMaxAge()` alone would have left
+  the feature inert.
+- **Verified:** 4 new tests in `RememberMeTest` + live HTTP against a running backend —
+  `Max-Age=86400` unticked, `Max-Age=2592000` ticked, preserved across two consecutive rotations.
+
+---
+
+## Fixed — permission-less role locked users out (2026-09-18)
+
+- **Problem:** `UserRepository.findActiveByEmailWithRole` fetched `r.permissions` with an **inner**
+  join. A role holding zero permissions is a perfectly legitimate state — a role just created from
+  the Roles page, or one whose permission matrix was emptied — but it produced no rows at all, so
+  the account was invisible to the login query and was rejected with *« Identifiants incorrects »*.
+  The message accuses the password while the password is correct; `RoleRequest.permissionIds` has no
+  `@NotEmpty`, so an administrator can reach this state from the UI.
+- **Solution:** `LEFT JOIN FETCH r.permissions`, with a comment on the query explaining why the join
+  type is load-bearing. Regression test `login_roleWithoutPermissions_stillAuthenticates`.
+- **Found by:** the remember-me tests above, whose fixture role happened to have no permissions.
+
+---
+
+## Open — malformed request bodies return 500 instead of 400
+
+- **Problem:** `HttpMessageNotReadableException` has no handler, so an unparseable JSON body
+  returns **500**. Reproduced on `POST /api/auth/login` with an empty body, with truncated JSON,
+  and with a type mismatch such as `{"rememberMe":"yes"}`. Pre-existing and global — not specific
+  to auth. (A body that *parses* but fails bean validation correctly returns 400.)
+- **Why it matters:** a client-side mistake is reported as a server fault, which misleads callers
+  and pollutes error monitoring with false server errors.
+- **Suggested fix:** one `@ExceptionHandler(HttpMessageNotReadableException.class)` in the global
+  handler returning a 400 problem detail, without echoing the parser message back to the client.
+
+---
+
 *Last review pass: 2026-07-30 — admin RBAC modules + UX foundation (backend + frontend, verified).
 Next scheduled pass: UX_UI_AUDIT §9 P1 items (toast/skeleton propagation, table pagination).*

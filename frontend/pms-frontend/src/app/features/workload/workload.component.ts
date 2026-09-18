@@ -243,6 +243,55 @@ interface MatrixResource { userId: number; name: string; role: string; }
             </div>
           }
         </div>
+
+        <!-- Charges réelles en attente de validation.
+             Le moteur KPI ne lit que les charges validées (findValidatedByProjectId),
+             donc tant que le chef de projet n'a pas validé ici, le coût consommé,
+             l'EAC et la marge restent à zéro. -->
+        @if (canValidate() && pendingCharges().length > 0) {
+          <div class="wl-card mt-3">
+            <div class="wl-card-head">
+              <span><i class="bi bi-hourglass-split me-2"></i>{{ 'workload.pendingTitle' | transloco }}</span>
+              <span class="badge bg-warning text-dark">{{ pendingCharges().length }}</span>
+            </div>
+            <div class="p-3">
+              <p class="text-caption mb-3">{{ 'workload.pendingHint' | transloco }}</p>
+              <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>{{ 'workload.resource' | transloco }}</th>
+                      <th>{{ 'workload.period' | transloco }}</th>
+                      <th class="text-end">{{ 'workload.actualDays' | transloco }}</th>
+                      <th class="text-end">{{ 'common.actions' | transloco }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (c of pendingCharges(); track c.id) {
+                      <tr>
+                        <td>{{ c.userFullName }}</td>
+                        <td>{{ monthLabel(c.month) }} {{ c.year }}</td>
+                        <td class="text-end">{{ c.actualDays | number:'1.0-2' }}</td>
+                        <td class="text-end">
+                          <button class="btn btn-sm btn-success"
+                                  (click)="validateCharge(c)"
+                                  [disabled]="validatingId() === c.id">
+                            @if (validatingId() === c.id) {
+                              <span class="spinner-border spinner-border-sm me-1"></span>
+                            } @else {
+                              <i class="bi bi-check2 me-1"></i>
+                            }
+                            {{ 'workload.validate' | transloco }}
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        }
       }
     </div>
 
@@ -369,6 +418,10 @@ export class WorkloadComponent implements OnInit {
 
   canPlan = () => this.auth.hasPermission('VALIDATE_WORKLOAD');
   canSubmit = () => this.auth.hasPermission('SUBMIT_WORKLOAD');
+  /** Same permission as canPlan, named for what it actually gates here.
+   *  VALIDATE_WORKLOAD covers both planning and accepting declared days
+   *  (see ChargeReelleService.validate, @PreAuthorize VALIDATE_WORKLOAD). */
+  canValidate = () => this.auth.hasPermission('VALIDATE_WORKLOAD');
   isDevOnly = () => this.canSubmit() && !this.canPlan() && this.auth.currentUserId !== null;
   get currentUserFullName(): string { return this.auth.context()?.fullName ?? ''; }
 
@@ -395,6 +448,16 @@ export class WorkloadComponent implements OnInit {
     const y = this.year();
     return y == null ? this.fullCharges() : this.fullCharges().filter(c => c.year === y);
   });
+
+  /** Actual workload waiting for the chef de projet to accept it. */
+  readonly pendingCharges = computed(() =>
+    this.chargesInScope()
+        .filter(c => !c.validatedAt)
+        .sort((a, b) => (a.year - b.year) || (a.month - b.month)
+                     || a.userFullName.localeCompare(b.userFullName)));
+
+  /** Id of the row being validated, so only that button shows a spinner. */
+  validatingId = signal<number | null>(null);
 
   showChargeModal = signal(false);
   chargeSaving = signal(false);
@@ -614,6 +677,41 @@ export class WorkloadComponent implements OnInit {
     this.workloadSvc.submitCharge(this.selected()!.id, this.chargeForm).subscribe({
       next: () => { this.loadAll(); this.showChargeModal.set(false); this.chargeSaving.set(false); this.toast.success(this.tr.translate('workload.okActualSaved')); },
       error: (e) => { this.chargeError.set(e.error?.message ?? 'Erreur lors de la soumission.'); this.chargeSaving.set(false); }
+    });
+  }
+
+  /** Month name in the active language, for the pending-validation rows. */
+  monthLabel(m: number): string {
+    return this.months.find(x => x.v === m)?.l ?? String(m);
+  }
+
+  /**
+   * Accept one declared month of work.
+   *
+   * This is the step that makes the money move: KpiService only reads charges
+   * through findValidatedByProjectId, so an unvalidated row contributes nothing
+   * to the consumed cost, the EAC or the margin. Reload afterwards so the
+   * matrix and the indicators reflect the new state.
+   */
+  validateCharge(c: ChargeReelle): void {
+    if (this.validatingId() !== null) return;          // one at a time
+    this.validatingId.set(c.id);
+    this.workloadSvc.validateCharge(this.selected()!.id, c.id).subscribe({
+      next: () => {
+        this.validatingId.set(null);
+        this.loadAll();
+        this.toast.success(this.tr.translate('workload.okValidated', {
+          name: c.userFullName, period: `${this.monthLabel(c.month)} ${c.year}`
+        }));
+      },
+      error: (e: { error?: { detail?: string; message?: string } }) => {
+        this.validatingId.set(null);
+        // Spring returns RFC 7807 ProblemDetail, whose field is `detail`.
+        // `message` is read first elsewhere in this app and is always
+        // undefined, which is why those screens show a generic error.
+        this.toast.error(e.error?.detail ?? e.error?.message
+                         ?? this.tr.translate('workload.errValidate'));
+      }
     });
   }
 

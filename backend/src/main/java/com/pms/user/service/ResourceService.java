@@ -19,7 +19,10 @@ import com.pms.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -120,21 +123,36 @@ public class ResourceService {
             throw new IllegalArgumentException("Chaque année ne peut apparaître qu'une seule fois");
         }
 
-        // Remplacement complet : soft-delete des entrées existantes puis insertion
-        List<TccAnnuel> existing = tccAnnuelRepository.findActiveByResourceId(resourceId);
-        existing.forEach(t -> t.setDeleted(true));
-        tccAnnuelRepository.saveAll(existing);
+        // Mise à jour en place, année par année.
+        //
+        // La version précédente soft-supprimait toutes les lignes puis réinsérait la
+        // liste reçue. Hibernate ordonne ses actions INSERT avant UPDATE au flush, donc
+        // la nouvelle ligne d'une année arrivait avant que l'ancienne soit marquée
+        // supprimée, et l'index unique partiel uk_tcc_annuel_resource_annee
+        // (resource_id, annee) WHERE deleted = FALSE la rejetait. Conséquence : toute
+        // modification d'une année déjà saisie renvoyait 409 — seul l'ajout d'une année
+        // encore absente fonctionnait. On met donc à jour la ligne existante au lieu de
+        // la remplacer, et on ne soft-supprime que les années réellement retirées.
+        Map<Integer, TccAnnuel> existing = tccAnnuelRepository.findActiveByResourceId(resourceId)
+                .stream()
+                .collect(Collectors.toMap(TccAnnuel::getAnnee, t -> t));
 
-        List<TccAnnuel> saved = tccAnnuelRepository.saveAll(rates.stream()
-                .map(dto -> TccAnnuel.builder()
-                        .resource(resource)
-                        .annee(dto.annee())
-                        .dailyRate(dto.dailyRate())
-                        .tccRate(dto.tccRate())
-                        .build())
-                .toList());
+        List<TccAnnuel> result = new ArrayList<>();
+        for (TccAnnuelDto dto : rates) {
+            TccAnnuel row = existing.remove(dto.annee());
+            if (row == null) {
+                row = TccAnnuel.builder().resource(resource).annee(dto.annee()).build();
+            }
+            row.setDailyRate(dto.dailyRate());
+            row.setTccRate(dto.tccRate());
+            result.add(row);
+        }
 
-        return saved.stream()
+        // Ce qui reste dans `existing` n'a pas été renvoyé par le client : année retirée.
+        existing.values().forEach(t -> t.setDeleted(true));
+        tccAnnuelRepository.saveAll(existing.values());
+
+        return tccAnnuelRepository.saveAll(result).stream()
                 .map(t -> new TccAnnuelDto(t.getAnnee(), t.getDailyRate(), t.getTccRate()))
                 .toList();
     }

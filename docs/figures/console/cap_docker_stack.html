@@ -1,0 +1,51 @@
+<meta charset="utf-8"><title>docker compose  —  PMS stack</title><style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #FFFFFF; font-family: Arial, Helvetica, sans-serif; }
+.term { width: 1180px; border: 1px solid #C6CCD2; border-radius: 8px; overflow: hidden;
+        box-shadow: 0 1px 3px rgba(16,24,32,.10); background: #1C2128; }
+.bar  { height: 32px; background: #E7EBEF; border-bottom: 1px solid #C6CCD2;
+        display: flex; align-items: center; padding: 0 0 0 13px; }
+.ttl  { flex: 1 1 auto; font-size: 12.5px; color: #41494F; letter-spacing: .1px; }
+.win  { display: flex; height: 100%; }
+.wb   { width: 44px; display: flex; align-items: center; justify-content: center;
+        font-size: 13px; color: #41494F; }
+pre   { margin: 0; padding: 13px 15px 15px; color: #D5DCE3; background: #1C2128;
+        font-family: Consolas, "DejaVu Sans Mono", monospace;
+        font-size: 12.9px; line-height: 1.47; white-space: pre; }
+.p    { color: #63E6A0; }                 /* the prompt */
+.cmd  { color: #FFFFFF; font-weight: 700; }
+.cut  { color: #7C8896; font-style: italic; }
+.k{color:#5A6672} .r{color:#FF7B72} .g{color:#7EE787} .y{color:#E3B341}
+.b{color:#79C0FF} .m{color:#D2A8FF} .c{color:#76E3EA} .w{color:#D5DCE3}
+.d{color:#7C8896} .dim{color:#8B95A1} .bold{font-weight:700} .ul{text-decoration:underline}
+</style><div class="term"><div class="bar"><span class="ttl">docker compose  —  PMS stack</span><span class="win"><span class="wb">&#8211;</span><span class="wb">&#9633;</span><span class="wb">&#215;</span></span></div><pre><span class="p">$</span> <span class="cmd">docker compose ps</span>
+NAME           IMAGE                COMMAND                  SERVICE    CREATED       STATUS                        PORTS
+pms-backend    pms-backend:local    "sh -c 'exec java $J…"   backend    3 weeks ago   Up About a minute (healthy)   0.0.0.0:8091-&gt;8080/tcp, [::]:8091-&gt;8080/tcp
+pms-db         postgres:17-alpine   "docker-entrypoint.s…"   db         3 weeks ago   Up About a minute (healthy)   0.0.0.0:5433-&gt;5432/tcp, [::]:5433-&gt;5432/tcp
+pms-frontend   pms-frontend:local   "/docker-entrypoint.…"   frontend   3 weeks ago   Up About a minute (healthy)   0.0.0.0:8081-&gt;80/tcp, [::]:8081-&gt;80/tcp
+
+<span class="p">$</span> <span class="cmd">docker inspect -f '{{.Name}} {{.State.Health.Status}}' pms-db pms-backend pms-frontend</span>
+/pms-db healthy
+/pms-backend healthy
+/pms-frontend healthy
+
+<span class="cut"># the smoke checks of the pipeline, run against this stack</span>
+
+<span class="p">$</span> <span class="cmd">curl -X POST http://localhost:8081/api/auth/login   # browser -&gt; nginx -&gt; API -&gt; database</span>
+HTTP 200
+body: {
+        "userId": 122
+        "accessToken": "eyJhbGciOiJIUzUxMi..."   (386 chars)
+        "firstLogin": false
+        "email": "admin@pms.local"
+        "fullName": "Admin PMS"
+        "role": "ADMIN"
+        "permissions": ["MANAGE_ROLES", "VIEW_RESOURCES", "MANAGE_RESOURCES", "MANAGE_USERS"]
+      }
+
+<span class="p">$</span> <span class="cmd">curl http://localhost:8081/projects        # Angular client-side route fallback</span>
+HTTP 200
+
+<span class="p">$</span> <span class="cmd">curl http://localhost:8081/i18n/fr.json    # translation catalogue served</span>
+HTTP 200</pre></div>

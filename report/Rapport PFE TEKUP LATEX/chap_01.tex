@@ -1,13 +1,11 @@
-\chapter{Project Framework}
+\chapter{General Context of the Project}
 
 \section*{Introduction}
 \addcontentsline{toc}{section}{Introduction}
-This first chapter situates the project in its context. It presents the host organisation and the
-subject assigned by that organisation, analyses the project-tracking process currently in place,
-which rests on Excel workbooks, and compares it with the tools available on the market. From this
-study follow the problem statement, the proposed solution, and the management methodology adopted
-to build it.
-
+This first chapter sets the scene. It presents ST2i, the company that hosted the internship, and
+the subject the company assigned. It then studies how projects are tracked there today, in Excel
+workbooks, and compares that way of working with the tools sold on the market. The chapter ends
+with the problem this raises, the solution chosen, and the method used to build it.
 % =====================================================================
 \section{Host organisation}
 
@@ -77,7 +75,7 @@ than as a sixth box hanging under one of them.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\columnwidth]{img/st2i_organigramme.png}
-  \caption{Functional organisation of ST2i: five activity lines under one general management, and
+  \caption[Functional organisation of ST2i]{Functional organisation of ST2i: five activity lines under one general management, and
   the technical teams assembled across them}
   \label{fig:st2i-org}
 \end{figure}
@@ -182,7 +180,7 @@ deliberately preserves is everything this analysis actually rests on: the struct
 its column headings, its formulas and its business logic.
 
 % ---------------------------------------------------------------
-\subsubsection{Project identification sheet}
+\runin{Project identification sheet}
 \textbf{What it represents.} The identity card of the project: client, contract reference, funder,
 business model (alone or in consortium), engagement type (fixed price or time~\&~material), project
 manager, start and end dates, contract duration, project currency and initial budget.
@@ -210,7 +208,7 @@ code, client, funder, engagement type, multi-currency budget, provisions and sol
 \emph{Internal quote}, which reproduces this economic baseline.
 
 % ---------------------------------------------------------------
-\subsubsection{Cost rate sheet (TCC)}
+\runin{Cost rate sheet (TCC)}
 \textbf{What it represents.} The daily loaded cost (\emph{Taux de Coût Chargé}) of each resource,
 recorded per year.
 
@@ -237,7 +235,7 @@ rate per resource and per year, with the overhead coefficient and the number of 
 externalised as configurable business parameters rather than hard-coded constants.
 
 % ---------------------------------------------------------------
-\subsubsection{Planned workload sheet}
+\runin{Planned workload sheet}
 \textbf{What it represents.} A resource~$\times$~month matrix giving the man-days planned for each
 resource over the life of the project, together with the resulting forecast cost.
 
@@ -261,7 +259,7 @@ the monthly and cumulative totals of planned man-days, the forecast cost
 plan as a monthly time series per resource, and feeds the ETC used by the KPI engine.
 
 % ---------------------------------------------------------------
-\subsubsection{Actual workload sheet}
+\runin{Actual workload sheet}
 \textbf{What it represents.} The mirror of the previous sheet, filled with the effort actually
 consumed: the man-days really booked by each resource, month by month.
 
@@ -287,7 +285,7 @@ restricted to assigned projects, validation by the project manager, preserved hi
 actual cost that feeds the EAC.
 
 % ---------------------------------------------------------------
-\subsubsection{Billing progress sheet}
+\runin{Billing progress sheet}
 \textbf{What it represents.} The billing milestones of the contract, expressed as a percentage of
 the total, with their amount, their status and the monthly cumulative invoiced total.
 
@@ -313,7 +311,7 @@ percentage, amount and lifecycle status, payments recorded against a milestone, 
 billing-progress indicator.
 
 % ---------------------------------------------------------------
-\subsubsection{Missions sheet}
+\runin{Missions sheet}
 \textbf{What it represents.} The business trips carried out for the project, with their cost
 components: per diem, plane ticket, accommodation, transport and administrative stamp.
 
@@ -336,7 +334,7 @@ converted at the applicable exchange rate.
 project and an employee, with multi-currency cost components and an automatically computed total.
 
 % ---------------------------------------------------------------
-\subsubsection{Project dashboard sheet}
+\runin{Project dashboard sheet}
 \textbf{What it represents.} The steering board of a single project: margins, man-days consumed
 against sold, key dates and the overall health of the project.
 
@@ -360,7 +358,7 @@ adopted in PMS.
 board, and its portfolio-level counterpart for the director.
 
 % ---------------------------------------------------------------
-\subsubsection{Statistics sheet --- KPI evolution}
+\runin{Statistics sheet --- KPI evolution}
 \textbf{What it represents.} The real computation engine of the workbook: the month-by-month
 evolution of the financial indicators of the project.
 
@@ -388,7 +386,7 @@ a frozen monthly snapshot that preserves the official state of each review. This
 equivalent of the monthly column of this sheet.
 
 % ---------------------------------------------------------------
-\subsubsection{Deliverables sheet}
+\runin{Deliverables sheet}
 \textbf{What it represents.} The contractual deliverables of the project, each identified by a code
 (\texttt{L31}, \texttt{L32}, \dots) and tracked month by month as a completion percentage.
 
@@ -413,7 +411,7 @@ documentation: a status that cannot be counted produces no indicator.
 (Sprint~7), whose controlled status is consumed by the delivery rate of the indicator engine.
 
 % ---------------------------------------------------------------
-\subsubsection{Glossary of indicators}
+\runin{Glossary of indicators}
 \textbf{What it represents.} The definition of every indicator the workbook produces: its unit, its
 meaning, and above all its calculation method.
 
@@ -443,7 +441,7 @@ derived: the glossary itself describes it as an estimate made from the project p
 measurement the system can compute.
 
 % ---------------------------------------------------------------
-\subsubsection{Parameters sheet}
+\runin{Parameters sheet}
 \textbf{What it represents.} The reference data of the workbook: the probability scale of a risk,
 its severity scale with the associated thresholds, the treatment options, the risk categories, the
 efficiency scale and the asset classes exposed to risk.
@@ -472,7 +470,7 @@ separate controlled fields: the workbook already treated them as three distinct 
 information.
 
 % ---------------------------------------------------------------
-\subsubsection{Traceability towards the platform}
+\runin{Traceability towards the platform}
 Table~\ref{tab:excel-traceability} summarises the correspondence established during this
 preparation phase between the sheets analysed and the modules built.
 
@@ -716,6 +714,7 @@ Four events structure a sprint, complemented by the continuous refinement of the
 \end{itemize}
 
 \subsection{Adaptation to this project}
+\label{sec:scrum-adapt}
 Scrum assumes a team. This project was carried out by a single student developer, so the framework
 was applied in a deliberately reduced form, and it is worth stating plainly which parts were kept
 and which were not.
@@ -747,9 +746,9 @@ releases and sprints, together with the schedule, is established in Chapter~2.
 
 \section*{Conclusion}
 \addcontentsline{toc}{section}{Conclusion}
-This chapter presented ST2i and the subject it assigned, then studied the process currently used to
-steer projects. The reference workbook showed a proven business model carried by a fragile medium,
-and no tool on the market models that economics natively. From this follows the solution retained:
-a centralised platform that reproduces the financial model faithfully while making its
-authorization policy configurable. The next chapter specifies what the system must do, for whom,
-and under which rules.
+This chapter presented ST2i and the subject the company assigned, then looked at how projects are
+steered today. The reference workbook holds a business model that works, but it is carried by a
+fragile medium, and no tool on the market reproduces that model as it stands. The solution is
+therefore a single platform that follows the financial model exactly and keeps its authorization
+policy configurable. The next chapter sets out what the system must do, for whom, and under which
+rules.

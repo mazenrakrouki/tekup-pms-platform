@@ -29,15 +29,12 @@ public class AuthController {
     @Value("${pms.security.cookie-secure:false}")
     private boolean cookieSecure;
 
-    @Value("${pms.jwt.refresh-token-expiration:604800}")
-    private int refreshTokenExpiry;
-
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response) {
         TokenBundle bundle = authService.login(request);
-        addRefreshCookie(response, bundle.refreshToken());
+        addRefreshCookie(response, bundle.refreshToken(), bundle.refreshMaxAgeSeconds());
         return ResponseEntity.ok(bundle.body());
     }
 
@@ -49,7 +46,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         TokenBundle bundle = authService.refresh(refreshToken);
-        addRefreshCookie(response, bundle.refreshToken());
+        addRefreshCookie(response, bundle.refreshToken(), bundle.refreshMaxAgeSeconds());
         return ResponseEntity.ok(bundle.body());
     }
 
@@ -70,18 +67,20 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    private void addRefreshCookie(HttpServletResponse response, String value) {
+    private void addRefreshCookie(HttpServletResponse response, String value, int maxAgeSeconds) {
         Cookie cookie = new Cookie(REFRESH_COOKIE, value);
         cookie.setHttpOnly(true);
         cookie.setSecure(cookieSecure);
         cookie.setPath("/api/auth/refresh");
-        cookie.setMaxAge(refreshTokenExpiry);
+        // La duree vient du service, qui l'a deja appliquee au JWT : les deux ne peuvent
+        // pas diverger et laisser un cookie survivre a son contenu.
+        cookie.setMaxAge(maxAgeSeconds);
         // SameSite=Strict via header (Servlet Cookie API doesn't support SameSite directly)
         response.addCookie(cookie);
         // Override with SameSite attribute
         String header = String.format(
                 "%s=%s; Path=/api/auth/refresh; Max-Age=%d; HttpOnly%s; SameSite=Strict",
-                REFRESH_COOKIE, value, refreshTokenExpiry,
+                REFRESH_COOKIE, value, maxAgeSeconds,
                 cookieSecure ? "; Secure" : "");
         response.setHeader("Set-Cookie", header);
     }

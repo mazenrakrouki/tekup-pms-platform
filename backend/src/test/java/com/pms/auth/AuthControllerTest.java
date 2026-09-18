@@ -209,6 +209,37 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    /**
+     * Regression : un rôle sans aucune permission est un état parfaitement légitime —
+     * c'est celui d'un rôle qu'on vient de créer depuis la page Rôles, ou dont la
+     * matrice des permissions vient d'être vidée. La requête d'authentification
+     * chargeait les permissions par jointure interne : le compte ne remontait alors
+     * pas du tout et l'utilisateur était refusé avec « Identifiants incorrects »,
+     * un message qui accuse le mot de passe alors que le mot de passe est correct.
+     */
+    @Test
+    @DisplayName("Un compte dont le rôle n'a aucune permission peut se connecter")
+    void login_roleWithoutPermissions_stillAuthenticates() throws Exception {
+        Role emptyRole = roleRepository.save(Role.builder()
+                .name("ROLE_SANS_PERMISSION")
+                .permissions(Set.of())
+                .build());
+        userRepository.save(User.builder()
+                .firstName("Sans").lastName("Permission")
+                .email("sans.permission@pms.local")
+                .passwordHash(passwordEncoder.encode("Test1234!"))
+                .active(true).firstLogin(false).role(emptyRole)
+                .build());
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new LoginRequest("sans.permission@pms.local", "Test1234!"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.permissions").isArray());
+    }
+
     /** Extracts the pms_refresh cookie value from a login or refresh response's Set-Cookie header. */
     private String extractRefreshCookieValue(MvcResult result) {
         String header = result.getResponse().getHeader("Set-Cookie");

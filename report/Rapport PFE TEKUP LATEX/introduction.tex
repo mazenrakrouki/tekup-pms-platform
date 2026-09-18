@@ -2,49 +2,51 @@
 \addcontentsline{toc}{chapter}{General Introduction}
 \markboth{General Introduction}{General Introduction}
 
-In a digital services company, profitability is decided project by project. Each engagement sells a
-volume of effort at a negotiated price, consumes resources whose cost is known, and is invoiced
-according to a contractual schedule. Steering therefore means keeping three quantities under
-control at once: the workload sold, the effort actually consumed, and the revenue invoiced. Losing
-sight of any one of them means discovering a loss-making project only once it is finished.
+A consulting firm earns its margin one project at a time. A contract fixes the price and the
+number of days sold; whether any money is left at the end depends on what the work actually costs
+to deliver, and on when the client is billed for it. Those three figures move independently of
+each other. Lose sight of one, and the news that a project lost money arrives after it has closed,
+which is the one moment when nothing can be done about it.
 
-The host company steers this equilibrium through an Excel workbook, a ``project review sheet''
-of some twenty interconnected tabs and more than two thousand formulas, duplicated for every
-project. This workbook is remarkable in what it encodes: loaded cost rates per resource and per
-year, monthly workload plans, billing milestones as a percentage of the contract, mission expenses,
-governance registers and a complete earned-value indicator engine. It is, in practice, the
-company's real specification.
+At ST2i that arithmetic lives in a spreadsheet. The file is called a project review sheet: some
+twenty linked tabs, more than two thousand formulas, one copy per project. It holds a great deal.
+Cost rates for every resource and every year, the workload planned month by month, billing
+milestones written as percentages of the contract, mission expenses, the governance registers, and
+a complete earned-value engine that computes the margin at the end of it. Nobody ever wrote the
+company rules down as a specification. This file is the specification.
 
-It is also a fragile medium. One file per project means no single source of truth; formulas
-spanning tabs break silently, and the file provided for this project indeed contains cells in
-error; consolidating the portfolio is impossible without reopening every workbook; and a
-spreadsheet cannot prevent a developer from reading the margin of the project they work on.
+It is also breakable. One file per project means there is no single copy anyone can point to as
+the true one. Formulas that reach across tabs fail quietly, and the workbook handed over at the
+start of this project has cells in error sitting in it. Seeing the whole portfolio means opening
+every file in turn. And nothing in a spreadsheet stops a developer from opening the tab that shows
+the margin on the project they are working on.
 
-This final year project addresses that gap through \textbf{PMS} (\textit{Project Management
-System}), a centralised web platform that automates the business logic carried by the workbook. Two
-requirements shaped it. The first is fidelity: the platform must reproduce the financial model
-faithfully (cost rates, workload plan, estimate at completion, margins, billing progress)
-rather than a simplified approximation of it. The second is configurability: the authorization
-policy must be modifiable as data, without redeploying the application, so that the platform can
-absorb the evolution of the company's rules.
+\textbf{PMS}, for \textit{Project Management System}, is the platform built to take that work
+over. Two things were settled before any code was written. It had to reproduce the financial model
+as the workbook computes it, down to the cost rates, the planned and consumed workload, the
+estimate at completion, the margin and the billing progress, rather than a tidier approximation of
+it: a figure that disagrees with the workbook is a figure nobody at ST2i will trust. And the
+question of who may see what had to be answered in the database rather than in the code, because
+those rules change, and a release is too high a price for granting somebody a right.
 
-The platform was built incrementally, in ten successive sprints grouped into four releases, each
-delivering a demonstrable increment of the product. This report follows that construction.
+It was built in ten sprints grouped into four releases, each one demonstrable on its own before
+the next began. This report follows that order.
 
-\textbf{Chapter~1} situates the project: the host organisation, the analysis of the existing
-Excel-based process, including the representative sheets from which each module derives, the
-resulting problem statement, and the methodology adopted.
+\textbf{Chapter~1} is about where the project comes from: the company, the way its projects are
+steered today, the workbook read sheet by sheet, and what all of that adds up to as a problem
+worth solving.
 
-\textbf{Chapter~2} specifies the system: actors and their boundaries, functional and non-functional
-requirements, business rules, the dynamic authorization model, the global use case diagram, and the
-product backlog and its distribution across the development sprints.
+\textbf{Chapter~2} turns the problem into requirements. Who the users are and what each of them
+may reach, what the platform has to do and how well it has to do it, the rules the business
+imposes on it, and the backlog all of that became.
 
-\textbf{Chapter~3} presents the technical design: the architectural style and its justification,
-the cross-cutting design decisions, the domain model and the relational schema.
+\textbf{Chapter~3} is the design: the architecture chosen and the reasoning behind it, the
+decisions that apply across every module, and the database the whole thing stands on.
 
-\textbf{Chapters~4 to~7} present the realisation, release by release: the foundation and security
-of Release~1, the operational management of Release~2, the financial and governance value of
-Release~3, and the consolidation, testing and deployment of Release~4.
+\textbf{Chapters~4 to~7} are the construction, a release to a chapter. First the foundation and
+its security, then the day-to-day management of projects and workload, then the financial engine
+the project exists for, and last the work of turning a finished application into a deliverable
+one.
 
-A \textbf{general conclusion} assesses the result against the initial objectives and outlines the
-perspectives opened by the platform.
+The \textbf{general conclusion} looks back at what was asked for at the start, says how much of it
+arrived, and sets out what could follow.

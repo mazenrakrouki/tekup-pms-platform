@@ -79,6 +79,7 @@ pms:
     secret: ${JWT_SECRET}
     access-token-expiration: 900        # 15 minutes (en secondes)
     refresh-token-expiration: 604800    # 7 jours (en secondes)
+    remember-me-expiration:  2592000    # 30 jours — doit correspondre au libelle affiche
   security:
     bcrypt-strength: 12
     cookie-secure: ${COOKIE_SECURE:false}   # true derrière HTTPS uniquement

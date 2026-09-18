@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 596">
+  <style>
+    text  { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; fill:#16212B; }
+    .colh { font-weight:700; font-size:19px; fill:#1F4E79; }
+    .cls  { font-weight:700; font-size:16px; }
+    .lab  { font-size:14px; fill:#41505F; }
+    .small{ font-size:13px; fill:#5C6B7A; }
+    .card { fill:#FFFFFF; stroke:#33383D; stroke-width:1.5; }
+    .panel{ fill:#FAFBFC; stroke:#D6DDE4; stroke-width:1.3; }
+    .edge { fill:none; stroke:#33383D; stroke-width:1.7; }
+    .chip { fill:#E8F0F7; stroke:#9FB6CB; stroke-width:1.1; }
+    .chipg{ fill:#EDF6EF; stroke:#79B393; stroke-width:1.1; }
+    .chipd{ fill:#F6E9E8; stroke:#D3A6A2; stroke-width:1.1; }
+    .ok   { fill:#2E7D4F; font-size:14px; font-weight:700; }
+    .bad  { fill:#B3413A; font-size:14px; font-weight:700; }
+    .note { font-size:14px; fill:#41505F; }
+    .sep  { stroke:#D6DDE4; stroke-width:1.3; }
+    .box  { fill:none; stroke:#9FB6CB; stroke-width:1.3; stroke-dasharray:4 3; }
+  </style>
+  <defs>
+    <marker id="fd2" viewBox="0 0 14 10" refX="13" refY="5" markerWidth="12" markerHeight="8" orient="auto">
+      <path d="M0 5 L7 0 L14 5 L7 10 z" fill="#33383D"/>
+    </marker>
+  </defs>
+
+  <line class="sep" x1="450" y1="14" x2="450" y2="540"/>
+
+  <!-- ===================== option A : rejected ===================== -->
+  <text class="colh" x="20" y="32">Option A — the item belongs to the sprint</text>
+
+  <rect class="card" x="140" y="62" width="170" height="36" rx="4"/>
+  <text class="cls" x="225" y="86" text-anchor="middle">Project</text>
+  <path class="edge" d="M225 138 L225 102" marker-end="url(#fd2)"/>
+  <rect class="card" x="140" y="138" width="170" height="36" rx="4"/>
+  <text class="cls" x="225" y="162" text-anchor="middle">Sprint</text>
+  <path class="edge" d="M225 214 L225 178" marker-end="url(#fd2)"/>
+  <rect class="card" x="140" y="214" width="170" height="36" rx="4"/>
+  <text class="cls" x="225" y="238" text-anchor="middle">BacklogItem</text>
+
+  <text class="note" x="20" y="286">An item reaches its project only through its sprint.</text>
+
+  <rect class="panel" x="20" y="304" width="410" height="200" rx="7"/>
+  <text class="lab" x="38" y="330" font-weight="700">Ten items written down, three put into Sprint 1</text>
+
+  <rect class="box" x="38" y="344" width="180" height="62" rx="5"/>
+  <text class="small" x="48" y="362">Sprint 1</text>
+  <rect class="chipg" x="48" y="370" width="48" height="24" rx="3"/>
+  <rect class="chipg" x="102" y="370" width="48" height="24" rx="3"/>
+  <rect class="chipg" x="156" y="370" width="48" height="24" rx="3"/>
+
+  <text class="small" x="242" y="362">the other seven</text>
+  <rect class="chipd" x="242" y="370" width="38" height="20" rx="3"/>
+  <rect class="chipd" x="286" y="370" width="38" height="20" rx="3"/>
+  <rect class="chipd" x="330" y="370" width="38" height="20" rx="3"/>
+  <rect class="chipd" x="374" y="370" width="38" height="20" rx="3"/>
+  <rect class="chipd" x="242" y="396" width="38" height="20" rx="3"/>
+  <rect class="chipd" x="286" y="396" width="38" height="20" rx="3"/>
+  <rect class="chipd" x="330" y="396" width="38" height="20" rx="3"/>
+
+  <text class="bad"  x="38" y="450">No sprint, therefore no project.</text>
+  <text class="note" x="38" y="472">The seven belong to nothing and cannot be saved, so</text>
+  <text class="note" x="38" y="492">the product backlog cannot exist.</text>
+
+  <!-- ===================== option B : retained ===================== -->
+  <text class="colh" x="470" y="32">Option B — the model retained</text>
+
+  <rect class="card" x="590" y="62" width="170" height="36" rx="4"/>
+  <text class="cls" x="675" y="86" text-anchor="middle">Project</text>
+  <path class="edge" d="M560 150 L640 102" marker-end="url(#fd2)"/>
+  <path class="edge" d="M800 150 L716 102" marker-end="url(#fd2)"/>
+  <rect class="card" x="480" y="150" width="160" height="36" rx="4"/>
+  <text class="cls" x="560" y="174" text-anchor="middle">Sprint</text>
+  <rect class="card" x="720" y="150" width="160" height="36" rx="4"/>
+  <text class="cls" x="800" y="174" text-anchor="middle">BacklogItem</text>
+  <path class="edge" d="M640 168 L720 168"/>
+  <text class="small" x="680" y="161" text-anchor="middle">commits</text>
+  <text class="small" x="648" y="184">0..1</text>
+  <text class="small" x="692" y="184">0..*</text>
+
+  <text class="note" x="470" y="228">The project owns its sprints and its backlog. A sprint</text>
+  <text class="note" x="470" y="248">only commits items for its period, so an item may</text>
+  <text class="note" x="470" y="268">have no sprint at all. That is the 0..1.</text>
+
+  <rect class="panel" x="470" y="304" width="410" height="200" rx="7"/>
+  <text class="lab" x="488" y="330" font-weight="700">The same ten items</text>
+
+  <rect class="box" x="488" y="342" width="374" height="94" rx="5"/>
+  <text class="small" x="498" y="360">Project</text>
+
+  <rect class="box" x="498" y="368" width="180" height="58" rx="5"/>
+  <text class="small" x="508" y="384">Sprint 1</text>
+  <rect class="chipg" x="508" y="392" width="48" height="24" rx="3"/>
+  <rect class="chipg" x="562" y="392" width="48" height="24" rx="3"/>
+  <rect class="chipg" x="616" y="392" width="48" height="24" rx="3"/>
+
+  <text class="small" x="694" y="384">product backlog</text>
+  <rect class="chip" x="694" y="390" width="50" height="20" rx="3"/>
+  <rect class="chip" x="750" y="390" width="50" height="20" rx="3"/>
+  <rect class="chip" x="806" y="390" width="50" height="20" rx="3"/>
+  <rect class="chip" x="694" y="414" width="50" height="20" rx="3"/>
+  <rect class="chip" x="750" y="414" width="50" height="20" rx="3"/>
+  <rect class="chip" x="806" y="414" width="50" height="20" rx="3"/>
+  <rect class="chip" x="694" y="438" width="50" height="20" rx="3"/>
+
+  <text class="ok"   x="488" y="478">All ten belong to the project.</text>
+  <text class="note" x="488" y="498">Three are committed to Sprint 1; the other seven are the backlog.</text>
+
+  <line class="sep" x1="20" y1="540" x2="880" y2="540"/>
+  <text class="note" x="450" y="566" text-anchor="middle">The difference rests on one question: may an item exist with no sprint? Here it may, and the</text>
+  <text class="note" x="450" y="586" text-anchor="middle">column that carries the sprint is nullable for that reason.</text>
+</svg>

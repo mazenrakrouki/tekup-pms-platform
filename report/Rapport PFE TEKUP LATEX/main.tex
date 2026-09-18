@@ -16,6 +16,14 @@
 
 \input{./tpl/new_commands}
 
+% The class asks for T1 encoding but loads no outline font with it. Computer
+% Modern only ships T1 shapes as METAFONT sources, so pdfTeX rendered every
+% glyph to a bitmap: the text was going out as 21 Type 3 fonts, which look
+% ragged on screen at any zoom and print less sharply than they should.
+% Latin Modern is the same typeface redrawn as Type 1 outlines with full T1
+% coverage, so the report reads exactly as before and the text becomes vector.
+\usepackage{lmodern}
+
 % The class loads babel with the `arabic` option, which pulls in arabi; its
 % arabicfnt.sty redefines \times (and \texttimes) to an Arabic-font glyph that
 % has no counterpart in the Latin fonts, so every multiplication sign in the
@@ -70,13 +78,63 @@
 % empty, which is the opposite complaint.
 \usepackage{etoolbox}
 \usepackage{needspace}
-\pretocmd{\section}{\Needspace*{5\baselineskip}}{}{}
+% Nine rather than five, because a sprint section is now followed immediately by
+% its first sub-section: the section heading has to arrive with that heading and
+% a line or two of its text, not on its own at the foot of a page.
+\pretocmd{\section}{\Needspace*{9\baselineskip}}{}{}
 \pretocmd{\subsection}{\Needspace*{5\baselineskip}}{}{}
 \pretocmd{\subsubsection}{\Needspace*{3\baselineskip}}{}{}
+% The reference reports the supervisor supplied never number deeper than three
+% levels. Ours reached four wherever a sprint's design or realisation broke into
+% \subsubsection, and so did the sheet-by-sheet reading of the workbook in
+% chapter 1. Those headings are real divisions of the text, so they are kept —
+% as bold run-ins, which read the same and number nothing. \Needspace stops one
+% from being set as the last thing on a page, the same rule the numbered
+% headings follow above.
+\newcommand{\runin}[1]{%
+  \par\Needspace*{3\baselineskip}%
+  \vspace{0.9\baselineskip}%
+  \noindent\textbf{#1}\par\nopagebreak\vspace{0.15\baselineskip}%
+}
+
 % Same defect, different element: a longtable whose caption and column headings
 % are printed at the foot of a page with the first row overleaf. Ask for enough
 % room that the heading arrives with some of its table.
 \BeforeBeginEnvironment{longtable}{\Needspace*{8\baselineskip}}
+
+% Giving every sprint the same seven sub-sections lengthened all three front-matter
+% lists past a page boundary each: the table of contents left one line, Webography,
+% alone on a page, and the list of tables left four. Both spills are air between
+% chapter groups rather than content -- 1em per chapter entry in the contents, 10pt
+% in the lists -- so the fix is to tighten that air, not to cut entries. The chapter
+% numbers still mark the groups in the lists.
+%
+% The class and tpl/new_commands.tex both open \makeatletter and never close it,
+% so the whole document runs with @ as a letter and the cover and signature pages
+% call \@proFramerSpeciality and friends directly. A plain \makeatother here would
+% therefore break them; save the catcode and put it back instead of assuming.
+\edef\pmsrestoreat{\catcode`\noexpand\@=\the\catcode`\@\relax}
+\makeatletter
+\patchcmd{\l@chapter}{\vskip 1.0em \@plus \p@}{\vskip 0.1em \@plus \p@}%
+  {\typeout{PMS: toc chapter spacing tightened}}%
+  {\typeout{PMS: WARNING toc chapter spacing patch did not apply}}
+% The list gap is written into the .lof and .lot files as \addvspace{10\p@}, so it
+% is already fixed by the time those files are read back; shrink it on the way in
+% instead, inside a group so \addvspace keeps its usual meaning everywhere else.
+% Two deferrals are needed: minitoc wraps both list commands at \begin{document},
+% so in the preamble they are still the class's own and the patch finds nothing.
+\newcommand{\pmstightlist}{\renewcommand{\addvspace}[1]{\vskip \z@\relax}}
+\AtBeginDocument{%
+  \patchcmd{\listoffigures}{\mtc@sv@listoffigures}%
+    {\begingroup\pmstightlist\mtc@sv@listoffigures\endgroup}%
+    {\typeout{PMS: lof chapter spacing tightened}}%
+    {\typeout{PMS: WARNING lof spacing patch did not apply}}%
+  \patchcmd{\listoftables}{\mtc@sv@listoftables}%
+    {\begingroup\pmstightlist\mtc@sv@listoftables\endgroup}%
+    {\typeout{PMS: lot chapter spacing tightened}}%
+    {\typeout{PMS: WARNING lot spacing patch did not apply}}%
+}
+\pmsrestoreat
 
 % Forbid a paragraph from leaving a single line behind on one page or carrying a
 % single line onto the next. The closing line of chapter 1 was landing alone on a
@@ -111,7 +169,10 @@
         \include{tpl/cover_page_black}
         \input{tpl/signatures}
         
-        \setcounter{page}{1}
+        % rontmatter numbers these pages in lower-case roman. The school uses
+        % capitals, so switch the style rather than the counter: \pagenumbering
+        % resets the page to 1 itself, which is what the line below used to do.
+        \pagenumbering{Roman}
         \input{dedicaces}
         \thispagestyle{frontmatter}
         \input{remerciement}
@@ -126,7 +187,12 @@
         
         \listoffigures
         \thispagestyle{frontmatter}
-        \listoftables
+        % Thirty-four entries do not fit one page. Left alone, LaTeX breaks after
+        % the thirty-first and leaves three on a page of their own; stretching the
+        % page to fit them all ran the last two through the footer. Breaking the
+        % list where the chapters change divides it 27 and 7, which reads as a
+        % decision rather than as an overflow.
+\listoftables
         \thispagestyle{frontmatter}
         
         \input{acronymes}
@@ -154,6 +220,8 @@
         \input{chap_06}
         \clearpage
 
+        % divide the list of tables where the chapter changes
+        \addtocontents{lot}{\protect\newpage}
         \input{chap_07}
         \clearpage
 
