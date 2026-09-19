@@ -1,10 +1,77 @@
 -- =============================================================
--- V16 : Archivage des projets terminés
--- -------------------------------------------------------------
--- Un projet TERMINE peut être archivé : il disparaît des listes actives
--- mais reste consultable dans une section "Projets archivés". Distinct de
--- la suppression douce (deleted) qui retire définitivement le projet.
+-- V16 : Archiving of finished projects
+-- =============================================================
+-- WHAT THIS FILE IS
+--   One schema change: it adds the flag "archived" to the projects table
+--   (created by V5__schema_project.sql). A project whose status is COMPLETED
+--   can be archived: it leaves the everyday lists but stays fully readable in
+--   a separate "Archived projects" screen.
+--
+-- WHERE IT SITS IN THE FLOW
+--   Browser
+--     -> PATCH /api/projects/{id}/archive   and   .../unarchive
+--        (ProjectController)
+--     -> ProjectService.archive / unarchive, both carrying
+--        @PreAuthorize("hasAuthority('EDIT_PROJECT')"). EDIT_PROJECT and not
+--        DELETE_PROJECT, because archiving hides a project and destroys
+--        nothing. The project perimeter is checked as well - the URL carries
+--        an id, so ProjectScopeInterceptor applies (ADR-021), and the service
+--        calls scopeService.assertCanAccess a second time so that the rule
+--        also holds for any caller that does not come through HTTP.
+--     -> Project.archived (Java field)
+--     -> THIS COLUMN.
+--   Reading side, in ProjectRepository:
+--     - findAllActive / findAllActivePaged ... WHERE p.deleted = false AND
+--       p.archived = false  -> the normal project list;
+--     - findAllArchived                 ... WHERE p.deleted = false AND
+--       p.archived = true   -> the archived tab (GET /api/projects/archived).
+--
+-- WHY IT EXISTS - and why it is a separate flag
+--   Three different ideas must not be mixed up, and the jury is likely to ask
+--   about exactly this:
+--     - status (DRAFT / ACTIVE / ON_HOLD / COMPLETED / CANCELLED) describes
+--       the life of the WORK;
+--     - archived describes WHERE THE ROW IS DISPLAYED;
+--     - deleted (from V1, present on every table) means the row is gone for
+--       the whole application, although it stays physically in the table so
+--       that years of timesheets and invoices keep pointing at something.
+--   Making archiving a sixth status would have broken the first idea: an
+--   archived project would have stopped being COMPLETED, so every report and
+--   every KPI would have had to test two things instead of one, and
+--   unarchiving would have had to guess which status to restore.
+--
+--   ProjectService.archive refuses any project that is not COMPLETED
+--   (HTTP 400). Without that guard a running contract could vanish from the
+--   projects screen while its team kept declaring work against it.
+--   unarchive has no such rule on purpose: a project archived by mistake must
+--   come back in one click.
 -- =============================================================
 
+-- BOOLEAN NOT NULL DEFAULT FALSE - the three words all matter.
+--
+-- DEFAULT FALSE: the projects already stored get FALSE written into the new
+-- column right now, and every project created later starts as "not archived".
+--
+-- NOT NULL: this is the part that protects the screens. All the reading
+-- queries say "p.archived = false". In SQL, comparing NULL with FALSE does
+-- not give "true" or "false" but "unknown", and a row whose test is unknown
+-- is NOT returned. So a nullable column, left empty on the rows that existed
+-- before this migration, would have made every project of the database
+-- disappear from the main list at once, with no error message anywhere - the
+-- page would simply have shown "no project".
+--
+-- BOOLEAN and not a status text: the question answered here has exactly two
+-- answers, and a text column would have allowed a fourth spelling of "yes"
+-- that no query matches.
+--
+-- IF NOT EXISTS: do nothing if the column is already there, instead of
+-- failing. A failed migration blocks the whole application start-up, so this
+-- keeps a database where the column was added by hand from blocking the team.
+--
+-- No index is created on this flag, and that is deliberate: the two queries
+-- above filter on it, but the number of projects of the company is small
+-- (tens of rows), and PostgreSQL reads such a table faster than it would walk
+-- an extra index. The existing partial indexes of V5 (idx_projects_status and
+-- the two on the people in charge) already cover the searches that matter.
 ALTER TABLE projects
     ADD COLUMN IF NOT EXISTS archived BOOLEAN NOT NULL DEFAULT FALSE;

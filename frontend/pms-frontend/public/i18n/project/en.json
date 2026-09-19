@@ -51,7 +51,17 @@
     "caProduction": "Production revenue",
     "faeStock": "Accrued / stock",
     "evPlaceholder": "e.g. 75",
-    "snapshot": "Snapshot"
+    "snapshot": "Snapshot",
+    "historyTitle": "Review history",
+    "historyShow": "Show",
+    "historyHide": "Hide",
+    "historyEmpty": "No review recorded for this project yet.",
+    "historyDate": "Review date",
+    "historyConsumed": "Consumed cost (TND)",
+    "historyMargin": "Margin (TND)",
+    "historyEndDate": "Estimated end",
+    "historyHighlights": "Highlights",
+    "historyError": "Could not load the review history."
   },
   "team": {
     "title": "Team members",

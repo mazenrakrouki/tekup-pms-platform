@@ -1,15 +1,99 @@
 -- =============================================================
--- V18 : Contraintes UNIQUE compatibles avec le soft-delete
+-- V18 : UNIQUE rules made compatible with the soft delete
 -- =============================================================
--- Les contraintes UNIQUE absolues sur users.email et projects.code
--- bloquaient la réutilisation de ces valeurs après un soft-delete.
--- Remplacées par des index uniques partiels (WHERE deleted = FALSE)
--- pour n'interdire les doublons que parmi les enregistrements actifs.
+-- WHAT THIS FILE IS
+--   It changes HOW two uniqueness rules are enforced, without changing what
+--   they mean for a live row:
+--     - users.email     (rule created by V1__schema_auth.sql)
+--     - projects.code   (rule created by V5__schema_project.sql)
+--   Each absolute UNIQUE constraint is dropped and replaced by a PARTIAL
+--   UNIQUE INDEX: an index that covers only the rows where deleted = FALSE.
+--
+-- THE PROBLEM IT SOLVES
+--   PMS never really erases a row. Deleting means setting the column
+--   deleted = TRUE (the flag comes from BaseEntity and exists on every
+--   table), so that years of timesheets, invoices and indicators keep
+--   pointing at something that still exists. An absolute UNIQUE does not know
+--   about that flag: it looks at every row of the table, dead ones included.
+--   Consequences before this migration:
+--     - an employee leaves, his account is soft-deleted, he comes back six
+--       months later: creating his account again with the same professional
+--       e-mail was impossible, for ever;
+--     - a project is created with the code "S2I-2024-012", deleted the same
+--       day because of a typing mistake in the name: that code was burnt and
+--       could never be used again, although the company's numbering expects
+--       it to be.
+--   The user saw a raw database error (GlobalExceptionHandler turns a
+--   duplicate key into 409 Conflict), with no way to understand why a code
+--   that appears nowhere on the screen was "already taken".
+--
+-- WHERE THIS SITS IN THE FLOW
+--   The friendly check happens first, in Java:
+--     - UserCrudService.create / update call
+--       userRepository.existsByEmailAndDeletedFalse(...) and answer a clear
+--       400 with a readable message;
+--     - ProjectService.create / update call
+--       projectRepository.existsByCodeAndDeletedFalse(...) the same way.
+--   The indexes below are the SECOND net, and they are the only one that
+--   really holds: two requests arriving at the same moment can both pass the
+--   Java check, because nothing locks the table between the SELECT and the
+--   INSERT. PostgreSQL then refuses the second INSERT. Without the index,
+--   that race would create two live users with the same e-mail - and the
+--   e-mail IS the identity in this application (the JWT subject, the key of
+--   the security cache, the parameter of findActiveByEmailWithRole), so the
+--   login of one person could load the account of the other.
+--
+-- WHY A PARTIAL INDEX RATHER THAN A "@Where" FILTER OR A TRIGGER
+--   A partial index is a plain feature of PostgreSQL: it indexes only the
+--   rows matching its WHERE clause. It is enforced by the database itself, at
+--   every write, whatever the code that writes - application, seeder, manual
+--   SQL. A check written in Java only would protect the paths that remember
+--   to call it.
+--
+-- A DETAIL THAT LOOKS STRANGE AND IS NOT
+--   A UNIQUE constraint and a UNIQUE index are two different objects in
+--   PostgreSQL, but a UNIQUE constraint is implemented BY an index of the
+--   same name. Dropping the constraint therefore frees that name, which is
+--   why the new index can be created with exactly the same name on the next
+--   line. Keeping the names identical matters: they appear in error logs and
+--   in the comments of User.java, Project.java and UserRepository.java.
+--
+-- NOT EVERY UNIQUE RULE WAS CHANGED, AND THAT IS ON PURPOSE
+--   uk_resources_user_id (V4) and uk_parameters_key (V3) stay absolute. The
+--   visible consequence for resources is documented in ResourceService: a
+--   person whose resource sheet was soft-deleted cannot be given a new one,
+--   because the dead row still occupies his user_id in the index. Only the
+--   two values a human reuses in real life - a professional e-mail and a
+--   project code - were relaxed here.
+-- =============================================================
 
 -- ── users.email ───────────────────────────────────────────────
+-- Drops the absolute rule of V1 (CONSTRAINT uk_users_email UNIQUE (email)).
 ALTER TABLE users DROP CONSTRAINT uk_users_email;
+-- The same rule, but limited to the accounts that are still alive.
+-- Read it as: "two rows may share an e-mail only if at most one of them has
+-- deleted = FALSE".
+-- WHAT IT ALLOWS: a.dupont@s2i.tn deleted in January can be created again in
+-- June; the old row keeps its e-mail and its history untouched.
+-- WHAT IT STILL FORBIDS: two live accounts with the same e-mail.
+-- Being an index and not only a rule, it is also used to SEARCH: every login
+-- runs findActiveByEmailWithRole, which filters on email and deleted = false,
+-- exactly the shape of this index.
+-- Note for the reader: V1 had already created a plain (non-unique) partial
+-- index with almost the same definition, idx_users_email ON users(email)
+-- WHERE deleted = FALSE. Since this line, that older index adds nothing that
+-- this one does not already cover.
 CREATE UNIQUE INDEX uk_users_email ON users(email) WHERE deleted = FALSE;
 
 -- ── projects.code ─────────────────────────────────────────────
+-- Drops the absolute rule of V5 (CONSTRAINT uk_projects_code UNIQUE (code)).
 ALTER TABLE projects DROP CONSTRAINT uk_projects_code;
+-- Same reasoning as for the e-mail. The project code is the reference written
+-- on the contracts and in the accounting, so it must stay unique among the
+-- live projects, while a code used by a deleted project has to become free
+-- again.
+-- Careful with the difference between the two flags: the condition is
+-- "deleted = FALSE" and says nothing about "archived" (V16). An archived
+-- project still exists for the application, so it still holds its code - and
+-- that is what we want, since its contract is real.
 CREATE UNIQUE INDEX uk_projects_code ON projects(code) WHERE deleted = FALSE;

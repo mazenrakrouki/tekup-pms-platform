@@ -1,21 +1,138 @@
 -- =============================================================
--- V14 : Fiche d'identification projet (fidélité au modèle Excel)
+-- V14 : Project identification sheet (faithful to the Excel model)
+--       (original French title: "Fiche d'identification projet")
 -- -------------------------------------------------------------
--- Le modèle Projet initial était un sous-ensemble. On complète avec les
--- champs de la feuille Excel "Fiche identification" (BUSINESS_ANALYSIS §9,
--- feuille 2 ; ADR-002 full Excel model). Devise pragmatique : code + taux
--- de conversion vers TND stockés directement sur le projet (comme l'Excel).
+-- The first Project model was only a subset. It is completed here with the
+-- fields of the Excel sheet "Fiche identification" (BUSINESS_ANALYSIS section 9,
+-- sheet 2; ADR-002, full Excel model). Pragmatic choice on currency: the
+-- currency code and the conversion rate to TND are stored directly on the
+-- project row, exactly as the Excel sheet does.
+-- =============================================================
+-- WHAT THIS FILE IS
+--   One Flyway migration with a single statement: it ADDs eleven columns to the
+--   existing "projects" table created in V5. It creates no table and touches no
+--   data.
+--
+-- WHERE IT SITS IN THE FLOW
+--   Before it: V5 created "projects". After it: V16 adds "archived", V17 fixes
+--   the date CHECK, V19 adds the audit columns, and V22 adds marge_nette_vendue.
+--   At runtime: the project form (Angular) -> ProjectController ->
+--   ProjectService.applyFicheIdentification(), which writes this whole block in
+--   one go -> the Project entity, where these eleven columns are mapped.
+--   Two of them are read far beyond the form: currency and exchange_rate_to_tnd
+--   feed Project.getBudgetTnd(), which KpiService and the Devis Interne use to
+--   express every figure of every project in dinars (ADR-020).
+--
+-- WHY IT EXISTS
+--   The company already ran its projects on an Excel workbook, and that workbook
+--   is the reference (ADR-002). A project row that carries fewer fields than the
+--   sheet cannot replace it: the contract reference, the funder, the sold
+--   workload and the penalty provision are all read at the monthly review.
+--   Delete this migration and the application starts, but the identification
+--   screen has nothing to show, and every amount is silently treated as if it
+--   were already in dinars.
+--
+-- WHY ELEVEN NULLABLE COLUMNS AND NOT A SECOND TABLE
+--   It is a one-to-one relationship: a project has exactly one identification
+--   sheet. A second table would add a join to every single project query for no
+--   gain. They are all nullable (except the two with a DEFAULT) because the
+--   sheet is filled in progressively: forcing them at creation time would stop a
+--   user opening a project before the contract paperwork is complete.
 -- =============================================================
 
+-- "ADD COLUMN IF NOT EXISTS" is repeated on every line, not written once at the
+-- top: the option belongs to each ADD COLUMN clause, so leaving it off one line
+-- would leave that one line unprotected.
+-- WHAT IT DOES: if the column is already there, PostgreSQL skips it instead of
+-- stopping with "column ... already exists".
+-- WHY: it is the defensive style used by every ALTER TABLE migration of this
+-- project (V15, V16, V19, V22 all do the same). Flyway normally runs a file
+-- exactly once, so on a clean database the guard never fires. It protects the
+-- case where a column already exists for a reason Flyway does not know about -
+-- a hand-patched database, or a schema built once by Hibernate before Flyway
+-- took ownership (ADR-019).
+-- WITHOUT IT: on such a database this migration would fail, Flyway would mark
+-- it as failed, and it would then refuse to apply V15 and everything after it -
+-- so one pre-existing column would block every later release.
+-- All of it is ONE statement ending with a single semicolon, so PostgreSQL
+-- rewrites the table definition once. Eleven separate ALTER TABLE statements
+-- would take the table lock eleven times.
 ALTER TABLE projects
+    -- The contract reference given by the client. Text and not a number, because
+    -- it follows the client's own numbering and may contain letters, slashes and
+    -- spaces. It is what lets a project in PMS be matched with a paper file.
     ADD COLUMN IF NOT EXISTS contract_id               VARCHAR(100),
+    -- Name of the client who signed the contract.
     ADD COLUMN IF NOT EXISTS client                    VARCHAR(255),
-    ADD COLUMN IF NOT EXISTS funder                    VARCHAR(255),       -- Bailleur de fonds
+    -- The body actually paying - typically a development bank on a public
+    -- project. WHY IT IS KEPT APART FROM client: on publicly funded work the
+    -- client (a ministry) and the payer (the World Bank, AFD, GIZ) are two
+    -- different organisations with different reporting rules. Merging them would
+    -- make it impossible to list every project financed by one donor. It stays
+    -- empty on an ordinary private contract.
+    ADD COLUMN IF NOT EXISTS funder                    VARCHAR(255),       -- funder / donor ("bailleur de fonds")
+    -- Does the company run this project alone (SEUL) or inside a consortium
+    -- (GROUPEMENT)? Mapped by the Java enum BusinessModel with
+    -- @Enumerated(EnumType.STRING), so the WORD is stored, never the position in
+    -- the enum: a value inserted into the enum later cannot then change the
+    -- meaning of the rows already saved.
     ADD COLUMN IF NOT EXISTS business_model            VARCHAR(20),        -- SEUL | GROUPEMENT
+    -- Fixed price (FORFAIT) or time and materials (REGIE). Mapped by the enum
+    -- EngagementType, stored as a word for the same reason.
+    -- WHY IT MATTERS BEYOND THE FORM: it decides how a cost overrun is read. On a
+    -- FORFAIT the overrun eats the company's margin; on a REGIE the client pays
+    -- the days actually spent.
     ADD COLUMN IF NOT EXISTS engagement_type           VARCHAR(20),        -- FORFAIT | REGIE
+    -- The currency the contract is written in, as a short code: TND, EUR, FCFA.
+    -- Every amount of this project - the budget and every selling price of the
+    -- internal quote - is expressed in THIS currency, never in TND, unless the
+    -- column name says tnd.
+    -- NOT NULL with DEFAULT 'TND': the default is what makes this ALTER safe on a
+    -- table that already holds rows. Without it PostgreSQL would refuse to add a
+    -- NOT NULL column to a non-empty table, and the migration would fail on any
+    -- database that already has projects.
     ADD COLUMN IF NOT EXISTS currency                  VARCHAR(10) NOT NULL DEFAULT 'TND',
+    -- How many dinars one unit of that currency is worth. The whole application
+    -- converts with this single number: amount in TND = amount x this rate.
+    -- WHY THE RATE IS STORED ON THE PROJECT AND NOT FETCHED FROM A LIVE FEED: the
+    -- company agrees one rate for the life of a contract and uses it in all its
+    -- reporting, exactly as the Excel sheet does. A live rate would make
+    -- yesterday's margin different from today's on a project where nothing
+    -- happened, and no two reports would ever agree.
+    -- WHY SIX DECIMALS, NUMERIC(15,6): 1 FCFA is worth roughly 0.005850 TND. With
+    -- the usual two decimals that rate would round to 0.01 and a contract in FCFA
+    -- would be read as almost twice its real value.
+    -- DEFAULT 1 is not decoration either: a project already in dinars needs no
+    -- conversion, and multiplying by 1 lets one single formula serve every
+    -- project instead of a special case.
     ADD COLUMN IF NOT EXISTS exchange_rate_to_tnd      NUMERIC(15,6) NOT NULL DEFAULT 1,
+    -- The share of the budget that goes on software licences and subcontracting,
+    -- in the project currency. It is money the company passes straight on to
+    -- somebody else, so it is tracked apart from the days worked in-house.
+    -- It is financial: ProjectResponse.withoutFinancials() blanks it for a user
+    -- without VIEW_KPI (BR-050).
     ADD COLUMN IF NOT EXISTS license_subcontract_budget NUMERIC(15,2),
-    ADD COLUMN IF NOT EXISTS sold_workload_days        NUMERIC(10,2),      -- Workload vendu (JH)
-    ADD COLUMN IF NOT EXISTS warranty_workload_days    NUMERIC(10,2),      -- Workload garantie (JH)
+    -- Total workload sold to the client, in man-days (JH = "homme-jour", one
+    -- person for one day). It is the volume side of the contract, where the
+    -- budget is the money side; KpiService compares it with the days really
+    -- booked to show the drift.
+    -- NOTE: this one stays VISIBLE to a user without VIEW_KPI. BR-050 hides
+    -- money, and a number of days is not money.
+    ADD COLUMN IF NOT EXISTS sold_workload_days        NUMERIC(10,2),      -- sold workload (man-days)
+    -- Man-days set aside for the warranty period, after delivery.
+    -- WHY IT IS A SEPARATE COLUMN and not added into sold_workload_days: those
+    -- days are owed to the client but are not part of the work being delivered.
+    -- Mixed in, they would make a project look as if it still had budget left to
+    -- build with, when that budget is really reserved for fixing.
+    ADD COLUMN IF NOT EXISTS warranty_workload_days    NUMERIC(10,2),      -- warranty workload (man-days)
+    -- Money set aside for contractual penalties - what the company expects to
+    -- lose if it delivers late. Financial, so withoutFinancials() blanks it too
+    -- (BR-050). PPP is the abbreviation used on the Excel sheet.
     ADD COLUMN IF NOT EXISTS penalty_provision         NUMERIC(15,2);      -- PPP
+-- A POINT WORTH KNOWING BEFORE THE JURY ASKS: unlike the tables of V8 to V11,
+-- this block adds no CHECK constraint. business_model and engagement_type are
+-- kept inside their two allowed words by the Java enums only, and nothing at
+-- database level stops exchange_rate_to_tnd from being 0. Both are recorded as
+-- observations, not as fixes: changing them here would mean rewriting a
+-- migration that has already been applied, and Flyway forbids that - a new
+-- migration would be the way to do it.

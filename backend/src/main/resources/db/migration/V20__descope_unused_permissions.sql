@@ -1,7 +1,92 @@
--- N-2: MANAGE_ROLES and VIEW_AUDIT_LOG are seeded but never enforced by any @PreAuthorize check.
--- The role-permission admin UI and audit-log viewer features are formally descoped for this release.
--- Remove the dead permissions to keep the RBAC matrix clean and avoid misleading the frontend.
+-- =============================================================
+-- V20 : Removal of two permissions that nothing enforced (audit point N-2)
+-- =============================================================
+-- WHAT THIS FILE IS
+--   A data migration, not a schema one: it deletes two rows from the
+--   permissions table, MANAGE_ROLES and VIEW_AUDIT_LOG, and the links those
+--   rows had with the roles. Both had been seeded by V2__seed_rbac.sql.
+--   N-2 is the reference of the finding in the audit document of the project.
+--   Never renumber it: it is what ties this file back to that document.
+--
+-- WHY IT EXISTS - the problem it fixes
+--   Authorization in PMS is dynamic and permission-based (ADR-001): a
+--   permission is a ROW in the database, the checks are written
+--   @PreAuthorize("hasAuthority('CODE')") on the SERVICE methods, and no line
+--   of code anywhere asks "is this user an ADMIN?".
+--   The direct consequence is that a permission row with no @PreAuthorize
+--   behind it protects absolutely nothing. At the time of this migration,
+--   MANAGE_ROLES and VIEW_AUDIT_LOG were exactly that: seeded, granted to
+--   ADMIN, and never named by a single check. Two things went wrong because
+--   of it. First, the authorization matrix of the documentation promised two
+--   capabilities the application did not have. Second, the Angular front end
+--   decides which menus to display from the list of permissions of the
+--   signed-in user, so it could offer a "roles" screen and an "audit log"
+--   screen for features that did not exist.
+--   The role-permission administration screens and the audit-log viewer were
+--   therefore formally put out of scope for that release, and the dead rows
+--   removed so that the matrix says the truth.
+--
+-- WHAT HAPPENED AFTERWARDS - say this exactly right in front of the jury
+--   MANAGE_ROLES came back later. V25__rbac_admin_module.sql recreates it,
+--   gives it a description, and grants it to ADMIN, because by then the
+--   administration screens really existed and RoleAdminService /
+--   PermissionAdminService really carry
+--   @PreAuthorize("hasAuthority('MANAGE_ROLES')").
+--   VIEW_AUDIT_LOG was never restored: there is no audit-log screen in the
+--   application. The created_by / updated_by columns added by V19 are the
+--   audit trail, and they are read in the database, not through a page.
+--   So this file is not a mistake that V25 repairs; it is a snapshot of what
+--   was true when it ran, and the pair V20 / V25 is the traceable history of
+--   the decision.
+--
+-- WHEN THE CHANGE IS FELT BY A USER ALREADY SIGNED IN
+--   Authorities are never trusted from the token. On every request,
+--   JwtAuthenticationFilter reads the account from the database and turns
+--   user.getRole().getPermissions() into the authorities, then keeps the
+--   result in a small cache for five minutes, under the key
+--   e-mail + ":" + tokenVersion (ADR-017). A deleted permission therefore
+--   disappears on the next cache miss, five minutes at worst.
+--   That is why this file, unlike V13 and V25, does NOT raise
+--   users.token_version: those two migrations GIVE a new authority and want
+--   it to be visible at once, while here nothing was enforcing the two
+--   permissions anyway, so there was no session worth cutting.
+-- =============================================================
+
+-- Why the links are deleted FIRST, before the permissions themselves.
+--   role_permissions is the table that says which role holds which
+--   permission. Its foreign key fk_rp_permission was declared in V1 with
+--   ON DELETE CASCADE, so PostgreSQL would in fact have removed these link
+--   rows by itself when the permission rows went. Deleting them explicitly
+--   makes the intention readable, and keeps the script correct even if that
+--   cascade were ever removed from the schema - in which case the second
+--   statement alone would fail with a foreign key violation and block the
+--   start-up of the application.
+--
+-- Why the permissions are found by CODE and not by id.
+--   The link table stores ids, and those ids come from a BIGSERIAL counter:
+--   they are not the same numbers in the developer database, in the test
+--   database and in production. The code (MANAGE_ROLES) is the stable,
+--   human-readable key - the very same string that
+--   hasAuthority('MANAGE_ROLES') compares against. Writing the numbers here
+--   would have deleted two completely different permissions on another
+--   database.
+--
+-- Why "IN (SELECT ...)" and not a join: DELETE ... USING exists in
+--   PostgreSQL, but the subquery says plainly "the link rows whose
+--   permission is one of these two", and the list is two rows long, so there
+--   is nothing to gain by optimising it.
+--
+-- Why a real DELETE, when everything else in this application is a soft
+--   delete: permissions and role_permissions are reference data seeded by
+--   the migrations, not business data written by users. Nothing points at
+--   them from a timesheet or an invoice, role_permissions has no "deleted"
+--   column at all (it is a pure link table), and keeping a row flagged as
+--   deleted would leave exactly the confusion this migration is removing.
+--   The trace of the change is this file, which Flyway records for ever in
+--   flyway_schema_history.
 DELETE FROM role_permissions WHERE permission_id IN (
     SELECT id FROM permissions WHERE code IN ('MANAGE_ROLES', 'VIEW_AUDIT_LOG')
 );
+-- The permission rows themselves. After this line, hasAuthority('MANAGE_ROLES')
+-- can never be true for anybody, including ADMIN, until V25 puts the row back.
 DELETE FROM permissions WHERE code IN ('MANAGE_ROLES', 'VIEW_AUDIT_LOG');

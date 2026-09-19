@@ -55,5 +55,33 @@
     "saved": "Tarifs annuels enregistrés.",
     "savedToast": "Tarifs TCC enregistrés.",
     "saveFailed": "Erreur lors de l'enregistrement."
+  },
+  "form": {
+    "new": "Nouvelle ressource",
+    "newTitle": "Nouvelle ressource",
+    "editTitle": "Modifier la ressource",
+    "edit": "Modifier",
+    "editAria": "Modifier la ressource de {{name}}",
+    "archive": "Archiver",
+    "archiveAria": "Archiver la ressource de {{name}}",
+    "archiveConfirm": "Archiver la ressource de {{name}} ? Ses tarifs par année ne seront plus utilisés dans le calcul des coûts.",
+    "user": "Collaborateur",
+    "userPlaceholder": "Choisir un collaborateur…",
+    "dailyRate": "Tarif journalier (TND)",
+    "tccRate": "Taux TCC",
+    "tccHint": "Part ajoutée au salaire pour couvrir les charges. 0,2390 = +23,90 %.",
+    "staffingStart": "Début de staffing",
+    "staffingEnd": "Fin de staffing",
+    "staffingEndHint": "Laisser vide si le collaborateur est toujours en poste.",
+    "errUser": "Choisissez un collaborateur.",
+    "errDailyRate": "Le tarif journalier doit être supérieur à zéro.",
+    "errTccRate": "Le taux TCC ne peut pas être négatif.",
+    "errStart": "La date de début de staffing est obligatoire.",
+    "errSave": "Enregistrement impossible.",
+    "errArchive": "Archivage impossible.",
+    "usersFailed": "Impossible de charger la liste des collaborateurs.",
+    "okCreated": "Ressource créée pour {{name}}.",
+    "okUpdated": "Ressource de {{name}} mise à jour.",
+    "okArchived": "Ressource de {{name}} archivée."
   }
 }

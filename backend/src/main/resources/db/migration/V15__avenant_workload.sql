@@ -1,9 +1,83 @@
 -- =============================================================
--- V15 : Workload d'avenant (fidélité Excel "Workload avenants en JH")
--- -------------------------------------------------------------
--- Un avenant peut modifier non seulement le budget (déjà géré via revised_budget)
--- mais aussi la charge vendue. On stocke l'impact en jours-homme sur l'avenant.
+-- V15 : Avenant workload (faithful to the Excel line
+--       "Workload avenants en JH")
+-- =============================================================
+-- WHAT THIS FILE IS
+--   One single schema change: it adds the column workload_days to the table
+--   "avenants". An "avenant" is a signed amendment to the contract of a
+--   project. JH stands for "jours-homme" (person-days): one person working
+--   for one day. The avenants table itself was created by
+--   V9__schema_billing.sql, with the money side only (the column montant).
+--
+-- WHERE IT SITS IN THE FLOW
+--   Browser, billing tab of a project
+--     -> POST /api/projects/{id}/avenants   (BillingController, the single
+--        controller mapped on /api/projects/{projectId} that serves the
+--        milestones, the amendments and the payments)
+--     -> AvenantService.create, which carries
+--        @PreAuthorize("hasAuthority('MANAGE_BILLING')"). The permission is
+--        checked on the SERVICE, never on the controller. Before that,
+--        ProjectScopeInterceptor has already checked that this caller is
+--        allowed on THIS project, because the URL is shaped
+--        /api/projects/{id}/** (ADR-021: the permission alone is not enough).
+--     -> the Avenant entity, field workloadDays, mapped with
+--        @Column(name = "workload_days", precision = 10, scale = 2)
+--     -> THIS COLUMN.
+--   On the way back: AvenantMapper -> AvenantResponse -> JSON -> the
+--   amendments table shown on the billing screen.
+--
+-- WHY IT EXISTS - what would be missing without this file
+--   An amendment does not only change the price, it can also change the
+--   amount of work that was sold. V9 stored the price change and nothing
+--   else, so an amendment that added 45 person-days of work to the scope
+--   looked on screen exactly like a pure price change, and the Excel review
+--   sheet this application digitises has a line for it ("Workload avenants en
+--   JH") that could not be reproduced.
+--
+-- READ THIS CAREFULLY BEFORE ANSWERING A QUESTION ON IT
+--   The two halves of an amendment are NOT handled the same way in the code
+--   today, and saying the opposite in front of the jury would be wrong:
+--     - montant is applied automatically. AvenantService.create adds it to
+--       projects.revised_budget and then rebuilds the planned milestone
+--       amounts (marker H-4); AvenantService.delete subtracts it again.
+--     - workload_days is only RECORDED here and displayed. No code adds it to
+--       projects.sold_workload_days (the "Workload vendu" of the
+--       identification sheet, column added by V14). KpiService reads that
+--       project column, not this one, when it computes the drift
+--       derive_jh = sold workload - consumed - remaining.
+--   So this column is, as things stand, a faithful copy of the Excel line and
+--   a piece of contract history, not an input of the KPI calculation.
 -- =============================================================
 
+-- ALTER TABLE ... ADD COLUMN adds the column to a table that already holds
+-- rows; it does not rebuild the table and it keeps the existing amendments.
+--
+-- IF NOT EXISTS: do nothing when the column is already there, instead of
+-- stopping with an error. Why it matters: Flyway refuses to start the
+-- application when one migration fails, so a database where somebody had
+-- already added this column by hand would block every developer on the team,
+-- for a change that was in fact already applied.
+--
+-- NUMERIC(10,2): up to 10 digits in total, 2 of them after the point, so at
+-- most 99999999.99. Two decimals because half-days (12.50 JH) are normal in
+-- this business. NUMERIC and not DOUBLE PRECISION: a double stores decimal
+-- values in binary and cannot hold 0.1 exactly, so adding up the amendments
+-- of a long project drifts, and the total shown would stop matching the sum
+-- of the lines the user can read on screen. NUMERIC keeps the digits exactly.
+-- The Java side must match: Avenant.workloadDays declares precision = 10 and
+-- scale = 2, and the application runs with ddl-auto = validate, so a mismatch
+-- stops the start-up with a clear message instead of rounding amounts later.
+--
+-- No NOT NULL and no DEFAULT, on purpose. Two reasons:
+--   1. The amendments already in the table have no known value. NOT NULL
+--      would force this migration to invent one for them.
+--   2. Empty and zero do not mean the same thing here. 0.00 JH is a
+--      statement - "this amendment changed the price and not the work" -
+--      while NULL means "nobody filled it in". The billing screen shows an
+--      empty box in the second case rather than a figure that was never
+--      agreed.
+-- The value may also be NEGATIVE: an amendment that removes work from the
+-- scope is a real case, which is why there is no CHECK (workload_days >= 0)
+-- here.
 ALTER TABLE avenants
     ADD COLUMN IF NOT EXISTS workload_days NUMERIC(10,2);

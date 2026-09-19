@@ -1,11 +1,68 @@
 -- =============================================================
--- V17 : Correction de la contrainte chk_project_dates
+-- V17 : Fix of the constraint chk_project_dates
 -- =============================================================
--- La règle métier (modèle Excel, bornes incluses) autorise un
--- projet d'un seul jour (start_date = end_date, durée = 1 j).
--- Ancienne contrainte : end_date > start_date  (strict — 500 sur projet 1 jour)
--- Nouvelle contrainte  : end_date >= start_date (inclus)
+-- WHAT THIS FILE IS
+--   A correction of one database rule on the projects table. It replaces the
+--   check on the two contract dates that V5__schema_project.sql had created.
+--     Old rule : end_date > start_date   (strict: the end must come AFTER the
+--                start, so a project that starts and ends the same day was
+--                refused)
+--     New rule : end_date >= start_date  (both ends included, so a one-day
+--                project is legal)
+--
+-- WHY IT EXISTS - the bug it repairs
+--   The business rule comes from the company's Excel model, where the
+--   duration of a project counts BOTH ends: a project that starts and ends on
+--   12 May lasts one day, not zero. The Java code says the same thing -
+--   Project.getDurationDays() is ChronoUnit.DAYS.between(start, end) + 1.
+--   With the strict constraint of V5, saving such a project was impossible:
+--   PostgreSQL rejected the INSERT, and the user was blocked on a perfectly
+--   normal case (a one-day audit, a one-day training session).
+--   The note written when this file was created recorded that failure as an
+--   HTTP 500. Today GlobalExceptionHandler catches
+--   DataIntegrityViolationException and answers 409 Conflict instead, so the
+--   same mistake would now surface as a 409. Either way the message told the
+--   user nothing useful, because the refusal came from the database and not
+--   from a business check.
+--
+-- WHERE THIS RULE SITS IN THE FLOW
+--   Nowhere in Java. ProjectRequest carries no Bean Validation rule saying
+--   "the end must follow the start" (its own comment says so), and
+--   ProjectService does not test the two dates either. PostgreSQL is the only
+--   guard, which is exactly why it must be the RIGHT rule: it also protects
+--   rows inserted by a script or by hand, outside the application.
+--
+-- HOW TO READ THE TWO STATEMENTS BELOW
+--   A CHECK constraint cannot be modified in place in PostgreSQL: there is no
+--   "ALTER CONSTRAINT" that rewrites its condition. The only way is to drop
+--   it and create it again. The new constraint deliberately keeps the SAME
+--   NAME, chk_project_dates, so that the error messages, the documentation
+--   and the comments in Project.java that mention it stay true.
+-- =============================================================
 
+-- Removes the strict rule of V5.
+-- There is no IF EXISTS here, so the statement fails if the constraint is
+-- missing. That is safe: Flyway always runs V5 before V17, in file number
+-- order, and V5 always creates it. Failing loudly would in fact be the right
+-- answer, because a projects table without that constraint would mean the
+-- schema is not the one this file expects.
 ALTER TABLE projects DROP CONSTRAINT chk_project_dates;
+-- Creates the corrected rule.
+--
+-- ">=" instead of ">" is the whole point of the migration: start = end is now
+-- accepted, which is a project lasting one day.
+--
+-- "end_date IS NULL OR ..." keeps a project with no end date legal - a
+-- contract being prepared often has no agreed end yet, and end_date is a
+-- nullable column since V5. Be exact about this part in front of the jury: it
+-- is written for the reader, not because SQL needs it. A CHECK only rejects a
+-- row when its condition is plainly FALSE; comparing NULL with a date gives
+-- "unknown", which a CHECK lets through. So the row would pass anyway, and
+-- the first half of the OR simply states the intention in the schema itself.
+--
+-- What this rule does NOT do: it does not force an end date, it does not
+-- limit the length of a project, and it says nothing when start_date itself
+-- is NULL (same reason as above - the comparison is then unknown and the row
+-- is accepted).
 ALTER TABLE projects ADD CONSTRAINT chk_project_dates
     CHECK (end_date IS NULL OR end_date >= start_date);

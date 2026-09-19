@@ -55,5 +55,33 @@
     "saved": "Yearly rates saved.",
     "savedToast": "TCC rates saved.",
     "saveFailed": "Could not save the rates."
+  },
+  "form": {
+    "new": "New resource",
+    "newTitle": "New resource",
+    "editTitle": "Edit resource",
+    "edit": "Edit",
+    "editAria": "Edit {{name}}'s resource",
+    "archive": "Archive",
+    "archiveAria": "Archive {{name}}'s resource",
+    "archiveConfirm": "Archive {{name}}'s resource? Their yearly rates will no longer feed the cost calculation.",
+    "user": "Team member",
+    "userPlaceholder": "Pick a team member…",
+    "dailyRate": "Daily rate (TND)",
+    "tccRate": "TCC rate",
+    "tccHint": "Share added on top of pay to cover overheads. 0.2390 = +23.90%.",
+    "staffingStart": "Staffing start",
+    "staffingEnd": "Staffing end",
+    "staffingEndHint": "Leave empty if the person is still on staff.",
+    "errUser": "Pick a team member.",
+    "errDailyRate": "The daily rate must be greater than zero.",
+    "errTccRate": "The TCC rate cannot be negative.",
+    "errStart": "The staffing start date is required.",
+    "errSave": "Could not save.",
+    "errArchive": "Could not archive.",
+    "usersFailed": "Could not load the list of team members.",
+    "okCreated": "Resource created for {{name}}.",
+    "okUpdated": "{{name}}'s resource updated.",
+    "okArchived": "{{name}}'s resource archived."
   }
 }

@@ -1,5 +1,41 @@
 -- =============================================================
--- V4 : Contrainte UNIQUE manquante sur resources.user_id
+-- V4 : Missing UNIQUE constraint on resources.user_id
 -- =============================================================
+--
+-- WHAT THIS FILE IS
+--   A one-line correction to V3. The resources table was created with a
+--   foreign key to users but with nothing stopping the same person from
+--   having two cost sheets. This migration adds that rule.
+--
+-- WHERE IT SITS IN THE FLOW
+--   Runs after: V3__schema_user_resource.sql, which created the table.
+--   Matches: the Java mapping in Resource.java, where the link to the account
+--     is a @OneToOne with @JoinColumn(name = "user_id", unique = true). The
+--     Java side only documents the rule; the database is what enforces it,
+--     because the application runs with ddl-auto: validate (ADR-019) and
+--     Hibernate never creates a constraint.
+--   Protects: ResourceService, ResourceMapper and above all KpiService, which
+--     all ask "the cost sheet of this person" and expect one single answer.
+--
+-- WHY IT EXISTS - what breaks without it
+--   Two live cost sheets for the same person would make "the daily rate of
+--   Ahmed" ambiguous. ResourceRepository.findActiveByUserId returns an
+--   Optional, which holds at most one value, so a second row would either make
+--   that query fail or would be ignored, and the margin of a project would
+--   depend on which of the two rows the database read first. The number on the
+--   KPI screen would change between two page loads with nothing to explain it.
+--
+-- WHY A SEPARATE MIGRATION AND NOT AN EDIT OF V3
+--   Flyway records the checksum of every file it has already run. Editing V3
+--   after it has been applied somewhere makes the next start-up stop with a
+--   checksum error. A correction is always a NEW file - this is the rule the
+--   whole db/migration folder follows.
+--
+-- KNOWN LIMIT, worth knowing before the jury asks
+--   This is an ABSOLUTE unique constraint: it covers the soft-deleted rows
+--   too, unlike users.email and projects.code which V18 turns into partial
+--   unique indexes. Since ResourceService.delete only sets deleted = true, the
+--   archived cost sheet keeps holding its user_id, and creating a new cost
+--   sheet for that same person is refused by the database.
 ALTER TABLE resources
     ADD CONSTRAINT uk_resources_user_id UNIQUE (user_id);

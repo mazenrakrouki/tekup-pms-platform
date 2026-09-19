@@ -51,7 +51,17 @@
     "caProduction": "CA Production",
     "faeStock": "FAE / Stock",
     "evPlaceholder": "ex. 75",
-    "snapshot": "Snapshot"
+    "snapshot": "Snapshot",
+    "historyTitle": "Historique des revues",
+    "historyShow": "Afficher",
+    "historyHide": "Masquer",
+    "historyEmpty": "Aucune revue enregistrée pour ce projet.",
+    "historyDate": "Date de revue",
+    "historyConsumed": "Coût consommé (TND)",
+    "historyMargin": "Marge (TND)",
+    "historyEndDate": "Fin estimée",
+    "historyHighlights": "Faits marquants",
+    "historyError": "Impossible de charger l'historique des revues."
   },
   "team": {
     "title": "Membres de l'équipe",
