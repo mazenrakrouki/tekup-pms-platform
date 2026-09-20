@@ -1,392 +1,174 @@
-# =============================================================================
-# application.yml -- BASE configuration of the PMS backend (Spring Boot 3.3).
-#
-# WHAT THIS FILE IS
-#   The settings that are true in EVERY environment: local machine, automated
-#   tests, Docker container. Spring Boot reads it first, before anything else.
-#
-# WHERE IT SITS IN THE FLOW
-#   Spring Boot startup
-#     -> reads THIS file
-#     -> then reads the file of the active profile on top of it, chosen with
-#        --spring.profiles.active=dev|prod (or SPRING_PROFILES_ACTIVE=prod in
-#        docker-compose.yml):
-#          application-dev.yml   -- local development (same folder)
-#          application-prod.yml  -- container deployment, ADR-026 (same folder)
-#          application-test.yml  -- H2 in memory (src/test/resources)
-#     -> the values land in the Spring Environment, and from there they are
-#        injected into the code with @Value: JwtService reads pms.jwt.*,
-#        SecurityConfig reads pms.security.bcrypt-strength and
-#        pms.cors.allowed-origins, AuthController reads
-#        pms.security.cookie-secure.
-#   A key written in a profile file REPLACES the key with the same name here.
-#   Every key the profile does not mention keeps the value written here.
-#
-# WHY IT EXISTS -- what would break if you deleted it
-#   The application would not start at all: no database URL, no Flyway setup,
-#   no JWT settings. And even if each profile repeated those fifty lines, the
-#   three environments would slowly drift apart -- prod could end up with a
-#   different token lifetime than dev, and nobody would see it until users are
-#   logged out too early in production only.
-#
-# HOW TO READ ${NAME:value}
-#   "${DB_HOST:localhost}" means: take the environment variable DB_HOST; if it
-#   is not set, use "localhost". "${DB_PASSWORD}" with NO colon means there is
-#   no fallback -- if the variable is missing, startup fails on purpose.
-# =============================================================================
+# Base Spring Boot config shared by every environment. dev/prod/test profiles load on top of this
+# and override individual keys; whatever a profile doesn't mention keeps the value written here.
+# ${NAME:value} falls back to "value" if the env var is unset; ${NAME} with no colon fails startup
+# on purpose if missing (e.g. DB_PASSWORD) so a misconfigured deploy never boots with a known default.
 spring:
   application:
-    # Logical name of the service. It shows up in the startup log and in
-    # monitoring output, which is how you tell this process apart from any
-    # other Spring application running on the same machine.
+    # Logical service name, shown in startup logs and monitoring.
     name: pms-backend
 
   # -- Database --------------------------------------------------------------
-  # Spring Boot builds the DataSource (the object that opens connections to
-  # PostgreSQL 17) from the keys below. Everything else -- Flyway, Hibernate,
-  # every repository -- goes through this single DataSource.
   datasource:
-    # Each part of the URL has its own environment variable with a local
-    # default, so a developer can start the app with zero configuration while a
-    # container gets its real host and database name from docker-compose.yml.
+    # Each part has its own env var with a local default, so dev needs zero config.
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:pms_db}
     username: ${DB_USERNAME:pms_user}
-    # No default value on purpose: a badly configured startup must fail
-    # immediately rather than start with a password everybody knows. The
-    # dev/test/prod profiles each provide their own value.
-    # Example of what this prevents: shipping the container to a server while
-    # forgetting DB_PASSWORD. With a default like "pms_user" the app would
-    # happily boot and try that well-known password; with no default it stops
-    # at once with "Could not resolve placeholder 'DB_PASSWORD'".
+    # No default on purpose: startup must fail rather than boot with a well-known password.
     password: ${DB_PASSWORD}
-    # Spring can normally guess the driver class from the "jdbc:postgresql:"
-    # prefix. Naming it is still useful here because the test classpath also
-    # carries the H2 driver: being explicit removes any doubt about which one
-    # is picked.
+    # Named explicitly since the test classpath also carries the H2 driver.
     driver-class-name: org.postgresql.Driver
-    # HikariCP is the connection pool. Instead of opening a new network
-    # connection to PostgreSQL for every request (which costs tens of
-    # milliseconds: socket plus authentication), it keeps a small set of open
-    # connections and lends them out.
+    # HikariCP connection pool: reuses a small set of open connections instead of opening one per request.
     hikari:
-      # Never more than 10 open connections from this instance. PostgreSQL
-      # accepts a limited number of connections in total (100 by default) and
-      # they are shared with pgAdmin, psql and any other instance. Without a
-      # ceiling, a burst of parallel requests would keep opening connections
-      # until the database answers "too many clients already" and EVERY caller
-      # fails, including the ones already working. The prod profile raises this
-      # to 20.
+      # Ceiling of 10 connections so a request burst can't exhaust PostgreSQL's shared connection limit.
       maximum-pool-size: 10
-      # Keep only 2 connections alive when nothing is happening. By default
-      # Hikari holds the pool at full size, so an idle laptop or a small
-      # container would keep 10 PostgreSQL connections busy for nothing.
+      # Keep only 2 alive when idle, rather than holding the pool at full size for nothing.
       minimum-idle: 2
-      # A request waits at most 20 seconds (20000 ms) for a free connection,
-      # then fails with a clear exception. Why: if the pool is exhausted
-      # because of one slow query, it is better to answer an error quickly than
-      # to let browser tabs hang with a spinner.
+      # Fail fast after 20s waiting for a free connection instead of leaving requests hanging.
       connection-timeout: 20000
 
   # -- JPA / Hibernate -------------------------------------------------------
   jpa:
     hibernate:
-      # "validate" = at startup Hibernate compares every @Entity with the real
-      # tables and stops the application if something does not match. It never
-      # creates or alters a table: Flyway owns the schema (ADR-019).
-      # Why not "update": "update" would silently change the schema behind
-      # Flyway's back, with no migration script, nothing to review, and no way
-      # to replay the same change on another server.
-      # Example of what validate catches: a column added to the DevisInterne
-      # entity but forgotten in V23__devis_interne.sql. The app refuses to boot
-      # with a precise message instead of crashing later on the first DI read.
+      # Validate entities against real tables at startup; never auto-creates/alters — Flyway owns the schema (ADR-019).
       ddl-auto: validate
-    # Do not print every SQL statement. Production logs would otherwise be
-    # flooded, and a statement can carry business data. The dev profile turns
-    # this on.
+    # No SQL logging here; would flood prod logs and can carry business data. Dev profile turns it on.
     show-sql: false
-    # "Open Session In View" keeps the Hibernate session open until the JSON
-    # response has been written. It is turned OFF here, which buys two things.
-    # (1) A database connection is no longer held for the whole request, so the
-    # pool above is not drained by slow clients. (2) Touching a lazy collection
-    # outside the service transaction now fails loudly with
-    # LazyInitializationException instead of quietly firing extra queries.
-    # Example: serializing a Project together with its team would run one
-    # hidden SELECT per member (the classic N+1 problem) while the JSON is
-    # being written; with this off, the developer must load what he needs
-    # inside the service.
+    # Open Session In View off: frees the DB connection once the service returns, and turns a
+    # lazy-load outside the transaction into a loud LazyInitializationException instead of silent N+1 queries.
     open-in-view: false
     properties:
       hibernate:
-        # No pretty-printing of SQL (only visible when show-sql is true).
+        # No pretty-printing (only relevant when show-sql is true).
         format_sql: false
-        # Resolve every table in the "public" schema. Why: the schema Hibernate
-        # uses otherwise depends on the search_path of the connecting database
-        # role. Example: a DBA who points search_path at the role's own schema
-        # would make the "validate" above look for tables that are not there
-        # and block the startup for a reason unrelated to the code.
+        # Fixed schema, independent of the connecting role's search_path.
         default_schema: public
         jdbc:
-          # Send up to 25 INSERT/UPDATE statements to PostgreSQL in one network
-          # round trip instead of one round trip each. Why it matters here:
-          # saving a workload grid or a devis interne writes many rows at once;
-          # 100 rows become 4 round trips instead of 100.
+          # Batches up to 25 INSERT/UPDATE statements per round trip.
           batch_size: 25
-        # Hibernate sorts the pending INSERTs (and UPDATEs) by table before
-        # sending them. Without this, a natural sequence such as
-        # insert line / insert project / insert line breaks the batch into
-        # three pieces because the target table changes each time, and the
-        # batch_size above buys almost nothing.
+        # Groups pending inserts/updates by table first, so the batch above isn't broken up by interleaved tables.
         order_inserts: true
         order_updates: true
 
   # -- Flyway (ADR-019) ------------------------------------------------------
-  # Flyway runs the numbered SQL scripts V1..V28 at startup and records what it
-  # has already applied in the table flyway_schema_history. This is what makes
-  # the schema reproducible: an empty PostgreSQL plus this code gives exactly
-  # the schema everybody else has.
+  # Runs V1..V28 at startup and records progress in flyway_schema_history, so an empty database
+  # plus this code always reproduces the same schema.
   flyway:
     enabled: true
-    # Where the V*.sql files live: backend/src/main/resources/db/migration.
     locations: classpath:db/migration
-    # Refuse to "adopt" a database that already contains tables but has no
-    # flyway_schema_history. Why: baselining would mark V1..V28 as applied
-    # WITHOUT running them, on a database whose real shape nobody verified.
-    # Example: pointing the app at an old copy of the database would look fine
-    # at boot and then fail on the first query against a missing column.
+    # Refuses to adopt a database with tables but no flyway_schema_history, rather than silently
+    # marking migrations as applied without having run them.
     baseline-on-migrate: false
-    # A migration whose version is lower than one already applied is rejected.
-    # Why: the scripts must run in the same order everywhere. Example: two
-    # developers create V29 and V30; if V29 is merged after V30 was already
-    # applied, Flyway stops instead of applying the pair in an order nobody
-    # ever tested.
+    # Rejects a migration numbered lower than one already applied, so scripts always run in the same order.
     out-of-order: false
-    # With "true", Flyway re-computes a checksum of every V*.sql file and
-    # compares it with the checksum stored when that script was applied: one
-    # edited character fails the startup.
-    # Disabled here because the local database may have diverged over the
-    # iterations. The prod profile (containers, empty volume) turns the check
-    # back on -- any checksum drift must fail loudly there.
+    # Off here since the local dev database has diverged across iterations; prod turns this back on.
     validate-on-migrate: false
 
   # -- Cache (security context -- ADR-017) -----------------------------------
-  # Caffeine is an in-memory cache: a map with a maximum size and an expiry.
-  # Caching itself is switched on by @EnableCaching on PmsApplication.
-  # The only cache in use is named "securityContext":
-  #   key   = "<email>:<tokenVersion>"
-  #   value = the ready-made Spring Security Authentication, carrying the
-  #           permission codes of the caller's role.
-  # JwtAuthenticationFilter fills it on the first request of a session;
-  # AuthService, UserCrudService and RoleAdminService drop entries when a
-  # password, a role or the permission matrix changes.
-  # Why it exists (ADR-017): permissions are read from the database, not from
-  # the token, so a permission granted or revoked by an administrator applies
-  # on the very next request. This cache is what keeps that from costing a
-  # database round trip on every single call.
+  # Caffeine in-memory cache, keyed "<email>:<tokenVersion>", holding the ready-built Authentication
+  # (permission codes) for a session. Lets a DB-driven permission change apply on the next request
+  # without a lookup on every call; token_version bump on change invalidates the key immediately.
   cache:
     type: caffeine
     caffeine:
-      # maximumSize=2000: at most 2000 entries, the least recently used ones
-      # are evicted. Without a ceiling, a long-running server would keep one
-      # entry per user AND per token version forever, and the heap would only
-      # grow.
-      # expireAfterWrite=5m: an entry is dropped 5 minutes after it was
-      # written. This is the safety net, not the revocation mechanism -- a
-      # deactivation or a password change increments users.token_version, which
-      # changes the key, so the stale entry can never be reused.
+      # Ceiling of 2000 entries (LRU eviction) so a long-running server's heap doesn't grow unbounded.
+      # 5-minute TTL is a safety net, not the revocation path — that's the token_version key change.
       spec: maximumSize=2000,expireAfterWrite=5m
 
   # -- JSON ------------------------------------------------------------------
   jackson:
     serialization:
-      # Write dates as ISO-8601 text ("2026-09-19T14:30:00Z") instead of a
-      # number of milliseconds. Why: the Angular frontend and anyone reading
-      # the API in Swagger both need a readable, unambiguous date. Example:
-      # 1789408200000 tells a reader nothing, and it is easy to feed it to the
-      # wrong constructor on the client side.
+      # ISO-8601 text dates instead of epoch millis, for readability on the Angular/Swagger side.
       write-dates-as-timestamps: false
-    # Serialize and parse every date in UTC. Why: the server, the developer
-    # laptops and the browsers can all sit in different time zones. Without one
-    # fixed zone, the same deadline comes back as 23:00 on one machine and
-    # 00:00 the next day on another, and a project looks one day late.
+    # Fixed UTC so the same deadline doesn't shift across server/browser time zones.
     time-zone: UTC
 
   # -- MVC -------------------------------------------------------------------
   mvc:
-    # When no controller matches the URL, raise NoHandlerFoundException instead
-    # of answering a bare 404. Why: GlobalExceptionHandler catches that
-    # exception (handleNotFound) and returns the SAME JSON error body as every
-    # other error of the API.
+    # Raise NoHandlerFoundException on an unmatched URL so GlobalExceptionHandler can return the
+    # same JSON error shape as every other error.
     throw-exception-if-no-handler-found: true
   web:
     resources:
-      # Turn off the default static-file handler. It MUST be off for the
-      # setting just above to work: that handler matches every URL, so it would
-      # answer the unknown URL itself and NoHandlerFoundException would never
-      # be raised. It costs nothing here because the backend serves no static
-      # file -- nginx serves the Angular build (ADR-026).
-      # Example of what goes wrong without the pair: a typo such as
-      # /api/projet/12 returns Spring's default HTML error page, and the
-      # Angular error interceptor finds none of the fields it expects.
+      # Must be off for the setting above: the default static-file handler would otherwise catch
+      # every URL itself. Costs nothing since nginx serves the Angular build (ADR-026).
       add-mappings: false
 
 # -- Server --------------------------------------------------------------------
 server:
-  # 8090 is the port of the local "mvn spring-boot:run" loop. It deliberately
-  # stays clear of 8080, which Apache uses on the development machine. The prod
-  # profile overrides it with ${PORT:8080} inside the container.
+  # Local "mvn spring-boot:run" port, kept clear of 8080 (used by Apache on the dev machine). Prod overrides with ${PORT:8080}.
   port: 8090
   servlet:
     encoding:
       charset: UTF-8
       enabled: true
-      # force: true applies UTF-8 to BOTH the request and the response, even
-      # when the client declares another charset or none at all. Why: this is a
-      # French application -- project names, client names and comments are full
-      # of accents. Without it, a name typed as "Reunion de lancement" with an
-      # accent on the first e comes back mangled in the browser.
+      # Forces UTF-8 on both request and response regardless of client charset, since French names/comments carry accents.
       force: true
 
 # -- PMS configuration ---------------------------------------------------------
-# Everything under "pms" is this project's own configuration, not Spring's. It
-# is read with @Value in JwtService, SecurityConfig and AuthController.
+# Everything under "pms" is this project's own config, read with @Value in JwtService, SecurityConfig and AuthController.
 pms:
   jwt:
-    # No default value: same reasoning as DB_PASSWORD above.
-    # The value is used as-is (its raw UTF-8 bytes). It is NOT decoded from
-    # base64, so 64 characters really do mean 64 bytes of key.
-    # JwtService.init() passes those bytes to Keys.hmacShaKeyFor() (jjwt 0.12.6)
-    # and it is the LENGTH of the key that decides which HMAC-SHA variant signs
-    # the tokens: 64 bytes or more -> HMAC-SHA512, 48 -> SHA384, 32 -> SHA256,
-    # and under 32 bytes the library throws WeakKeyException at startup.
-    # Why aim for at least 64 characters: that is the only way to actually get
-    # HMAC-SHA512, because HMAC-SHA512 needs a key at least as long as its own
-    # output (512 bits = 64 bytes).
-    # Careful, and this is the part a jury may probe: a secret of, say, 40
-    # characters does NOT stop the application. It is above the 32-byte floor,
-    # so the library accepts it and quietly signs with HMAC-SHA256 instead.
-    # Nothing in the logs says the algorithm was downgraded; the tokens keep
-    # working, and only the strength of the signature has dropped. Only a
-    # secret shorter than 32 bytes fails loudly.
+    # No default (same reasoning as DB_PASSWORD). Used as raw UTF-8 bytes, not base64-decoded: key
+    # length picks the HMAC variant (>=64B SHA512, >=48B SHA384, >=32B SHA256, <32B throws). A
+    # secret just above 32 bytes is silently downgraded to SHA256 with no warning — aim for 64+.
     secret: ${JWT_SECRET}
-    # Lifetime of the ACCESS token, in seconds. 900 = 15 minutes.
-    # Why so short: this token travels on every call and is kept in browser
-    # memory. If it leaks, the attacker's window is 15 minutes. The user never
-    # notices the expiry, because the frontend silently calls
-    # /api/auth/refresh.
+    # Access token lifetime: short because it travels on every call and sits in browser memory;
+    # the frontend silently refreshes so the user never notices.
     access-token-expiration: 900        # 15 minutes (in seconds)
-    # Lifetime of the REFRESH token, in seconds. 604800 = 7 days.
-    # The refresh token lives in an HttpOnly cookie (JavaScript cannot read
-    # it) and is rotated at every refresh, so a stolen one can be used once at
-    # most before the rotation makes it worthless.
+    # Refresh token lives in an HttpOnly cookie and rotates on every use, so a stolen one is usable once.
     refresh-token-expiration: 604800    # 7 days (in seconds)
-    # Lifetime of a refresh token when the user ticked "remember me".
-    # 2592000 = 30 days. It MUST match the label shown on the login page
-    # ("Remember me for 30 days", translation key auth.login.rememberMe):
-    # changing one without the other makes the application lie to the user.
+    # "Remember me" lifetime; must match the login page's "Remember me for 30 days" label.
     remember-me-expiration:  2592000    # 30 days -- must match the label shown
   security:
-    # Cost factor of BCrypt, the algorithm that hashes a password before it is
-    # stored. The work is 2^12 = 4096 rounds, roughly a quarter of a second on
-    # a normal machine.
-    # Why 12 and not less: hashing must stay slow enough that someone who
-    # steals the users table cannot test millions of guesses per second.
-    # Why not more: login would become noticeably slow for real users.
+    # BCrypt cost factor (2^12 rounds, ~0.25s): slow enough to resist offline guessing, not so slow login lags.
     bcrypt-strength: 12
-    # Adds the "Secure" flag to the refresh-token cookie, which tells the
-    # browser to send it over HTTPS only. Read by AuthController.
-    # It defaults to false because local development and the demo stack run on
-    # plain http://localhost, where a Secure cookie would simply never be sent
-    # back and nobody could stay logged in.
+    # Secure flag on the refresh-token cookie; false by default since local/demo runs on plain HTTP.
     cookie-secure: ${COOKIE_SECURE:false}   # true behind HTTPS only
   cors:
-    # CORS is the browser rule that stops a page served by one origin from
-    # calling a different origin. The Angular dev server runs on port 4200
-    # while this backend runs on 8090: two different origins, so the browser
-    # blocks the call unless the server names 4200 here.
-    # Bound to a List<String> field in SecurityConfig. Spring accepts both
-    # spellings: this YAML list, or the comma-separated string used by the prod
-    # profile.
-    # Example without it: every request from "ng serve" fails in the browser
-    # console with "No 'Access-Control-Allow-Origin' header", even though the
-    # backend answered 200.
+    # Angular dev server (4200) and this backend (8090) are different origins, so the browser
+    # blocks calls unless 4200 is listed here.
     allowed-origins:
       - "http://localhost:4200"
       - "http://127.0.0.1:4200"
 
 # -- API documentation (springdoc) ---------------------------------------------
-# springdoc reads the controllers and generates an OpenAPI description, plus the
-# Swagger UI page used to try the API by hand. SecurityConfig leaves these URLs
-# open (permitAll) so the documentation is reachable without a token.
+# Generates the OpenAPI description and Swagger UI; SecurityConfig leaves these URLs open (permitAll).
 springdoc:
   api-docs:
-    # The machine-readable description (JSON).
     path: /v3/api-docs
   swagger-ui:
-    # The human page: http://localhost:8090/swagger-ui.html
     path: /swagger-ui.html
-    # Sort the groups and the operations alphabetically. Why: the natural order
-    # is the order in which Spring happened to find the controllers, and that
-    # is not guaranteed to stay the same between builds. A stable A-Z list is
-    # what makes a live demonstration possible without hunting for an endpoint.
+    # Alphabetical order, since the natural (discovery) order isn't stable across builds.
     tags-sorter: alpha
     operations-sorter: alpha
-    # Stop Swagger UI from loading its built-in "Petstore" example definition.
-    # Without it, the page opens on a demo API that has nothing to do with PMS.
+    # Skips Swagger UI's built-in Petstore demo definition.
     disable-swagger-default-url: true
 
 # -- Actuator (container probes -- ADR-026) ------------------------------------
-# Only health and info are exposed. show-details: never guarantees that an
-# unauthenticated call leaks no infrastructure detail (database state, disk...).
-# Why this section exists at all: the docker-compose healthcheck calls
-# /actuator/health and "depends_on: service_healthy" waits for it. Without a
-# health endpoint the backend container is never marked healthy and the
-# frontend container never starts.
+# Only health/info are exposed; docker-compose's healthcheck polls /actuator/health and the
+# frontend container waits on it via depends_on: service_healthy.
 management:
   endpoints:
     web:
       exposure:
-        # Whitelist. Everything else (env, beans, mappings, heapdump,
-        # loggers...) stays unreachable. Example of what this prevents:
-        # /actuator/env would print every property of the application,
-        # including the resolved datasource settings, to anyone who asks.
+        # Whitelist — everything else (env, beans, mappings, heapdump...) stays unreachable.
         include: health,info
   endpoint:
     health:
-      # The body is reduced to {"status":"UP"} -- no per-component breakdown.
-      # This is also Spring Boot's default; it is written down because
-      # SecurityConfig deliberately opens this URL to everybody, so the choice
-      # has to be visible next to the exposure list above.
+      # Reduced to {"status":"UP"}, no component breakdown, since this endpoint is intentionally public.
       show-details: never
       probes:
-        # Adds /actuator/health/liveness and /actuator/health/readiness, the two
-        # questions an orchestrator asks separately: "is the process alive?" and
-        # "can it already take traffic?". Without readiness, a container can be
-        # sent requests while Flyway is still applying the migrations (60-90 s
-        # on a fresh volume) and they would all fail.
+        # Adds liveness/readiness probes so an orchestrator doesn't send traffic during the 60-90s Flyway run.
         enabled: true
   info:
     env:
-      # Keep properties coming from the Environment out of /actuator/info.
-      # Why: that endpoint answers without authentication. Nothing defines an
-      # "info.*" property today, but leaving this off means one added later
-      # cannot become public by accident.
+      # Keeps Environment properties out of the unauthenticated /actuator/info endpoint.
       enabled: false
 
 # -- Logging -------------------------------------------------------------------
 logging:
   level:
-    # Default level for every library: INFO.
     root: INFO
-    # The application's own packages, same level. The dev profile raises this
-    # to DEBUG.
+    # App packages at the same level; dev profile raises this to DEBUG.
     com.pms: INFO
-    # Suppress PageImpl serialization stability warning (N-4: VIA_DTO changes
-    # JSON shape, deferred).
-    # In plain words: Spring warns on every paginated endpoint that the JSON
-    # shape of Page<T> is not a stable contract. The clean fix is to return a
-    # PageResponse<T> DTO (Data Transfer Object -- a small class whose only job
-    # is to carry data over the wire), but that changes the JSON the Angular
-    # frontend already consumes, so it is tracked as backlog item N-4 instead
-    # of being rushed. Raising this one logger to ERROR hides the warning
-    # without hiding real errors.
+    # Silences Spring's PageImpl serialization-stability warning (tracked as backlog N-4) without hiding real errors.
     org.springframework.data.web.config: ERROR

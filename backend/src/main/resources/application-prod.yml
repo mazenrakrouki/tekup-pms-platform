@@ -1,168 +1,69 @@
-# =============================================================================
-# application-prod.yml -- PRODUCTION profile of the PMS backend.
-# Profile used by the containers (ADR-026).
+# Production profile, used by the containers (ADR-026): nothing hard-coded, sensitive values come
+# from env vars, logs go quiet, Flyway checksum validation is back on. Loaded on top of
+# application.yml when docker-compose sets SPRING_PROFILES_ACTIVE=prod; only the keys below change.
 #
-# WHAT THIS FILE IS
-#   The settings that change when the application runs inside its Docker
-#   container instead of on a laptop: nothing is hard-coded, everything
-#   sensitive arrives through environment variables, the logs go quiet, and the
-#   Flyway checksum check is switched back on.
-#
-# WHERE IT SITS IN THE FLOW
-#   docker-compose.yml sets SPRING_PROFILES_ACTIVE=prod on the backend service
-#     -> Spring Boot reads application.yml first, then THIS file on top of it
-#     -> only the keys below are replaced; the Hikari timeout, Hibernate
-#        validate, the Caffeine "securityContext" cache, the Actuator probes
-#        and the Jackson/UTC settings all still come from application.yml
-#     -> the container healthcheck calls /actuator/health, and the nginx
-#        container waits for it through "depends_on: service_healthy".
-#
-# WHY IT EXISTS -- what would break if you deleted it
-#   The container would start with the development defaults of application.yml:
-#   it would look for a database on "localhost" (which, inside a container, is
-#   the container itself, not the db service), listen on port 8090 instead of
-#   the 8080 the healthcheck and nginx expect, allow CORS only from
-#   localhost:4200, and never re-check the migration checksums.
-#
-# REQUIRED environment variables:
-#   DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD
-#   JWT_SECRET  -- used as-is (raw UTF-8 bytes), AT LEAST 64 CHARACTERS. It is
-#                  not decoded from base64. 64 bytes is the length that makes
-#                  jjwt sign with HMAC-SHA512; a shorter secret is NOT refused
-#                  unless it drops under 32 bytes -- it is silently downgraded
-#                  to HMAC-SHA256. Nobody is warned, so the length has to be
-#                  checked when the variable is set, not after an incident.
-# OPTIONAL environment variables: PORT, COOKIE_SECURE, CORS_ALLOWED_ORIGINS,
-#   LOG_ROOT_LEVEL, PMS_DEMO_SEED_USERS
-#   PMS_DEMO_SEED_USERS is not written anywhere in this file. Spring's relaxed
-#   binding maps that variable name onto the property pms.demo.seed-users, and
-#   DataInitializer carries @ConditionalOnProperty on it with
-#   matchIfMissing = true: absent means "yes, create the demo accounts".
-#
-# RELATED FILES
-#   application.yml      -- the base every profile builds on
-#   application-dev.yml  -- the laptop profile; read the two side by side to
-#                           see what is deliberately different
-#   docker-compose.yml   -- where these environment variables are actually set
-#   docs/DEPLOYMENT.md   -- the deployment procedure
-# =============================================================================
+# Required env vars: DB_HOST, DB_PORT, DB_NAME, DB_USERNAME, DB_PASSWORD, JWT_SECRET (raw UTF-8
+# bytes, at least 64 chars — shorter is silently downgraded to HMAC-SHA256 below 64, and only
+# rejected under 32; check the length when setting it, not after an incident).
+# Optional: PORT, COOKIE_SECURE, CORS_ALLOWED_ORIGINS, LOG_ROOT_LEVEL, PMS_DEMO_SEED_USERS (maps to
+# pms.demo.seed-users via relaxed binding; DataInitializer treats it missing as "seed demo accounts").
 
 spring:
   datasource:
-    # No fallback value anywhere in this URL, unlike application.yml. Why: a
-    # missing DB_HOST must stop the container at startup with a clear message,
-    # not silently fall back to "localhost" and then fail on every request with
-    # a connection error that looks like a database outage.
+    # No fallback anywhere in this URL (unlike application.yml): a missing DB_HOST must fail
+    # startup loudly, not silently try localhost and fail every request afterward.
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     hikari:
-      # 20 open connections instead of the 10 of application.yml, because this
-      # instance serves every user at once while a laptop serves one developer.
-      # It must stay well under the PostgreSQL max_connections (100 by
-      # default), which is also shared with any admin tool connected to the
-      # same database.
+      # 20 instead of 10: this instance serves every user at once, not one developer laptop.
       maximum-pool-size: 20
 
   jpa:
-    # Repeated from application.yml on purpose: these two lines are the
-    # explicit guarantee that the SQL of the development profile never leaks
-    # into a production log. Statements can carry names, e-mail addresses and
-    # amounts, and application logs are usually less protected than the
-    # database itself.
+    # Repeated explicitly so dev's SQL logging can never leak into a production log.
     show-sql: false
     properties:
       hibernate:
         format_sql: false
 
   flyway:
-    # NOTE: classpath:db/migration includes V26__seed_demo_data.sql. The demo
-    # accounts are therefore created under this profile too -- see
-    # docs/DEPLOYMENT.md.
-    # Be precise about this if the jury asks, because there are TWO separate
-    # sources of demo data and only one of them has an off switch:
-    #   - DataInitializer (Java) creates the demo LOGIN accounts and is disabled
-    #     by PMS_DEMO_SEED_USERS=false;
-    #   - V26__seed_demo_data.sql (this list) and DemoDataSeeder have no such
-    #     switch, so they run anyway.
-    # Setting PMS_DEMO_SEED_USERS=false therefore reduces the exposure but does
-    # not remove every demo row: a real deployment also has to delete them.
+    # NOTE: includes V26__seed_demo_data.sql, so demo accounts are seeded under this profile too.
+    # Two independent sources of demo data, only one has an off switch: DataInitializer (Java
+    # accounts) is disabled by PMS_DEMO_SEED_USERS=false; V26 and DemoDataSeeder are not — a real
+    # deployment must delete those rows itself.
     locations: classpath:db/migration
-    # Empty volume on first start: any checksum drift must fail.
-    # In plain words: Flyway re-computes a fingerprint of each V*.sql file and
-    # compares it with the fingerprint recorded when that script was applied.
-    # If they differ, the container refuses to start.
-    # Why it is true here and false in the base profile: the local development
-    # database has been migrated many times while the scripts were still being
-    # written, so the check would block a laptop for no good reason; a
-    # container starts from a clean volume, so a mismatch can only mean one
-    # thing -- a migration that was already applied has been edited afterwards,
-    # which means the running schema and the scripts no longer describe the
-    # same database. Failing loudly is the only safe answer.
+    # On (unlike the dev profile): a fresh container volume means any checksum drift can only mean
+    # an already-applied migration was edited afterward, so failing loudly is the only safe answer.
     validate-on-migrate: true
 
 pms:
   jwt:
-    # Never written in clear in the code. Supplied by the environment; the
-    # container fails to start if it is missing, which is the intended
-    # behaviour (see the note about DB_PASSWORD in application.yml).
     secret: ${JWT_SECRET}               # Never in clear in the code
-    # Back to the short lifetimes of application.yml, undoing the relaxed
-    # values of the dev profile. They are repeated here so the real production
-    # numbers can be read in one place, without having to remember which
-    # profile last touched them.
+    # Back to the short lifetimes of application.yml (dev relaxes these); repeated here so the
+    # real production numbers are readable in one place.
     access-token-expiration: 900        # 15 minutes
     refresh-token-expiration: 604800    # 7 days
-    # Must stay equal to the "Remember me for 30 days" label of the login page.
     remember-me-expiration:  2592000    # 30 days
   security:
-    # Same cost factor as everywhere else. It must never be lowered for
-    # production "performance": the hashes stored here are the ones that would
-    # be attacked if the database were stolen.
+    # Never lower this for "performance" — these are the hashes an attacker would target if the DB leaked.
     bcrypt-strength: 12
-    # Adds the "Secure" flag to the refresh-token cookie so the browser only
-    # sends it over HTTPS. It stays false by default because the demo stack is
-    # published on plain http://localhost:8081, where a Secure cookie would
-    # never be sent back and no one could stay logged in. Set COOKIE_SECURE=true
-    # as soon as the stack sits behind HTTPS.
+    # False by default since the demo stack runs on plain HTTP; set true once the stack is behind HTTPS.
     cookie-secure: ${COOKIE_SECURE:false}   # true as soon as the stack is behind HTTPS
   cors:
-    # Comma-separated list (bound with @Value in SecurityConfig).
-    # The containerized frontend serves the app and /api on the same origin.
-    # That is why a single origin is enough here, while the dev profile needs
-    # port 4200: in the container, the browser talks to nginx on 8081 and nginx
-    # forwards /api to this backend, so the browser never sees a second origin.
-    # The @Value target is a List<String>; Spring splits this string on the
-    # commas, so "http://a,http://b" declares two origins.
+    # Single origin is enough here: nginx serves the app and proxies /api on the same origin, so
+    # the browser never sees a second one (unlike dev's separate port 4200).
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:8081}
 
 server:
-  # 8080 inside the container, not the 8090 of application.yml. This number is
-  # written in three places that must agree: here, the container healthcheck
-  # (curl http://127.0.0.1:8080/actuator/health) and the nginx proxy
-  # configuration. Change one without the others and the container never turns
-  # healthy.
+  # 8080 in-container, not 8090. Must agree with the healthcheck and the nginx proxy config.
   port: ${PORT:8080}
 
 logging:
   level:
-    # WARN by default: in production the log should contain problems, not a
-    # narrative. LOG_ROOT_LEVEL allows raising it temporarily to INFO or DEBUG
-    # to investigate an incident, without rebuilding the image.
-    # Worth knowing before reading the container output: the WARN written here
-    # is only the fallback. docker-compose.yml sets LOG_ROOT_LEVEL to INFO for
-    # the backend service, so the demo stack actually runs its root logger at
-    # INFO. Seeing INFO lines in "docker compose logs" is therefore normal and
-    # does not mean this file is being ignored.
+    # WARN by default; LOG_ROOT_LEVEL can raise it temporarily without rebuilding the image.
+    # docker-compose.yml actually sets this to INFO for the demo stack, so INFO lines are expected.
     root: ${LOG_ROOT_LEVEL:WARN}
-    # The project's own packages stay at INFO even when the rest is at WARN,
-    # so the business events of the services remain traceable.
+    # App packages stay traceable at INFO even when the rest is at WARN.
     com.pms: INFO
-    # Without this, the 28 migrations of the first start (60-90 s) are
-    # completely silent.
-    # (The original note said 26; the folder now holds V1 to V28.)
-    # Meaning: the root level above is WARN, and Flyway reports its progress at
-    # INFO, so during a minute and a half the container would print nothing at
-    # all and look frozen. Whoever is watching the deployment would be tempted
-    # to kill it in the middle of a migration.
+    # Without this, the first-start migration run (60-90s) prints nothing and looks frozen.
     org.flywaydb: INFO

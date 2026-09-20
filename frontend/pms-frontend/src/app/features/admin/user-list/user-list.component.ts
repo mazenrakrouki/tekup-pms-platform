@@ -10,133 +10,59 @@ import { ToastService } from '../../../core/services/toast.service';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { environment } from '../../../../environments/environment';
 
-/*
- * FILE: user-list.component.ts
- *
- * WHAT THIS FILE IS
- * The whole "Gestion des utilisateurs" screen of the admin area, in one standalone Angular
- * component: the toolbar (search, role filter, status filter), the sortable and paged table
- * of accounts, the create/edit modal, and the modal that shows the one-time password
- * produced by a password reset.
- *
- * WHERE IT SITS IN THE FLOW
- *   app.routes.ts, path 'admin/users' -> permissionGuard with data.permission =
- *   'MANAGE_USERS' -> this component is lazy-loaded (loadComponent) -> it talks to the
- *   backend directly through HttpClient:
- *       GET   /api/roles                     -> fills the two role drop-downs
- *       GET   /api/users?page&size&sort&...  -> one page of accounts (UserController.list)
- *       POST  /api/users                     -> create, answers a UserCreateResult
- *       PUT   /api/users/{id}                -> update
- *       PATCH /api/users/{id}/reset-account  -> new one-time password
- *       PATCH /api/users/{id}/deactivate     -> switch the account off
- *       PATCH /api/users/{id}/reactivate     -> switch it back on
- *   Every one of those requests passes through core/interceptors/auth.interceptor.ts, which
- *   attaches the short-lived JWT access token. The real authorization check is NOT here: it
- *   lives on the SERVICE methods of the backend as
- *   @PreAuthorize("hasAuthority('MANAGE_USERS')"). The route guard in front of this screen
- *   only hides a page the server would refuse anyway.
- *   It also uses three shared pieces: ConfirmService (the application's "are you sure?"),
- *   ToastService (the small transient messages), and <app-pagination> (the shared pager).
- *
- * WHY IT EXISTS
- * Without it there is no way to create an account, change somebody's role, hand out a new
- * password, or switch an account off. Accounts could then only be inserted by hand in
- * PostgreSQL, and nobody could be locked out when they leave the company.
- *
- * WHY IT CALLS HttpClient DIRECTLY INSTEAD OF A UserService
- * Every call here is used by this screen and by no other screen, and the payloads are the
- * plain DTOs of UserController (a DTO, Data Transfer Object, is the flat object used to
- * carry data between the server and the browser). A dedicated service would be one extra
- * file that only forwards calls. The shapes are still typed (User, UserCreateResult,
- * PagedResponse<User>), so a wrong field name is caught by the compiler, which is the part
- * that actually matters.
- *
- * WHY THE TABLE IS PAGED BY THE SERVER AND NOT LOADED WHOLE
- * The account table grows with the company. Asking the server for 20 rows at a time keeps
- * the first paint fast and keeps the filtering and the sorting in SQL, where an index can
- * help. Sorting a 2000-row array in the browser on every keystroke would freeze the page.
- */
+// The "Gestion des utilisateurs" admin screen: toolbar (search/role/status filters), sortable
+// paged accounts table, create/edit modal, and the one-time-password modal from a reset.
+// Calls HttpClient directly (no UserService) since these DTOs are only used here; the real
+// authorization check lives on the backend (@PreAuthorize), not in this component.
 
-// The shape of one row of GET /api/roles: the backend answers a list with exactly these two
-// keys. It is declared here, and not in core/models, because no other file needs it - the
-// two <select> lists on this screen are its only readers.
-// WHY type it at all: without it roles() would be any[], and a typo such as r.label would
-// compile and quietly render an empty drop-down, with no error anywhere.
+// Shape of one row of GET /api/roles. Declared here (not core/models) since only this screen reads it.
 interface Role { id: number; name: string; }
-// A union type listing the only two columns the table can be sorted by. These two strings
-// are not free text: they are ENTITY FIELD names that travel to Spring Data as
-// ?sort=lastName,asc and are turned into an ORDER BY on the SQL side.
-// WHY a union and not plain string: a mistyped column such as 'lastname' would be refused by
-// Spring at request time with a property error, and the table would simply fail to load. The
-// union makes that mistake impossible to compile.
+// The only two sortable columns; these are Spring Data entity field names (?sort=lastName,asc),
+// not free text. A union catches a typo'd column at compile time instead of a failed request.
 type SortCol = 'lastName' | 'email';
 // The two sort directions, again spelled exactly the way Spring Data expects them.
 type SortDir = 'asc' | 'desc';
 
 @Component({
   selector: 'app-user-list',
-  // standalone means the component declares its own dependencies in `imports` below and
-  // needs no NgModule. That is what lets app.routes.ts lazy-load it on its own: the
-  // JavaScript of this screen is only downloaded when an administrator opens it.
+  // Lets app.routes.ts lazy-load this screen on its own (loadComponent).
   standalone: true,
-  // provideTranslocoScope('admin') tells Transloco to also load the translation file of the
-  // admin area for this component and its children.
-  // WHY: the admin wording is only needed by three screens, so it is kept out of the main
-  // translation bundle that every user downloads. Without this line every key used below,
-  // such as 'admin.users.title', would be printed on screen as the raw key text.
+  // Loads the admin translation bundle, kept out of the main bundle since only a few screens need it.
   providers: [provideTranslocoScope('admin')],
-  // The dependencies used by the inline template: CommonModule for ngClass, FormsModule for
-  // [(ngModel)], the shared pager, and the transloco pipe. A missing entry here is not a
-  // silent bug - the template fails to compile.
+  // Dependencies used by the inline template below; a missing entry fails the template build.
   imports: [CommonModule, FormsModule, PaginationComponent, TranslocoModule],
-  // Component styles are scoped to this component only: Angular adds a unique attribute to
-  // these elements and to these rules. A plain `.toolbar` written here can therefore never
-  // repaint a .toolbar on another screen.
-  // Inside this block only /* */ comments are legal.
+  // Styles are view-encapsulated to this component only.
   styles: [`
-    /* The filter bar above the table. flex-wrap lets the filters drop onto a second line on
-       a narrow window instead of overflowing sideways. */
+    /* flex-wrap lets filters drop to a second line instead of overflowing on narrow windows. */
     .toolbar { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;
       padding:.75rem 1rem; border-bottom:1px solid var(--border); }
-    /* margin-left:auto pushes the "N results" counter to the far right of the bar, whatever
-       number of filters sit on its left. white-space:nowrap stops that short sentence from
-       being cut in two when the bar gets tight. */
     .toolbar .count { font-size:12px; color:var(--text-3); margin-left:auto; white-space:nowrap; }
 
-    /* The two clickable column headers. user-select:none stops a double click on a header
-       from selecting the text instead of just sorting. */
+    /* user-select:none stops a double click on a header from selecting text instead of sorting. */
     th.th-sort { cursor:pointer; user-select:none; transition:color var(--t); }
     th.th-sort:hover { color:var(--text-1); }
     th.th-sort .th-inner { display:inline-flex; align-items:center; gap:.3rem; }
-    /* The small arrow is invisible at rest and only fades in on hover, so an untouched table
-       stays quiet; the column actually sorted keeps it at full opacity. */
+    /* Caret is invisible at rest, fades in on hover; the sorted column keeps it fully visible. */
     th.th-sort .caret { font-size:11px; opacity:0; transition:opacity var(--t); }
     th.th-sort:hover .caret { opacity:.4; }
     th.th-sort.is-sorted { color:var(--c-brand); }
     th.th-sort.is-sorted .caret { opacity:1; }
-    /* :focus-visible, not :focus - the ring is drawn for keyboard users only and does not
-       appear after a mouse click. Without it a keyboard user tabbing through the headers
-       would have no idea where he is. */
+    /* :focus-visible, not :focus - ring shows for keyboard nav only, not after a mouse click. */
     th.th-sort:focus-visible { outline:2px solid var(--c-brand); outline-offset:-2px; }
 
     .u-name { font-weight:600; color:var(--text-1); }
     .u-mail { color:var(--text-2); }
-    /* One colour per action button, taken from the design-system variables so that both the
-       light and the dark theme stay correct. */
+    /* Design-system variables so colors stay correct in both light and dark theme. */
     .act-info { color:var(--c-brand); }
     .act-warn { color:var(--c-warning); }
     .act-ok   { color:var(--c-success); }
     .act-danger { color:var(--c-danger); }
 
-    /* The grey bars shown while the page is loading. Four widths are used so the fake rows
-       look like real, uneven data instead of a block of identical rectangles. */
+    /* Four widths so skeleton rows look like real, uneven data rather than identical blocks. */
     .sk-line { height:12px; border-radius:var(--r-xs); }
     .sk-w-40{width:40%} .sk-w-55{width:55%} .sk-w-70{width:70%} .sk-w-30{width:30%}
     .pw-field { }
   `],
-  // The template is written inline, inside backticks, as in every component of this project.
-  // Inside this HTML only <!-- --> comments are legal: // or /* */ would be printed on the
-  // page as text or break the parsing.
   template: `
     <!-- Top bar of the page: breadcrumb on the left, main action on the right. -->
     <div class="topbar">
@@ -162,32 +88,22 @@ type SortDir = 'asc' | 'desc';
         <div class="toolbar">
           <div class="input-wrap" style="flex:1;min-width:200px;max-width:320px">
             <i class="bi bi-search input-icon"></i>
-            <!-- [ngModel] one-way plus (ngModelChange), NOT [(ngModel)]. The value is read
-                 from the signal, and every keystroke goes through onSearchChange(), which
-                 waits 300 ms before calling the server. With a plain [(ngModel)] the signal
-                 would be written directly and there would be no place left to hold that
-                 delay, so typing "martin" would fire six /api/users requests. -->
+            <!-- One-way [ngModel] + (ngModelChange), not [(ngModel)]: lets onSearchChange() debounce before calling the server. -->
             <input type="search" class="form-control form-control-sm"
                    [placeholder]="'admin.users.search.placeholder' | transloco"
                    [ngModel]="search()" (ngModelChange)="onSearchChange($event)"
                    [attr.aria-label]="'admin.users.search.aria' | transloco">
           </div>
 
-          <!-- Role filter. The empty value means "no filter", which is why load() can simply
-               test the string before adding the query parameter. -->
+          <!-- Empty value means "no filter"; load() only adds the query param when it's set. -->
           <select class="form-select form-select-sm" style="width:auto"
                   [ngModel]="roleFilter()" (ngModelChange)="onRoleChange($event)" [attr.aria-label]="'admin.users.filter.roleAria' | transloco">
             <option value="">{{ 'admin.users.filter.allRoles' | transloco }}</option>
-            <!-- track r.id lets Angular match the existing <option> elements with the new
-                 list when roles() changes, instead of destroying and rebuilding them.
-                 Without a stable track key the option chosen by the user could be thrown
-                 away and the filter would reset itself. -->
+            <!-- track r.id: keeps <option> elements stable across roles() updates instead of rebuilding them. -->
             @for (r of roles(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
           </select>
 
-          <!-- Status filter. The values are the strings "true" and "false" on purpose: they
-               are sent as ?active=true / ?active=false and Spring converts them into the
-               Boolean parameter of UserController.list. -->
+          <!-- Values are the strings "true"/"false" on purpose: sent as ?active=true/false for Spring's Boolean param. -->
           <select class="form-select form-select-sm" style="width:auto"
                   [ngModel]="statusFilter()" (ngModelChange)="onStatusChange($event)" [attr.aria-label]="'admin.users.filterStatusAria' | transloco">
             <option value="">{{ 'admin.users.filter.allStatuses' | transloco }}</option>
@@ -195,17 +111,14 @@ type SortDir = 'asc' | 'desc';
             <option value="false">{{ 'admin.users.state.inactive' | transloco }}</option>
           </select>
 
-          <!-- The reset button only exists while at least one filter is set, so the bar
-               stays clean on a fresh page. -->
+          <!-- Reset button only appears once a filter is set, so the bar stays clean on a fresh page. -->
           @if (hasFilters()) {
             <button class="btn btn-ghost btn-sm" (click)="clearFilters()">
               <i class="bi bi-x-lg me-1"></i>{{ 'admin.users.search.reset' | transloco }}
             </button>
           }
 
-          <!-- Singular and plural are two different translation keys, because the rule is not
-               the same in every language. The number shown is totalElements (all pages),
-               never users().length, which would say "20 results" on every page. -->
+          <!-- Singular/plural are separate keys (pluralization rules differ by language); count is totalElements, not users().length. -->
           <span class="count">{{ (totalElements() === 1 ? 'admin.users.results.one' : 'admin.users.results.other') | transloco: { count: totalElements() } }}</span>
         </div>
 
@@ -213,19 +126,12 @@ type SortDir = 'asc' | 'desc';
           <table class="table mb-0 align-middle">
             <thead>
               <tr>
-                <!-- Sortable header. Three things happen here:
-                     [class.is-sorted] paints the column that is currently sorted;
-                     [attr.aria-sort] tells a screen reader "ascending"/"descending"/"none";
-                     tabindex="0" plus the two keydown handlers make a <th> reachable and
-                     usable with the keyboard, which a <th> is not by default.
-                     $event.preventDefault() on space stops the browser from scrolling the
-                     page down while the user only meant to sort. -->
+                <!-- tabindex + keydown handlers make this <th> keyboard-operable; preventDefault stops space from scrolling the page. -->
                 <th class="th-sort" [class.is-sorted]="sortCol()==='lastName'" [attr.aria-sort]="ariaSort('lastName')"
                     tabindex="0" (click)="toggleSort('lastName')" (keydown.enter)="toggleSort('lastName')" (keydown.space)="toggleSort('lastName'); $event.preventDefault()">
                   <span class="th-inner">{{ 'admin.users.table.name' | transloco }} <i class="bi caret" [ngClass]="caret('lastName')"></i></span>
                 </th>
-                <!-- "Email" is written as plain text and not as a translation key because the
-                     word is the same in French and in English. -->
+                <!-- "Email" is plain text, not a translation key: the word is identical in French and English. -->
                 <th class="th-sort" [class.is-sorted]="sortCol()==='email'" [attr.aria-sort]="ariaSort('email')"
                     tabindex="0" (click)="toggleSort('email')" (keydown.enter)="toggleSort('email')" (keydown.space)="toggleSort('email'); $event.preventDefault()">
                   <span class="th-inner">Email <i class="bi caret" [ngClass]="caret('email')"></i></span>
@@ -236,9 +142,7 @@ type SortDir = 'asc' | 'desc';
               </tr>
             </thead>
             <tbody>
-              <!-- While the request is in flight the table shows eight grey rows of the same
-                   height as real rows. Why not a spinner: the table keeps its size, so the
-                   page does not jump when the data arrives. -->
+              <!-- Skeleton rows (not a spinner) keep the table's size, so the page doesn't jump when data arrives. -->
               @if (loading()) {
                 @for (i of skeletonRows; track i) {
                   <tr>
@@ -250,9 +154,7 @@ type SortDir = 'asc' | 'desc';
                   </tr>
                 }
               } @else {
-                <!-- track u.id: the row is identified by its database id, so after a reload
-                     Angular reuses the same <tr> for the same person instead of rebuilding
-                     the whole table. -->
+                <!-- track u.id: reuses the same <tr> for the same person after a reload instead of rebuilding the table. -->
                 @for (u of users(); track u.id) {
                   <tr>
                     <td class="u-name">{{ u.firstName }} {{ u.lastName }}</td>
@@ -266,11 +168,7 @@ type SortDir = 'asc' | 'desc';
                               [title]="'admin.users.actions.edit' | transloco" [attr.aria-label]="'admin.users.actions.editAria' | transloco">
                         <i class="bi bi-pencil"></i>
                       </button>
-                      <!-- The action buttons depend on the state of the account: an active
-                           account can be reset or switched off, a switched-off account can
-                           only be switched back on. Showing "deactivate" on an account that
-                           is already inactive would send a request the server answers with
-                           an error the user cannot understand. -->
+                      <!-- Buttons depend on account state: an inactive account can only be reactivated, never deactivated again. -->
                       @if (u.active) {
                         <button class="btn btn-ghost btn-icon btn-sm act-info" (click)="resetAccount(u)"
                                 [title]="'admin.users.actions.resetPassword' | transloco" [attr.aria-label]="'admin.users.actions.resetPassword' | transloco">
@@ -289,17 +187,11 @@ type SortDir = 'asc' | 'desc';
                     </td>
                   </tr>
                 }
-                <!-- @empty runs when users() is an empty array. -->
                 @empty {
                   <tr>
-                    <!-- colspan="5" makes the empty message span the five columns; without it
-                         the message would be squeezed inside the first column. -->
+                    <!-- colspan="5" spans the empty message across all columns. -->
                     <td colspan="5">
-                      <!-- Two different empty screens on purpose. "Nothing matches your
-                           filters", with a reset button, is a completely different problem
-                           from "there is no user yet", with a create button. One single
-                           message would send the administrator looking for a bug when he has
-                           only typed a search term that matches nobody. -->
+                      <!-- Two different empty states: "no match" (with reset) vs "no user yet" (with create). -->
                       @if (hasFilters()) {
                         <div class="empty-state">
                           <div class="es-icon"><i class="bi bi-search"></i></div>
@@ -327,11 +219,7 @@ type SortDir = 'asc' | 'desc';
           </table>
         </div>
 
-        <!-- The shared pager, reused instead of rewritten (project rule: the same pager on
-             every long list). It is hidden while loading and when there is nothing to page,
-             so an empty table does not show "page 1 of 1".
-             page/pageSize/total go down as inputs, and the two outputs come back up into
-             onPage()/onPageSize(), which ask the server for the new page. -->
+        <!-- Shared pager (project rule: reuse it everywhere); hidden while loading or empty. -->
         @if (!loading() && totalElements() > 0) {
           <app-pagination
             [page]="page()" [pageSize]="pageSize()" [total]="totalElements()"
@@ -340,20 +228,11 @@ type SortDir = 'asc' | 'desc';
       </div>
     </div>
 
-    <!-- Password reset modal. It is shown only after the server has answered, and its only
-         job is to display the one-time password once - the server keeps only a BCrypt hash
-         of it (BCrypt is a one-way hashing function, so the clear value cannot be read back
-         from the database). If the administrator closes this window without copying the
-         password, the only way out is another reset. -->
+    <!-- Password reset modal: shows the one-time password once, since only its BCrypt hash is stored server-side. -->
     @if (showResetModal()) {
-      <!-- The grey overlay behind the modal. It is a separate element because Bootstrap
-           styles the backdrop and the dialog separately. -->
       <div class="modal-backdrop fade show"></div>
-      <!-- Clicking anywhere outside the dialog closes it... -->
+      <!-- Clicking outside the dialog closes it; stopPropagation keeps a click inside from bubbling up to that handler. -->
       <div class="modal d-block" tabindex="-1" (click)="showResetModal.set(false)">
-        <!-- ...and $event.stopPropagation() keeps a click INSIDE the dialog from bubbling up
-             to that handler. Without this line, selecting the password with the mouse would
-             close the window and lose the password. -->
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
@@ -363,8 +242,7 @@ type SortDir = 'asc' | 'desc';
             <div class="modal-body">
               @if (resetResult()) {
                 <p class="mb-3" style="font-size:13px">
-                  <!-- The name is passed as a parameter of the translation, not glued to it,
-                       so each language can put it where its grammar needs it. -->
+                  <!-- Name is a translation param, not concatenated, so each language can place it per its grammar. -->
                   {{ 'admin.users.reset.done' | transloco: { name: resetResult()!.userName } }}
                   {{ 'admin.users.reset.mustChange' | transloco }}
                 </p>
@@ -373,11 +251,7 @@ type SortDir = 'asc' | 'desc';
                   {{ 'admin.users.reset.communicate' | transloco }}
                 </div>
                 <div class="input-group mt-2">
-                  <!-- type="text" and not type="password": the whole point of this field is
-                       to be read and copied. readonly stops the administrator from editing
-                       what he believes is the real password. The "!" after resetResult() is
-                       the non-null assertion; it is safe here because the whole block sits
-                       inside the @if above. -->
+                  <!-- type="text", not "password": the field exists to be read and copied. readonly prevents edits. -->
                   <input type="text" class="form-control monospace" [value]="resetResult()!.pwd" readonly [attr.aria-label]="'admin.users.tempPassword' | transloco">
                   <button class="btn btn-outline-secondary" type="button" (click)="copyResetPassword()" [title]="'common.copy' | transloco" [attr.aria-label]="'admin.users.copyPassword' | transloco">
                     <i class="bi bi-clipboard"></i>
@@ -393,9 +267,7 @@ type SortDir = 'asc' | 'desc';
       </div>
     }
 
-    <!-- Create / edit modal. One single modal for both jobs: the fields are identical, and
-         editingId() decides whether save() sends a POST or a PUT. Two separate modals would
-         be the same HTML written twice. -->
+    <!-- Create/edit modal: editingId() decides whether save() sends a POST or a PUT. -->
     @if (showModal()) {
       <div class="modal-backdrop fade show"></div>
       <div class="modal d-block" tabindex="-1" (click)="showModal.set(false)">
@@ -410,10 +282,7 @@ type SortDir = 'asc' | 'desc';
               <div class="row g-3">
                 <div class="col-6">
                   <label class="form-label">{{ 'admin.users.form.firstName' | transloco }} <span class="text-danger">*</span></label>
-                  <!-- [(ngModel)] here, two-way, because 'form' is a plain object and not a
-                       signal: there is nothing to debounce and no request to send while the
-                       user types. autocomplete="given-name" lets the browser offer the right
-                       stored value instead of a random one. -->
+                  <!-- Two-way [(ngModel)] here: 'form' is a plain object, not a signal, so nothing needs debouncing. -->
                   <input type="text" class="form-control" [(ngModel)]="form.firstName" [placeholder]="'admin.users.form.firstName' | transloco" autocomplete="given-name">
                 </div>
                 <div class="col-6">
@@ -422,30 +291,22 @@ type SortDir = 'asc' | 'desc';
                 </div>
                 <div class="col-12">
                   <label class="form-label">Email <span class="text-danger">*</span></label>
-                  <!-- type="email" gives a keyboard with @ on a phone and a first, rough
-                       browser check. The real check is the backend one: only the server knows
-                       whether the address is already taken. -->
+                  <!-- type="email" gives a rough browser check; only the server knows if the address is already taken. -->
                   <input type="email" class="form-control" [(ngModel)]="form.email" placeholder="email@example.com" autocomplete="email">
                 </div>
                 <div class="col-12">
                   <label class="form-label">{{ 'admin.users.form.role' | transloco }} <span class="text-danger">*</span></label>
                   <select class="form-select" [(ngModel)]="form.roleId">
-                    <!-- The 0 option is disabled: it is the "nothing chosen yet" placeholder
-                         and must not be selectable, because save() refuses roleId 0. -->
+                    <!-- 0 is the disabled "nothing chosen yet" placeholder; save() refuses roleId 0. -->
                     <option [value]="0" disabled>{{ 'admin.users.form.selectRole' | transloco }}</option>
-                    <!-- The role list comes from the database, never from a hard-coded list:
-                         authorization is dynamic in this project, so a role created by an
-                         administrator in the Roles screen appears here with no code change. -->
+                    <!-- Role list comes from the database (dynamic authorization), never a hard-coded list. -->
                     @for (r of roles(); track r.id) { <option [value]="r.id">{{ r.name }}</option> }
                   </select>
                 </div>
               </div>
-              <!-- Server-side error, shown inside the modal and not as a toast: the
-                   administrator must still see the form he has to correct. -->
+              <!-- Server-side error shown inside the modal, not as a toast, so the form stays visible to correct. -->
               @if (errorMsg()) { <div class="alert alert-danger py-2 mt-3">{{ errorMsg() }}</div> }
-              <!-- After a successful creation the same modal changes job: it stops being a
-                   form and becomes the one and only place where the initial password is
-                   shown. -->
+              <!-- After a successful creation, the modal switches from a form to showing the initial password. -->
               @if (initialPassword()) {
                 <div class="alert alert-success mt-3">
                   <strong>{{ 'admin.users.form.created' | transloco }}</strong> {{ 'admin.users.form.communicate' | transloco }}
@@ -459,16 +320,11 @@ type SortDir = 'asc' | 'desc';
               }
             </div>
             <div class="modal-footer">
-              <!-- Once the account exists there is nothing left to cancel, so the same button
-                   changes its wording from "Cancel" to "Close". -->
+              <!-- Once the account exists there's nothing to cancel, so wording switches from "Cancel" to "Close". -->
               <button class="btn btn-secondary" (click)="showModal.set(false)">{{ (initialPassword() ? 'common.close' : 'common.cancel') | transloco }}</button>
-              <!-- The save button disappears after a successful creation. Why: clicking it
-                   again would POST the same form a second time and try to create a duplicate
-                   account. -->
+              <!-- Save button disappears after creation, to avoid a duplicate POST of the same form. -->
               @if (!initialPassword()) {
-                <!-- [disabled]="saving()" is the guard against the impatient double click:
-                     without it, two clicks in a row would send two POST requests, and the
-                     second one would fail on the unique e-mail constraint. -->
+                <!-- [disabled]="saving()" guards against a double click sending two POSTs. -->
                 <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
                   @if (saving()) { <span class="spinner-border spinner-border-sm me-1"></span> }
                   Enregistrer
@@ -482,244 +338,148 @@ type SortDir = 'asc' | 'desc';
   `
 })
 /**
- * The controller of the users screen: it holds the state of the table (page, sort, filters),
- * the state of the two modals, and the seven HTTP calls listed in the file header.
- *
- * WHY THE STATE IS HELD IN SIGNALS
- * A signal is a value Angular watches: writing into it redraws exactly the parts of the
- * template that read it, without a change-detection pass over the whole page. With plain
- * fields the template would only be refreshed by chance, at the next global check, and a row
- * switched off inside a callback could stay drawn as active.
- *
- * WHY THERE IS NO ROLE TEST ANYWHERE IN THIS CLASS
- * Authorization is dynamic and permission-based, and the decision is taken on the backend
- * service methods (MANAGE_USERS). Anything hidden here is comfort, not security: hiding a
- * button in the browser stops nobody from sending the request by hand.
+ * Controller of the users screen: table state (page/sort/filters), the two modals, and the HTTP calls.
+ * State is kept in signals so the template redraws reactively. No role test here - authorization
+ * is permission-based and enforced on the backend; hiding UI is comfort, not security.
  */
 export class UserListComponent implements OnInit {
-  // inject() is the modern form of dependency injection. It is used for the three services
-  // that are only called from methods.
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
-  // TranslocoService is the programmatic half of the transloco pipe: the pipe works inside
-  // the template, this one translates strings inside TypeScript code, which is exactly what
-  // the toasts and the confirmation questions below need.
+  // Programmatic twin of the transloco pipe, for translating strings in TypeScript (toasts, confirm dialogs).
   private readonly t     = inject(TranslocoService);
-  // HttpClient is taken the classic way, through the constructor. Both styles are
-  // equivalent; the mix here simply reflects how the file grew.
+  // HttpClient via constructor injection; mixed with inject() above simply reflects how the file grew.
   constructor(private http: HttpClient) {}
 
-  // The rows of the CURRENT page only - never the whole table.
+  // Rows of the CURRENT page only - never the whole table.
   users = signal<User[]>([]);
-  // The role list, loaded once in ngOnInit and reused by the filter and by the form.
+  // Loaded once in ngOnInit, reused by both the filter and the form.
   roles = signal<Role[]>([]);
-  // Starts at true, not false: the very first paint already shows the grey skeleton rows.
-  // Starting at false would show "no user yet" for a split second before the data lands,
-  // which looks like a broken screen.
+  // Starts true so the first paint shows skeleton rows instead of a flash of "no user yet".
   loading = signal(true);
-  // 0-indexed page, exactly like Spring Data. Sending 1 for the first page would silently
-  // skip the first 20 accounts.
+  // 0-indexed, like Spring Data - sending 1 for the first page would skip the first 20 accounts.
   page = signal(0);
   pageSize = signal(20);
-  // How many accounts match the filters across ALL pages. It feeds the counter and the pager.
+  // Count across ALL pages (feeds the counter and pager), not just the current page.
   totalElements = signal(0);
-  // Default sort: by family name, ascending. It matches the @PageableDefault of
-  // UserController.list, so the first page looks the same whether the parameter travels or
-  // not.
+  // Matches UserController's @PageableDefault so the first page looks the same either way.
   sortCol = signal<SortCol>('lastName');
   sortDir = signal<SortDir>('asc');
 
-  // The three filters. They are kept as strings because that is what the form controls and
-  // the query string use; the empty string means "filter not set".
+  // Kept as strings since that's what the form controls and query string use; empty means "not set".
   search = signal('');
   roleFilter = signal('');
   statusFilter = signal('');
-  // The handle of the pending debounce timer. ReturnType<typeof setTimeout> is used instead
-  // of `number` because setTimeout returns a number in the browser but an object in Node,
-  // and the project is compiled with both type sets in scope; writing `number` would break
-  // the build depending on which one wins.
+  // ReturnType<typeof setTimeout>, not `number`: setTimeout's return type differs between browser and Node typings.
   private searchTimer: ReturnType<typeof setTimeout> | undefined;
 
   // State of the create/edit modal.
   showModal = signal(false);
-  // null = creating, a number = editing that account. This single value is what makes one
-  // modal serve both jobs, and what save() reads to choose between POST and PUT.
+  // null = creating, a number = editing that account id; save() reads this to choose POST vs PUT.
   editingId = signal<number | null>(null);
   saving = signal(false);
   errorMsg = signal('');
-  // The one-time password returned by a creation. It only ever lives in memory, and it is
-  // dropped the moment the modal is opened again.
+  // Lives only in memory; dropped as soon as the modal is reopened.
   initialPassword = signal<string | null>(null);
   // State of the password-reset modal: the flag, plus the name and password to display.
   showResetModal = signal(false);
   resetResult = signal<{ userName: string; pwd: string } | null>(null);
 
-  // A fixed array used only to repeat the loading placeholder eight times. @for needs
-  // something to iterate over, and this costs nothing because it is created once.
+  // Dummy array only to repeat the skeleton placeholder eight times in @for.
   readonly skeletonRows = [1, 2, 3, 4, 5, 6, 7, 8];
 
-  // The edit form. A plain object, not a signal: it is bound with [(ngModel)] and nothing in
-  // the template has to react to a single keystroke, so a signal would only add noise.
-  // roleId starts at 0, the value of the disabled placeholder option, which save() then
-  // treats as "no role chosen".
+  // Plain object, not a signal: bound via [(ngModel)], nothing needs reactive updates per keystroke.
+  // roleId starts at 0, the disabled placeholder value, which save() treats as "no role chosen".
   form: { firstName: string; lastName: string; email: string; roleId: number } = {
     firstName: '', lastName: '', email: '', roleId: 0
   };
 
-  // True as soon as one of the three filters is set. It drives the reset button and decides
-  // which of the two empty screens is shown. The double "!!" turns a string into a plain
-  // true/false. It is written as an arrow-function field so the template can call it.
+  // Drives the reset button and which empty state is shown. Arrow-function field so the template can call it.
   hasFilters = () => !!this.search() || !!this.roleFilter() || !!this.statusFilter();
 
-  /**
-   * Runs once, right after Angular has created the component.
-   *
-   * Why the work is here and not in the constructor: the constructor should only wire
-   * dependencies. Firing HTTP requests from it makes the component much harder to test,
-   * because the request leaves before the test can prepare anything.
-   */
+  // HTTP calls belong here, not in the constructor, which should only wire dependencies.
   ngOnInit(): void {
-    // First page of accounts.
     this.load();
-    // The role list is fetched once and never again: roles change very rarely, and both the
-    // filter drop-down and the form drop-down read this same signal.
-    // GET /api/roles is guarded on the backend by hasAuthority('MANAGE_USERS'), the same
-    // permission that lets the route guard open this screen.
+    // Fetched once: roles change rarely, and both the filter and form dropdowns read this signal.
     this.http.get<Role[]>(`${environment.apiUrl}/roles`).subscribe(r => this.roles.set(r));
   }
 
   /**
-   * Asks the server for one page of accounts, using the current page, size, sort and
-   * filters, and puts the answer into the signals the table reads.
-   *
-   * Why every filter change calls this again instead of filtering users() in the browser:
-   * users() only ever holds the 20 rows of the current page, so a browser-side filter would
-   * search inside one page and pretend the rest of the table does not exist.
+   * Asks the server for one page of accounts (page/size/sort/filters) into the signals the table reads.
+   * Filtering happens server-side because users() only ever holds the current page's 20 rows.
    */
   load(): void {
     this.loading.set(true);
-    // HttpParams is immutable: .set() does NOT change the object, it returns a new one. That
-    // is why the result is assigned back to `params` on each line below. Forgetting that
-    // assignment is the classic bug here - the filter would simply never reach the URL, and
-    // the table would ignore it with no error at all.
+    // HttpParams is immutable: .set() returns a new object, so the result must be reassigned each time.
     let params = new HttpParams()
       .set('page', this.page())
       .set('size', this.pageSize())
-      // Spring Data reads the sort parameter in this exact "field,direction" form, for
-      // example "lastName,asc". Without a sort the database is free to return the rows in
-      // any order, and the same person could then appear on page 1 and again on page 2 while
-      // somebody else never appears at all.
+      // Spring Data expects "field,direction"; without a sort the row order is undefined.
       .set('sort', `${this.sortCol()},${this.sortDir()}`);
     const s = this.search().trim();
-    // The three filters are only added when they hold something. Sending an empty search=
-    // would make the backend run a "contains nothing" condition instead of no condition.
+    // Only added when non-empty: an empty search= would filter on "contains nothing" instead of no filter.
     if (s) params = params.set('search', s);
     if (this.roleFilter()) params = params.set('roleId', this.roleFilter());
     if (this.statusFilter()) params = params.set('active', this.statusFilter());
-    // PagedResponse<User> is the typed shape of the Spring Data Page envelope: content holds
-    // the rows of this page, totalElements the count over all pages.
     this.http.get<PagedResponse<User>>(`${environment.apiUrl}/users`, { params }).subscribe({
       next: res => {
         this.users.set(res.content);
         this.totalElements.set(res.totalElements);
-        // Safety net for the page that no longer exists. Example: the administrator is on
-        // page 3, then types a search that leaves only 5 results - page 3 is now past the end
-        // and the server answers an empty content. Clamping the page number keeps the pager
-        // honest instead of showing "page 3 of 1".
+        // Clamp for the case where a new filter leaves the current page past the end of the results.
         const maxPage = Math.max(0, Math.ceil(res.totalElements / this.pageSize()) - 1);
         if (this.page() > maxPage) { this.page.set(maxPage); }
         this.loading.set(false);
       },
-      // The error branch empties the table instead of leaving the previous page on screen.
-      // Why: stale rows next to an error message look like real data, and the administrator
-      // could act on an account that no longer exists. loading is turned off here too -
-      // without that line a failed request would leave the grey skeleton for ever.
+      // Empties the table rather than leaving stale rows next to the error message.
       error: () => { this.users.set([]); this.totalElements.set(0); this.loading.set(false); this.toast.error('Impossible de charger les utilisateurs.'); }
     });
   }
 
   // Called by the shared pager when the user moves to another page.
   onPage(n: number): void { this.page.set(n); this.load(); }
-  // Changing the number of rows per page also jumps back to the first page: staying on page 4
-  // while switching from 10 to 50 rows per page would land far past the end of the result.
+  // Also resets to page 0: staying on page 4 after growing the page size could land past the end.
   onPageSize(n: number): void { this.pageSize.set(n); this.page.set(0); this.load(); }
 
   /**
-   * Handles every keystroke in the search box, but only queries the server once the user has
-   * stopped typing for 300 ms. This wait is called debouncing.
-   *
-   * Why: without it, typing "martin" sends six requests, and the answers can come back in the
-   * wrong order, so the table could end up showing the results for "mart" while the box
-   * reads "martin".
+   * Debounces search-box keystrokes 300ms before querying, so fast typing doesn't fire a request
+   * per character (and risk out-of-order responses overwriting the latest one).
    */
   onSearchChange(value: string): void {
     // The box itself must stay instant, so the signal is written straight away.
     this.search.set(value);
-    // Cancels the timer armed by the previous keystroke. This single line is what turns a
-    // series of delayed calls into exactly one. clearTimeout on undefined is harmless, so the
-    // first keystroke needs no special case.
+    // Cancels the previous keystroke's timer; clearTimeout on undefined is harmless.
     clearTimeout(this.searchTimer);
-    // Back to the first page: the result of a new search has nothing to do with the page the
-    // user happened to be on.
     this.searchTimer = setTimeout(() => { this.page.set(0); this.load(); }, 300);
   }
-  // The two drop-down filters need no delay: one click is one intention, so the request
-  // leaves at once. Both reset the page for the same reason as the search.
+  // No debounce needed for dropdowns: one click is one intention. Both reset the page, like search.
   onRoleChange(value: string): void { this.roleFilter.set(value); this.page.set(0); this.load(); }
   onStatusChange(value: string): void { this.statusFilter.set(value); this.page.set(0); this.load(); }
-  // Clears the three filters in one go and reloads. The sort is deliberately kept: the user
-  // asked to drop his filters, not to change the order of the columns.
+  // Sort is deliberately kept: the user asked to drop filters, not change column order.
   clearFilters(): void {
     this.search.set(''); this.roleFilter.set(''); this.statusFilter.set('');
     this.page.set(0); this.load();
   }
 
   /**
-   * Handles a click on a sortable column header: same column = flip the direction, different
-   * column = sort by it, ascending.
-   *
-   * Why that rule rather than always going back to ascending: it is the behaviour of every
-   * table the user already knows, so the second click on "Name" means "reverse it".
+   * Same column = flip direction, different column = sort by it ascending - the usual table convention.
    */
   toggleSort(col: SortCol): void {
     if (this.sortCol() === col) this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
     else { this.sortCol.set(col); this.sortDir.set('asc'); }
-    // Back to the first page: after a new sort, "page 3" holds completely different people.
     this.page.set(0);
     this.load();
   }
-  /**
-   * Gives the value of the aria-sort attribute for one column.
-   *
-   * Why it exists: the coloured arrow tells a sighted user which column is sorted, and a
-   * screen reader cannot see a colour. Without aria-sort, a blind administrator hears the
-   * column name and never learns that the table is ordered by it.
-   */
+  // aria-sort for screen readers, since the colored arrow only conveys sort state visually.
   ariaSort(col: SortCol): 'ascending' | 'descending' | 'none' {
     if (this.sortCol() !== col) return 'none';
     return this.sortDir() === 'asc' ? 'ascending' : 'descending';
   }
-  /**
-   * Gives the Bootstrap-icon class of the little arrow of one column: a double arrow when the
-   * column is not the sorted one, an up or a down arrow when it is.
-   *
-   * Why a method and not the three classes written in the template: the same three-way choice
-   * is needed for both columns, and writing it twice in the HTML is where the two copies
-   * start to drift apart.
-   */
+  // Shared by both sortable columns so the three-way icon choice isn't duplicated in the template.
   caret(col: SortCol): string {
     if (this.sortCol() !== col) return 'bi-chevron-expand';
     return this.sortDir() === 'asc' ? 'bi-chevron-up' : 'bi-chevron-down';
   }
 
-  /**
-   * Opens the modal in "create" mode.
-   *
-   * Every field is reset by hand, including the previous error and the previous one-time
-   * password. Why that matters: the same component state is reused, so without this reset the
-   * password of the account created a minute ago would still be displayed, and the save
-   * button would still be hidden.
-   */
+  // Opens the modal in "create" mode; resets fields by hand since the same component state is reused.
   openCreate(): void {
     // null is what tells save() to send a POST.
     this.editingId.set(null);
@@ -729,152 +489,96 @@ export class UserListComponent implements OnInit {
     this.showModal.set(true);
   }
 
-  /**
-   * Opens the same modal in "edit" mode, pre-filled with one account.
-   */
+  // Opens the same modal in "edit" mode, pre-filled with one account.
   openEdit(u: User): void {
     // The id is what makes save() send a PUT on this account.
     this.editingId.set(u.id);
-    // The table row carries the role NAME, not its id, because the name is what is displayed.
-    // The id needed by the form is found back in the role list loaded in ngOnInit.
+    // The row carries the role NAME (for display); look up its id from the role list loaded in ngOnInit.
     const role = this.roles().find(r => r.name === u.roleName);
-    // ?? 0 is the fallback used when no role matches, for example if the role list has not
-    // arrived yet. It puts the drop-down back on its disabled placeholder, which save()
-    // refuses, so the worst case is "choose the role again" - never a silent change of role.
+    // ?? 0 falls back to the disabled placeholder if no role matches (e.g. roles not loaded yet).
     this.form = { firstName: u.firstName, lastName: u.lastName, email: u.email, roleId: role?.id ?? 0 };
     this.errorMsg.set('');
     this.initialPassword.set(null);
     this.showModal.set(true);
   }
 
-  /**
-   * Sends the form: POST /api/users when creating, PUT /api/users/{id} when editing.
-   *
-   * Why one method does both: the payload is identical, and only the verb and the URL change.
-   * Two methods would duplicate the validation and the error handling.
-   */
+  // Sends the form: POST when creating, PUT when editing. One method for both since only the verb/URL differ.
   save(): void {
-    // A first, cheap check in the browser, so an obviously incomplete form never leaves. It
-    // does NOT replace the backend validation (@Valid on UserRequest): this code runs in the
-    // user's browser and anyone can skip it, so the server checks again.
+    // Cheap browser-side check; does NOT replace backend @Valid validation, which the server still runs.
     if (!this.form.firstName || !this.form.lastName || !this.form.email || !this.form.roleId) {
-      // translate() is the TypeScript twin of the transloco pipe used in the template.
       this.errorMsg.set(this.t.translate('admin.users.msg.allRequired'));
       return;
     }
     // Locks the save button until the answer comes back (see [disabled] in the template).
     this.saving.set(true);
-    // Clears the previous error, so the user does not read the message of the last attempt
-    // while the new one is still travelling.
     this.errorMsg.set('');
     const id = this.editingId();
     if (id) {
       this.http.put<User>(`${environment.apiUrl}/users/${id}`, this.form).subscribe({
-        // load() is called again rather than patching the row in memory: the server may have
-        // changed more than what was sent (a role change also revokes that person's sessions,
-        // ADR-017), and re-reading is the only way to be sure the table shows what the
-        // database really holds.
+        // Reloads rather than patching in memory: the server may have changed more than what was sent
+        // (a role change also revokes sessions, ADR-017), so re-reading is the only reliable source.
         next: () => { this.load(); this.showModal.set(false); this.saving.set(false); this.toast.success(this.t.translate('admin.users.msg.updated')); },
-        // e.error?.message is the message the backend sent, for example "this e-mail is
-        // already used". The ?. and the ?? fallback cover the case of a network failure with
-        // no JSON body at all - without them the user would read "undefined" in a red box.
+        // ?./?? cover a network failure with no JSON body, so the user never sees "undefined".
         error: (e) => { this.errorMsg.set(e.error?.message ?? this.t.translate('common.saveFailed')); this.saving.set(false); }
       });
     } else {
-      // UserCreateResult = the saved account PLUS the initial password in clear text. The
-      // server draws that password, stores only its BCrypt hash, and returns the clear value
-      // exactly once, in this answer.
+      // UserCreateResult = the saved account plus the initial clear-text password, returned exactly once.
       this.http.post<UserCreateResult>(`${environment.apiUrl}/users`, this.form).subscribe({
-        // The modal is deliberately NOT closed here, unlike in the edit branch: it has to stay
-        // open to show the password, which can never be read again afterwards.
+        // Modal stays open (unlike the edit branch) to show the password, which can't be read again later.
         next: (res) => { this.load(); this.saving.set(false); this.initialPassword.set(res.initialPassword); this.toast.success(this.t.translate('admin.users.msg.created')); },
         error: (e) => { this.errorMsg.set(e.error?.message ?? this.t.translate('common.saveFailed')); this.saving.set(false); }
       });
     }
   }
 
-  /**
-   * Copies the initial password of a freshly created account into the system clipboard.
-   *
-   * The empty .catch() is on purpose: the clipboard API is refused by the browser when the
-   * page is not served over HTTPS, or when the user denied the permission. Swallowing that
-   * rejection keeps a red exception out of the console, and the password stays visible on
-   * screen, so the administrator can still select it by hand.
-   */
+  // Copies the initial password to the clipboard. Empty .catch(): clipboard API can be refused
+  // (no HTTPS, denied permission) and the password stays visible on screen either way.
   copyPassword(): void {
     const pwd = this.initialPassword();
     if (pwd) navigator.clipboard.writeText(pwd).then(() => this.toast.info(this.t.translate('admin.users.msg.passwordCopied'))).catch(() => {});
   }
 
   /**
-   * Resets one account: asks for confirmation, then calls
-   * PATCH /api/users/{id}/reset-account and shows the new one-time password.
-   *
-   * What the backend does with that call (UserCrudService.resetAccount): it draws a new
-   * password, stores only its BCrypt hash, sets firstLogin = true so the person is forced
-   * through the change-password screen, and increases tokenVersion to revoke every session
-   * that person still had (ADR-017). This is the administrator's replacement for a "forgot my
-   * password" e-mail link, because the application sends no e-mail.
-   *
-   * Why async/await here: ConfirmService.ask() hands back a Promise<boolean>, and awaiting it
-   * keeps the code flat - one line to ask, one line to stop if the answer is no.
+   * Resets one account after confirmation: PATCH /api/users/{id}/reset-account. The backend
+   * (UserCrudService.resetAccount) draws a new password, forces a change on next login, and
+   * revokes existing sessions (ADR-017) - the admin's substitute for a "forgot password" email,
+   * since the app sends none.
    */
   async resetAccount(u: User): Promise<void> {
     const confirmed = await this.confirm.ask(
-      // The name is passed as a translation parameter so the question names the person:
-      // resetting the wrong account logs a colleague out of everything.
       this.t.translate('admin.users.msg.resetConfirm', { name: `${u.firstName} ${u.lastName}` }),
       this.t.translate('admin.users.msg.resetConfirmTitle')
     );
-    // The early return is what makes the confirmation real. Without it the dialog would be
-    // decoration and the account would be reset whatever the user answered.
     if (!confirmed) return;
-    // PATCH with an empty body: the request changes part of the account and carries no data,
-    // because the server draws the new password itself. The empty object is still passed
-    // because HttpClient.patch requires a body argument.
+    // Empty body: the server draws the new password itself; HttpClient.patch still requires a body arg.
     this.http.patch<UserCreateResult>(`${environment.apiUrl}/users/${u.id}/reset-account`, {}).subscribe({
       next: (res) => {
-        // The name is stored next to the password so the modal can say whose password it is.
         this.resetResult.set({ userName: `${u.firstName} ${u.lastName}`, pwd: res.initialPassword });
         this.showResetModal.set(true);
-        // Reloads the table, because the reset also changes the account on the server side.
         this.load();
       },
       error: () => this.toast.error(this.t.translate('admin.users.msg.resetError'))
     });
   }
 
-  // The same clipboard copy as copyPassword(), for the reset modal. The ?. is needed because
-  // resetResult() is null until a reset has actually answered.
+  // Same clipboard copy as copyPassword(), for the reset modal; ?. since resetResult() is null until answered.
   copyResetPassword(): void {
     const pwd = this.resetResult()?.pwd;
     if (pwd) navigator.clipboard.writeText(pwd).then(() => this.toast.info(this.t.translate('admin.users.msg.passwordCopied'))).catch(() => {});
   }
 
-  /**
-   * Switches an account off after confirmation: PATCH /api/users/{id}/deactivate.
-   *
-   * Why deactivate and not delete: the person is referenced by projects, tasks and time
-   * entries. Removing the row would break all of those links. Deactivating blocks the login
-   * while every past record keeps pointing at a real name.
-   */
+  // Deactivate rather than delete: the account is referenced by projects/tasks/time entries that must keep pointing at a real name.
   async deactivate(u: User): Promise<void> {
-    // The await sits inside the if: the method simply stops when the answer is false.
     if (!await this.confirm.ask(
       this.t.translate('admin.users.msg.deactivateConfirm', { name: `${u.firstName} ${u.lastName}` }),
       this.t.translate('admin.users.msg.deactivateTitle'))) return;
     this.http.patch(`${environment.apiUrl}/users/${u.id}/deactivate`, {}).subscribe({
-      // Reloading is what swaps the row's badge and its action buttons, because the template
-      // draws both of them from u.active.
       next: () => { this.load(); this.toast.success(this.t.translate('admin.users.msg.deactivated')); },
       error: () => this.toast.error(this.t.translate('admin.users.msg.deactivateError'))
     });
   }
 
-  /**
-   * The opposite move: PATCH /api/users/{id}/reactivate lets the person sign in again. It is
-   * confirmed too, because giving access back is as sensitive as taking it away.
-   */
+  // Reverses deactivate(); also confirmed, since restoring access is as sensitive as removing it.
   async reactivate(u: User): Promise<void> {
     if (!await this.confirm.ask(
       this.t.translate('admin.users.msg.reactivateConfirm', { name: `${u.firstName} ${u.lastName}` }),

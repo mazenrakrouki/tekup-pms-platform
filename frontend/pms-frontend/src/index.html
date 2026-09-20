@@ -1,62 +1,25 @@
 <!doctype html>
-<!--
-  ============================================================================
-  FILE: index.html — the single HTML page served by the application.
-
-  WHAT IT IS: the shell page of a Single Page Application (SPA: one HTML page,
-  and the screens are swapped by JavaScript instead of reloading the page).
-
-  WHERE IT SITS IN THE FLOW:
-    the browser (or the Spring Boot server serving the built files) returns this
-    page -> the Angular bundle built from src/main.ts is injected at the end of
-    <body> by the build tool -> main.ts calls bootstrapApplication() -> Angular
-    renders the root component App inside the <app-root> tag below.
-    The fonts and the theme colours declared here are used by src/styles.scss.
-
-  WHY IT EXISTS: it is the only container Angular can attach itself to. Delete
-  it and there is no <app-root>, no <base href>, no font, and nothing to show.
-  ============================================================================
--->
+<!-- Shell page of the SPA: Angular renders into <app-root> below. The build tool injects the
+     compiled bundle at the end of <body>, which calls bootstrapApplication() from main.ts. -->
 <html lang="en">
 <head>
-  <!-- UTF-8 so French accented letters (é, à, ç) and the "·" of the title are
-       shown correctly. Without it the browser may guess a Latin-1 encoding and
-       print "Devis Ã©tabli" instead of "Devis établi". -->
+  <!-- UTF-8 so accented French letters render correctly instead of being mis-guessed as Latin-1. -->
   <meta charset="utf-8">
   <title>PMS · ST2I</title>
-  <!-- Base URL used by the Angular router to build every link.
-       WHY "/": the app is served at the root of the domain.
-       EXAMPLE without it: after a refresh on /projects/12/di the router would
-       resolve relative URLs against the current path and load the JS bundle
-       from /projects/12/main.js, which does not exist -> blank page. -->
+  <!-- Base URL for the Angular router: without "/", a refresh on a nested route would try to
+       load the JS bundle relative to that route and get a blank page. -->
   <base href="/">
-  <!-- Tells mobile browsers to use the real device width instead of pretending
-       to be a 980px desktop. Needed for the responsive rules at the end of
-       styles.scss (the sidebar slides out under 768px).
-       Without it a phone shows the desktop layout shrunk down and unreadable. -->
+  <!-- Real device width, needed for the responsive rules in styles.scss (sidebar under 768px). -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Small icon shown in the browser tab. -->
   <link rel="icon" type="image/png" href="https://lh3.googleusercontent.com/aida-public/AB6AXuCw_yrHN-OmVPPni9xX2nNod_E6MTlwO1lflvFjx-0UznQ8bwUkA4RwBfzUcTVnbQ-5HH23gMON8novBTrdrNinlybsrRx6sUzhLrjTuN8UrDZFRnTOuB-TI3jfnxp7WcHqMwIRDv21_t0z5w__oYTKLe6WGemmNGbYMy7G0tBNC-hc4vnfeq_EM_3VW4O3rdQ8IxGtfB9nsEsgFShhYidPbQ52BLx6wfZLiluM4NwiUdsguWnzG3v7f8gq4nQOMZeqk2w1Rnazt3k">
-  <!-- preconnect opens the network connection (DNS + TLS) to the Google Fonts
-       servers early, while the page is still being parsed.
-       WHY two lines: googleapis.com serves the CSS file, gstatic.com serves the
-       font files themselves; they are two different hosts.
-       WHY crossorigin on the second one: font files are always fetched in
-       anonymous CORS mode, and a preconnect without it opens the wrong kind of
-       connection, so the browser has to open a second one and the gain is lost. -->
+  <!-- preconnect to both Google Fonts hosts early (CSS host + font-file host); crossorigin on
+       the second is required because font fetches always use anonymous CORS mode. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <!-- Loads the Inter font in the weights used by styles.scss (300 to 700).
-       display=swap shows the fallback system font immediately and swaps to
-       Inter when it arrives; without it the text stays invisible for up to
-       3 seconds while the font downloads. -->
+  <!-- display=swap shows the fallback font immediately instead of hiding text while Inter loads. -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 </head>
 <body>
-  <!-- The mount point. main.ts passes the root component App to
-       bootstrapApplication(), and Angular replaces the inside of this tag with
-       the rendered application. The selector name must stay "app-root" because
-       that is the selector declared on the App component. -->
   <app-root></app-root>
 </body>
 </html>

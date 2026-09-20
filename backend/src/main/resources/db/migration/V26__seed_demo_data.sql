@@ -1,113 +1,50 @@
--- ============================================================
--- V26 : Company demo data — Société S2I, Tunisia, TND
--- (French original: "Données démo entreprise")
--- 50 projects · 36 users · 2022-2026
--- ============================================================
--- WHAT THIS FILE IS
--- A Flyway migration (Flyway plays each .sql file of this folder once, in
--- version order, and records that it did). Unlike its neighbours it creates NO
--- table: it fills the tables built by V1..V25 with a complete, believable
--- company, so the application can be shown, measured and defended with real
--- volumes instead of three empty screens.
+-- V26: demo data for Société S2I (Tunisia, TND) — 50 projects, 36 users,
+-- 2022-2026. Fills the tables V1-V25 created so the app can be shown with real
+-- volumes instead of empty screens; sections follow table dependency order.
 --
--- WHERE IT SITS IN THE FLOW
--- It comes after every schema migration it writes into, and its sections follow
--- the dependency order of the tables: parameters, users, resources, yearly TCC
--- rates, projects, team assignments, billing milestones, payments, contract
--- amendments, workload (planned and real), KPI snapshots, then the governance
--- tables (missions, risks, deliverables, stakeholders, change requests).
--- Moving a section up would break a foreign key: a team assignment cannot be
--- written before the project and the user it points at exist.
--- Nothing in the Java code reads this file; it is only the state the running
--- application finds in its database.
+-- Deliberately contains NO Devis Interne lines (table lignes_di, V23): per the
+-- 2026-07-05 decision, DI stays an empty structure and real salary/margin
+-- figures are never committed to the repo. This file stops at project budgets.
 --
--- WHY IT EXISTS
--- Several screens only make sense with volume: the portfolio list and its
--- pagination, the EVM review with a month-by-month history, the workload heat
--- map, the invoicing follow-up. With an empty database none of them can be
--- demonstrated, and a jury cannot judge a table that shows "no data".
---
--- WHAT IT DELIBERATELY DOES NOT CONTAIN
--- No line of Devis Interne (table lignes_di, created by V23). That is the
--- decision of 2026-07-05: the DI structure is delivered empty, and the real
--- salary and margin figures of the company are NEVER written into the
--- repository. This file stops at project-level budgets.
---
--- ON THE PASSWORDS BELOW
--- They are demo accounts for a demo database. They are written in clear text in
--- this file on purpose, so the accounts can be handed over during a
--- presentation; they are hashed by the database before being stored. This file
--- must never be applied to a production database.
--- ============================================================
+-- Demo passwords below are written in clear text on purpose (handed out during
+-- a demo) and hashed by pgcrypto before storage. Never run against production.
 
--- pgcrypto is a PostgreSQL extension; it adds the crypt() and gen_salt()
--- functions used in section §1 to hash the demo passwords.
--- Why hash here rather than paste ready-made hashes: a bcrypt hash pasted by
--- hand is unreadable and impossible to check, and nobody could tell which
--- password it belongs to.
--- IF NOT EXISTS: the extension may already be installed on the database, and
--- "extension already exists" would abort the whole migration.
+-- pgcrypto adds crypt()/gen_salt(), used in §1 to hash the demo passwords.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- ── §-1  Clean-up (idempotence — safe to re-run) ──────────────
--- (French original: "Nettoyage (idempotence — re-run sécurisé)")
--- Deletes ONLY the rows carrying the S2I-* prefix or belonging to the demo
--- accounts, so the file can be replayed cleanly after a partial failure.
--- Why targeted deletes and not TRUNCATE: a database can already hold real data
--- created by hand (the admin account of V2, a test project). TRUNCATE would
--- destroy it; the filters below cannot touch anything that is not demo data.
---
--- DO $$ ... $$ opens an anonymous block of PL/pgSQL, the procedural language of
--- PostgreSQL. Plain SQL has no variables, no IF and no loops; this file needs
--- all three. The $$ pair is just a way of quoting the body so the apostrophes
--- inside it need no escaping.
+-- Deletes only rows with the S2I-* prefix or the demo accounts, so the file
+-- can be replayed after a partial failure without touching real data the way
+-- a TRUNCATE would.
 DO $$
--- One variable: the ids of the demo projects, held as an array so the whole
--- clean-up runs on one single SELECT instead of repeating the same sub-query in
--- fourteen DELETE statements.
+-- Held as an array so the whole clean-up runs off one SELECT instead of
+-- repeating the same sub-query in fourteen DELETEs.
 DECLARE v_ids BIGINT[];
 BEGIN
-  -- ARRAY_AGG collects every matching id into that array.
-  -- LIKE 'S2I-%' : % means "any sequence of characters", so this matches every
-  -- project code starting with S2I- and nothing else.
   SELECT ARRAY_AGG(id) INTO v_ids FROM projects WHERE code LIKE 'S2I-%' AND deleted = FALSE;
-  -- ARRAY_AGG over zero rows returns NULL, not an empty array. Without this
-  -- guard, "= ANY(NULL)" below would match nothing but the block would still run
-  -- fourteen useless statements on the very first, normal execution.
+  -- ARRAY_AGG over zero rows returns NULL, not []; without this guard the
+  -- block would still run fourteen no-op statements on a normal first run.
   IF v_ids IS NOT NULL THEN
-    -- The order of these DELETEs is the reverse of the order of creation: a row
-    -- is removed before the row it points at. Deleting projects first would be
-    -- refused by every foreign key below.
-    -- "= ANY(v_ids)" means "is one of the values in this array"; it is the array
-    -- form of IN (...).
+    -- Reverse creation order: a row is deleted before the row it points at.
     DELETE FROM demandes_changement  WHERE project_id = ANY(v_ids);
     DELETE FROM parties_prenantes    WHERE project_id = ANY(v_ids);
     DELETE FROM livrables            WHERE project_id = ANY(v_ids);
     DELETE FROM risks                WHERE project_id = ANY(v_ids);
-    -- Two levels down: mission components hang on missions, which hang on
-    -- projects, so they are reached through a sub-query on missions.
+    -- Two levels down: mission components hang off missions, which hang off projects.
     DELETE FROM composantes_mission  WHERE mission_id IN (SELECT id FROM missions WHERE project_id = ANY(v_ids));
     DELETE FROM missions             WHERE project_id = ANY(v_ids);
     DELETE FROM snapshot_kpis        WHERE project_id = ANY(v_ids);
     DELETE FROM charges_reelles      WHERE project_id = ANY(v_ids);
     DELETE FROM plan_charges         WHERE project_id = ANY(v_ids);
     DELETE FROM avenants             WHERE project_id = ANY(v_ids);
-    -- Same two-level shape: a payment hangs on a billing milestone, which hangs
-    -- on a project. Deleting the milestones first would be refused by the
-    -- foreign key on paiements.jalon_id.
+    -- Same two-level shape: a payment hangs off a milestone, which hangs off a project.
     DELETE FROM paiements            WHERE jalon_id IN (SELECT id FROM jalons_facturation WHERE project_id = ANY(v_ids));
     DELETE FROM jalons_facturation   WHERE project_id = ANY(v_ids);
     DELETE FROM team_assignments     WHERE project_id = ANY(v_ids);
     DELETE FROM projects             WHERE id = ANY(v_ids);
   END IF;
-  -- Delete the yearly TCC rates of the S2I demo accounts.
-  -- (French original: "Supprimer TCC annuels des comptes démo S2I".)
-  -- These three deletes are outside the IF on purpose: the demo users and their
-  -- resources exist even when no demo project does — for instance if a previous
-  -- run stopped between §1 and §4.
-  -- The chain is tcc_annuels -> resources -> users, so it is unwound in that
-  -- order; the same filter identifies a demo account each time: either the
-  -- @s2i.tn domain, or one of the three explicit local accounts.
+  -- Outside the IF: demo users/resources can exist even with no demo project
+  -- (e.g. a previous run stopped between §1 and §4).
   DELETE FROM tcc_annuels WHERE resource_id IN (
     SELECT r.id FROM resources r
     JOIN users u ON u.id = r.user_id
@@ -125,70 +62,38 @@ BEGIN
 END $$;
 
 -- ── §0  Parameters ────────────────────────────────────────────
--- The company being simulated is Tunisian, so the default currency of the
--- application becomes the Tunisian dinar. Every budget, cost price and KPI below
--- is expressed in TND.
--- UPDATE and not INSERT: the CURRENCY row already exists, seeded by an earlier
--- migration. Inserting it again would duplicate the parameter, and the screen
--- reading it would then pick one of the two at random.
+-- Simulated company is Tunisian, so the default currency becomes TND.
+-- UPDATE not INSERT: the CURRENCY row already exists, seeded by an earlier migration.
 UPDATE parameters SET param_value = 'TND', updated_at = NOW() WHERE param_key = 'CURRENCY';
 
 -- ── §1  Users ─────────────────────────────────────────────────
--- 36 accounts spread over the four roles of the RBAC matrix. They are inserted
--- role by role so the file can be read as an organisation chart.
--- Every account is created with first_login = false: the demonstration must not
--- be interrupted by the forced password change of FirstLoginFilter.
+-- 36 accounts across the four RBAC roles, inserted role by role. first_login =
+-- false so the demo isn't interrupted by the forced password-change filter.
 --
--- Momo accounts (password: Momo123456) — the three accounts used to show the
--- application, one per business role, so the same screen can be opened as a
--- director, as a project manager and as a developer.
--- Reading one of these rows, left to right:
---   crypt('Momo123456', gen_salt('bf',12))
---     bcrypt hashing. bcrypt is a password hashing algorithm built to be SLOW on
---     purpose, so that trying millions of passwords costs real time. 'bf' asks
---     for bcrypt ("blowfish"), 12 is the cost factor: the work is doubled each
---     time it goes up by one. gen_salt draws a fresh random salt for every row,
---     so two accounts sharing the same password still get two different hashes
---     and cannot be spotted as identical in the table.
---     This must match what Spring Security expects: BCryptPasswordEncoder reads
---     the cost out of the stored hash, so 12 here and 12 in the application are
---     the same thing. Storing the password in clear text would let anyone who
---     reads one database dump log in as anyone.
---   (SELECT id FROM roles WHERE name='DIRECTEUR')
---     the role is looked up by name because role ids come from a BIGSERIAL
---     counter and differ from one database to the next; a literal id would
---     attach the account to whatever role happens to sit at that number.
---   NOW()-INTERVAL'2 years'
---     a creation date pushed into the past, so the account list does not show
---     36 people hired on the same afternoon.
+-- Momo accounts (password: Momo123456) — one per role, used for demos.
+-- crypt(..., gen_salt('bf',12)): bcrypt hashing, cost 12, matching
+-- BCryptPasswordEncoder's expectation; a fresh salt per row means identical
+-- passwords still get different hashes. Role looked up by name (ids are
+-- BIGSERIAL and differ per database). created_at is backdated so the account
+-- list doesn't show 36 people hired the same afternoon.
 INSERT INTO users (first_name, last_name, email, password_hash, active, first_login, role_id, created_at, updated_at, deleted) VALUES
 ('Mohamed', 'Ben Directeur', 'momo-directeur@pms.local', crypt('Momo123456', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='DIRECTEUR'),   NOW()-INTERVAL'2 years', NOW(), false),
 ('Mohamed', 'Ben Chef',      'momo-chef@pms.local',      crypt('Momo123456', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='CHEF_PROJET'),  NOW()-INTERVAL'3 years', NOW(), false),
 ('Mohamed', 'Ben Dev',       'momo-dev@pms.local',       crypt('Momo123456', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='DEVELOPPEUR'),  NOW()-INTERVAL'1 year',  NOW(), false)
--- ON CONFLICT (email) WHERE deleted = FALSE names the PARTIAL unique index
--- created by V18 (uk_users_email), which forbids duplicates only among the rows
--- that are not soft-deleted. The WHERE clause is not a filter on this statement:
--- it is how PostgreSQL is told WHICH index is meant, and leaving it out would
--- fail with "no unique or exclusion constraint matching".
--- DO UPDATE and not DO NOTHING for these three accounts only: whoever runs the
--- demonstration must be certain the password is the one written above. If the
--- account already exists with another password, this resets it. EXCLUDED is the
--- row that was about to be inserted, so EXCLUDED.password_hash is the fresh
--- hash computed on the line above.
+-- Targets the partial unique index uk_users_email (V18, WHERE deleted=FALSE);
+-- DO UPDATE (not DO NOTHING) resets these three accounts' passwords so a demo
+-- always has a known-good login.
 ON CONFLICT (email) WHERE deleted = FALSE DO UPDATE SET password_hash=EXCLUDED.password_hash, role_id=EXCLUDED.role_id, first_login=false, updated_at=NOW();
 
--- Additional directors (password: PmsUser2025!)
--- From here on the statements end with a plain ON CONFLICT DO NOTHING: these
--- accounts only fill the lists, so an account already present is left exactly as
--- it is rather than being reset.
+-- Additional directors (password: PmsUser2025!). From here on plain ON
+-- CONFLICT DO NOTHING: an existing account is left as-is.
 INSERT INTO users (first_name, last_name, email, password_hash, active, first_login, role_id, created_at, updated_at, deleted) VALUES
 ('Karim',   'Ben Salah',  'karim.bensalah@s2i.tn',  crypt('PmsUser2025!', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='DIRECTEUR'), NOW()-INTERVAL'6 years', NOW(), false),
 ('Nadia',   'Trabelsi',   'nadia.trabelsi@s2i.tn',   crypt('PmsUser2025!', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='DIRECTEUR'), NOW()-INTERVAL'5 years', NOW(), false)
 ON CONFLICT DO NOTHING;
 
--- Project managers / "chefs de projet" (password: PmsUser2025!)
--- Seven of them: the portfolio of 50 projects below is shared between these
--- seven plus momo-chef, so no screen ever shows one manager owning everything.
+-- Project managers (password: PmsUser2025!) — seven, so the 50-project
+-- portfolio below isn't all owned by one manager.
 INSERT INTO users (first_name, last_name, email, password_hash, active, first_login, role_id, created_at, updated_at, deleted) VALUES
 ('Sonia',  'Hammami',    'sonia.hammami@s2i.tn',    crypt('PmsUser2025!', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='CHEF_PROJET'), NOW()-INTERVAL'5 years', NOW(), false),
 ('Aymen',  'Chaouachi',  'aymen.chaouachi@s2i.tn',  crypt('PmsUser2025!', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='CHEF_PROJET'), NOW()-INTERVAL'4 years', NOW(), false),
@@ -199,10 +104,8 @@ INSERT INTO users (first_name, last_name, email, password_hash, active, first_lo
 ('Mehdi',  'Karray',     'mehdi.karray@s2i.tn',     crypt('PmsUser2025!', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='CHEF_PROJET'), NOW()-INTERVAL'4 years', NOW(), false)
 ON CONFLICT DO NOTHING;
 
--- Developers — senior (password: PmsUser2025!)
--- The developers are split into three levels of seniority only so that §2 can
--- give them believable, different daily cost prices. The application itself
--- knows nothing about seniority: all of them carry the same DEVELOPPEUR role.
+-- Developers — senior (password: PmsUser2025!). Seniority is only a demo-data
+-- split for §2's cost prices; the app itself only knows the DEVELOPPEUR role.
 INSERT INTO users (first_name, last_name, email, password_hash, active, first_login, role_id, created_at, updated_at, deleted) VALUES
 ('Ahmed',    'Ben Ali',      'ahmed.benali@s2i.tn',       crypt('PmsUser2025!', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='DEVELOPPEUR'), NOW()-INTERVAL'7 years', NOW(), false),
 ('Yassine',  'Chebbi',       'yassine.chebbi@s2i.tn',     crypt('PmsUser2025!', gen_salt('bf',12)), true, false, (SELECT id FROM roles WHERE name='DEVELOPPEUR'), NOW()-INTERVAL'6 years', NOW(), false),
@@ -239,19 +142,10 @@ INSERT INTO users (first_name, last_name, email, password_hash, active, first_lo
 ON CONFLICT DO NOTHING;
 
 -- ── §2  Resources (base TCC) ──────────────────────────────────
--- (French original: "Ressources (TCC de base)")
--- A "resource" is the cost side of a user: what one day of that person costs the
--- company. TCC = "taux de coût complet", the fully loaded cost of a day (salary
--- plus every charge on it).
---   daily_rate     : cost of one day, in TND.
---   tcc_rate       : the loading ratio, stored as a fraction — 0.4300 = 43 %.
---   staffing_start : the day the person became billable.
--- Why users and resources are two tables and not one: not every account has a
--- cost (an administrator does not), and MANAGE_RESOURCES guards this data
--- separately — a developer may see his colleagues without seeing what they cost.
--- These are the rates the whole margin engine multiplies, which is why the row
--- is looked up by e-mail: a literal user id would attach a cost price to the
--- wrong person, and every KPI of the application would be wrong with it.
+-- The cost side of a user: daily_rate (TND/day), tcc_rate (loading fraction,
+-- 0.4300 = 43%), staffing_start. Kept apart from users because not every
+-- account has a cost and MANAGE_RESOURCES guards it separately. Looked up by
+-- e-mail (not id) so a rate always attaches to the right person.
 -- Project managers
 INSERT INTO resources (user_id, daily_rate, tcc_rate, staffing_start, created_at, updated_at, deleted) VALUES
 ((SELECT id FROM users WHERE email='momo-chef@pms.local'),      420.00, 0.4300, '2021-03-01', NOW(), NOW(), false),
@@ -264,7 +158,7 @@ INSERT INTO resources (user_id, daily_rate, tcc_rate, staffing_start, created_at
 ((SELECT id FROM users WHERE email='mehdi.karray@s2i.tn'),      410.00, 0.4300, '2020-03-01', NOW(), NOW(), false)
 ON CONFLICT DO NOTHING;
 
--- Senior developers — the highest daily cost of the three developer levels.
+-- Senior developers — highest daily cost of the three levels.
 INSERT INTO resources (user_id, daily_rate, tcc_rate, staffing_start, created_at, updated_at, deleted) VALUES
 ((SELECT id FROM users WHERE email='ahmed.benali@s2i.tn'),      320.00, 0.4400, '2017-03-01', NOW(), NOW(), false),
 ((SELECT id FROM users WHERE email='yassine.chebbi@s2i.tn'),    300.00, 0.4300, '2018-09-01', NOW(), NOW(), false),
@@ -288,9 +182,8 @@ INSERT INTO resources (user_id, daily_rate, tcc_rate, staffing_start, created_at
 ((SELECT id FROM users WHERE email='sabrine.chahed@s2i.tn'),    210.00, 0.4000, '2021-09-01', NOW(), NOW(), false)
 ON CONFLICT DO NOTHING;
 
--- Junior developers — the lowest daily cost. The spread between these three
--- levels is what makes the margin of a project depend on WHO is staffed on it,
--- which is the whole point of the KPI screens.
+-- Junior developers — lowest daily cost. The spread across the three levels is
+-- what makes a project's margin depend on WHO is staffed on it.
 INSERT INTO resources (user_id, daily_rate, tcc_rate, staffing_start, created_at, updated_at, deleted) VALUES
 ((SELECT id FROM users WHERE email='rim.khalfallah@s2i.tn'),    165.00, 0.3900, '2022-09-01', NOW(), NOW(), false),
 ((SELECT id FROM users WHERE email='sarra.ayari@s2i.tn'),       160.00, 0.3900, '2022-09-01', NOW(), NOW(), false),
@@ -304,75 +197,45 @@ INSERT INTO resources (user_id, daily_rate, tcc_rate, staffing_start, created_at
 ON CONFLICT DO NOTHING;
 
 -- ── §3  Yearly TCC rates (2023, 2024, 2025) ──────────────────
--- (French original: "TCC Annuels". Each resource gets 3 years of TCC with a
---  progression of about 5 % per year. Shape: resource_id, year, daily_rate,
---  tcc_rate.)
--- WHY THIS TABLE EXISTS AT ALL (V21, spec F-AFF-13 §6.3 rule 4): the cost of one
--- man-day depends on the YEAR it is charged to — the 2024 rate is not the 2025
--- rate. A project that spans three years must therefore value its 2023 days at
--- the 2023 cost. Without these rows, the engine falls back on the single base
--- rate of §2 and re-prices three years of past work at today's salaries, which
--- makes every old project look more expensive than it was.
---
--- Written as a loop rather than 36 × 3 hand-written rows: one rule ("about 5 %
--- less each year going back") applied to whatever §2 contains. A hand-written
--- list would have to be edited every time a resource is added, and a forgotten
--- line would silently mis-price one person.
+-- Cost per man-day depends on the YEAR it's charged to (V21, F-AFF-13 §6.3
+-- rule 4), so a multi-year project must value each year's days at that year's
+-- rate. Generated as a loop (~5%/year progression) rather than hand-written,
+-- so a resource added later is never missed.
 DO $$
--- RECORD = a variable whose shape is decided by the query that fills it, so the
--- loop does not have to declare one variable per selected column.
 DECLARE r RECORD;
 BEGIN
-  -- FOR ... IN SELECT ... LOOP runs the body once per row returned.
-  -- The filter deleted = FALSE keeps soft-deleted resources out: writing rates
-  -- for a resource nobody can use would only pollute the reference table.
+  -- deleted = FALSE: no point pricing a resource nobody can use.
   FOR r IN SELECT res.id, res.daily_rate, res.tcc_rate, res.staffing_start
            FROM resources res WHERE res.deleted = FALSE
   LOOP
-    -- 2025 is the reference year and keeps the base rate untouched; the two past
-    -- years are derived from it (× 0.905 and × 0.955), which reproduces a rise
-    -- of roughly 5 % a year going forward.
-    -- round(..., 2) because the column is NUMERIC(10,2): without it the value
-    -- would be rejected or silently rounded, and a cost price ending in three
-    -- decimals is not a real salary figure anyway.
-    -- The loading ratio moves too, but by a fraction (0.0050 = half a point),
-    -- since charges on salaries move far more slowly than the salaries.
+    -- 2025 is the reference year (kept as-is); 2023/2024 are derived
+    -- (×0.905, ×0.955) to reproduce ~5%/year growth. round(...,2) matches the
+    -- NUMERIC(10,2) column. The TCC ratio moves by a smaller fraction since
+    -- charges move slower than salaries.
     INSERT INTO tcc_annuels (resource_id, annee, daily_rate, tcc_rate, created_at, updated_at, deleted) VALUES
       (r.id, 2023, round(r.daily_rate * 0.905, 2), r.tcc_rate - 0.0050, NOW(), NOW(), false),
       (r.id, 2024, round(r.daily_rate * 0.955, 2), r.tcc_rate - 0.0020, NOW(), NOW(), false),
       (r.id, 2025, r.daily_rate,                   r.tcc_rate,          NOW(), NOW(), false)
-    -- The pair (resource_id, annee) is unique (uk_tcc_annuel_resource_annee,
-    -- V21). DO NOTHING means: a rate already entered by hand for that year wins
-    -- over the one this file would generate.
+    -- (resource_id, annee) is unique (V21); a hand-entered rate wins over this one.
     ON CONFLICT DO NOTHING;
   END LOOP;
 END $$;
 
 -- ── §4  Projects (50) ─────────────────────────────────────────
--- The portfolio. 50 projects spread over 2022-2026 and over four states, so the
--- list screen shows filters that actually filter and the KPI screens have
--- finished projects to compare against running ones.
---   DRAFT     : signed but not started — no workload, no invoice yet.
---   ACTIVE    : running — this is where the monthly EVM review makes sense.
---   COMPLETED : finished — used to show a full history end to end.
--- Columns worth knowing before reading a row:
---   initial_budget / revised_budget : the amount at signature, and the amount
---       after amendments. revised_budget is NULL while nothing has changed, and
---       every computation reads "revised if present, otherwise initial".
---   currency + exchange_rate_to_tnd : a contract can be sold in another currency;
---       the rate is the single conversion point to dinars (ADR-020). Here every
---       project is in TND, so the rate is 1.
---   sold_workload_days : the man-days SOLD. This is the reference the drift of
---       V22 (derive_jh) is measured against, never the internal plan.
---   marge_nette_vendue : the sold net margin baseline added by V22, as a
---       fraction (0.3850 = 38.50 %).
---   director_id / chef_projet_id : looked up by e-mail, never by a literal id,
---       because ids differ from one database to another.
+-- Portfolio spread over 2022-2026 and four statuses, so list filters and KPI
+-- comparisons (finished vs running) have something to show.
+--   DRAFT: signed, not started. ACTIVE: running. COMPLETED: finished.
+--   initial_budget/revised_budget: at signature, and after amendments (NULL
+--     until something changes; computations read "revised if present").
+--   currency + exchange_rate_to_tnd: conversion point to TND (ADR-020); all
+--     demo projects are TND, rate 1.
+--   sold_workload_days: man-days SOLD — what V22's drift is measured against.
+--   marge_nette_vendue: sold net margin baseline (V22), as a fraction.
+--   director_id / chef_projet_id: looked up by e-mail, not literal id.
 --
 -- ── momo-chef's projects (20) ─────────────────────────────────
--- Twenty projects on one manager on purpose: it is the account used for the
--- demonstration, and a portfolio of twenty is what makes the pagination, the
--- filters and the project picker worth showing.
+-- Twenty on one manager (the demo account) so pagination/filters/picker have
+-- something to show.
 INSERT INTO projects (code, name, description, status, start_date, end_date, initial_budget, revised_budget,
   director_id, chef_projet_id, client, business_model, engagement_type, currency, exchange_rate_to_tnd,
   sold_workload_days, warranty_workload_days, penalty_provision, marge_nette_vendue, created_at, updated_at, deleted)
@@ -519,13 +382,11 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- ── Projects of the other project managers (30) ───────────────
--- Split between the seven other managers, so that every screen which filters "my
--- projects" has something to leave out — and so the project scope rule of
--- ADR-021 can be demonstrated: a manager who opens the URL of a project that is
--- not his gets 403 even though he holds the permission.
--- Note these statements do not list penalty_provision, while momo-chef's do: a
--- column left out of the INSERT simply takes its default (NULL here), which is
--- the honest way of saying "no penalty clause was recorded for this contract".
+-- Split across the seven other managers so "my projects" filters have
+-- something to exclude, and ADR-021's scope rule can be demonstrated (403 on
+-- a project that isn't the caller's, despite holding the permission).
+-- These statements omit penalty_provision (momo-chef's don't): an omitted
+-- column just takes its default (NULL) — "no penalty clause recorded".
 -- Sonia Hammami (6 projects)
 INSERT INTO projects (code, name, description, status, start_date, end_date, initial_budget, revised_budget,
   director_id, chef_projet_id, client, business_model, engagement_type, currency, exchange_rate_to_tnd,
@@ -726,26 +587,16 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- ── §5  Team assignments ──────────────────────────────────────
--- (French original: "Affectations équipe")
--- Who works on which project. This table is not decoration: it is what the
--- project scope rule of ADR-021 reads. ProjectScopeInterceptor lets a developer
--- through on /api/projects/{id}/** only if a row here ties him to that project.
--- Without this section every demo account would get 403 on every project screen,
--- and the whole application would look broken.
+-- Who works on which project — read by ADR-021's ProjectScopeInterceptor to
+-- allow /api/projects/{id}/** access. Without this section every demo account
+-- gets 403 on every project screen.
 --
 -- Projects of momo-chef — developers
--- Reading the statement: INSERT ... SELECT writes one row per row the SELECT
--- returns, so this single statement creates a hundred-odd assignments.
--- "FROM projects p, users u" is a CROSS JOIN: every project paired with every
--- user. "WHERE (p.code, u.email) IN ( ... )" then keeps only the pairs listed
--- below — this is a ROW comparison, so each entry matches one project code AND
--- one e-mail together.
--- Why written this way: the list stays readable as (project, person) couples and
--- carries no id, so it survives on any database. Pairing on the code and the
--- e-mail instead of ids is what makes that possible.
+-- CROSS JOIN filtered by (p.code, u.email) IN (...) — a row comparison — so
+-- one statement creates every (project, person) pairing listed, with no ids
+-- to keep in sync.
 INSERT INTO team_assignments (project_id, user_id, role_in_team, start_date, end_date, created_at, updated_at, deleted)
--- The assignment runs for the whole life of the project, so the dates are copied
--- from the project itself rather than invented.
+-- Dates copied from the project itself: the assignment spans its whole life.
 SELECT p.id, u.id, 'DEVELOPPEUR', p.start_date, p.end_date, NOW(), NOW(), false
 FROM projects p, users u
 WHERE (p.code, u.email) IN (
@@ -811,14 +662,9 @@ WHERE (p.code, u.email) IN (
 )
 ON CONFLICT DO NOTHING;
 
--- momo-chef is himself the manager of his twenty projects, with role_in_team
--- CHEF_PROJET.
--- Why a row is needed even though projects.chef_projet_id already names him:
--- the scope check reads team_assignments, so without this row the manager of the
--- project would be refused access to his own project.
--- role_in_team is the role INSIDE this project, not the RBAC role of the account.
--- The same person can be manager here and developer elsewhere; what he is
--- allowed to do still comes from his permissions, never from this text.
+-- momo-chef manages his own twenty projects too (role_in_team CHEF_PROJET):
+-- needed because the scope check reads team_assignments, not just
+-- projects.chef_projet_id. role_in_team is a per-project label, not the RBAC role.
 INSERT INTO team_assignments (project_id, user_id, role_in_team, start_date, end_date, created_at, updated_at, deleted)
 SELECT p.id, (SELECT id FROM users WHERE email='momo-chef@pms.local'), 'CHEF_PROJET', p.start_date, p.end_date, NOW(), NOW(), false
 FROM projects p
@@ -828,10 +674,8 @@ WHERE p.code IN ('S2I-2022-001','S2I-2022-002','S2I-2023-003','S2I-2023-004','S2
                  'S2I-2025-016','S2I-2025-017','S2I-2025-018','S2I-2025-019','S2I-2025-020')
 ON CONFLICT DO NOTHING;
 
--- The other managers, each one assigned to his own projects.
--- Here the user is not named at all: p.chef_projet_id is read straight from the
--- project row. One statement covers the thirty projects and can never disagree
--- with the project sheet, which a hand-written list of thirty couples could.
+-- Other managers: p.chef_projet_id read straight off the project row, so this
+-- can never disagree with the project sheet.
 INSERT INTO team_assignments (project_id, user_id, role_in_team, start_date, end_date, created_at, updated_at, deleted)
 SELECT p.id, p.chef_projet_id, 'CHEF_PROJET', p.start_date, p.end_date, NOW(), NOW(), false
 FROM projects p
@@ -844,11 +688,9 @@ WHERE p.code IN ('S2I-2022-021','S2I-2023-022','S2I-2024-023','S2I-2024-024','S2
                  'S2I-2023-048','S2I-2024-049','S2I-2025-050')
 ON CONFLICT DO NOTHING;
 
--- Developers on the projects of the other managers. Same (project code, e-mail)
--- pairing as the first block. Note that several developers appear on several
--- projects at once: that overlap is what gives the workload screens something to
--- show, since a person spread over four projects is exactly the case a manager
--- needs to see.
+-- Developers on the other managers' projects. Same (code, e-mail) pairing;
+-- several developers appear on multiple projects, which is what the workload
+-- screens are meant to show.
 INSERT INTO team_assignments (project_id, user_id, role_in_team, start_date, end_date, created_at, updated_at, deleted)
 SELECT p.id, u.id, 'DEVELOPPEUR', p.start_date, p.end_date, NOW(), NOW(), false
 FROM projects p, users u
@@ -913,18 +755,9 @@ WHERE (p.code, u.email) IN (
 ON CONFLICT DO NOTHING;
 
 -- ── §6  Billing milestones ────────────────────────────────────
--- (French original: "Jalons de facturation")
--- Pattern of 4 milestones: 20 % at kick-off · 40 % mid-way · 30 % at delivery ·
--- 10 % at the end of the warranty.
--- A milestone is one line of the invoicing plan of a contract: a share of the
--- total, a planned date, and a state (PREVU = planned, FACTURE = invoiced,
--- PAYE = paid). The KPI engine adds up the FACTURE and PAYE ones to compute
--- total_facture and then the FAE of V22.
---
--- Written as a loop because the same commercial pattern applies to all 50
--- projects; only the amounts and the dates change. Fifty hand-written sets of
--- four milestones would be 200 lines that could silently stop adding up to
--- 100 %.
+-- Pattern of 4: 20% kick-off · 40% mid-way · 30% delivery · 10% end of
+-- warranty. Generated by a loop rather than 50 hand-written sets (200 lines
+-- that could silently stop summing to 100%).
 DO $$
 DECLARE
   p RECORD;       -- the project being processed
@@ -932,36 +765,20 @@ DECLARE
   d0 DATE; d_end DATE;   -- its start and end dates
   dur_months INT;        -- its duration in months
 BEGIN
-  -- ORDER BY code only makes the generated ids follow the project codes, which
-  -- makes the result easier to read when checking the data by hand.
   FOR p IN SELECT id, code, initial_budget, revised_budget, start_date, end_date, status
            FROM projects WHERE deleted = FALSE ORDER BY code
   LOOP
-    -- COALESCE returns its first argument that is not NULL.
-    -- The reference budget is therefore "revised if there is one, otherwise the
-    -- initial one, otherwise 100000". That last fallback is what stops the whole
-    -- loop from writing NULL amounts on a project whose budget was never filled
-    -- in — four milestones of NULL would make the invoicing screen unusable and
-    -- the KPI totals empty.
+    -- Reference budget: revised if set, else initial, else a 100000 fallback
+    -- so no project ends up with NULL milestone amounts.
     b     := COALESCE(p.revised_budget, p.initial_budget, 100000);
     d0    := COALESCE(p.start_date, '2023-01-01');
     d_end := COALESCE(p.end_date, d0 + INTERVAL '12 months');
-    -- AGE(end, start) gives the gap as an interval such as "1 year 8 mons";
-    -- EXTRACT(MONTH FROM ...) takes only the MONTHS part of it, so a project of
-    -- 1 year and 8 months yields 8, not 20. ::INT is the PostgreSQL cast that
-    -- turns the numeric result into a whole number.
-    -- GREATEST(3, ...) keeps the value at three minimum. Why it matters: the
-    -- mid-way milestone below divides this number by two, and a duration of 0 or
-    -- 1 would place the second milestone on the very day of the first.
+    -- Duration in whole months, floored at 3 so the mid-way milestone (below,
+    -- at half the duration) never lands on day one.
     dur_months := GREATEST(3, EXTRACT(MONTH FROM AGE(d_end, d0))::INT);
 
-    -- Milestone 1: 20 % at kick-off.
-    -- The two CASE expressions read the state of the project to decide whether
-    -- this milestone has been invoiced. A project that has started (ACTIVE) or
-    -- finished (COMPLETED) has certainly billed its kick-off, so the milestone
-    -- is PAYE and gets an invoice date; a DRAFT project has not, so both stay
-    -- NULL / PREVU. Without this, every demo project would show a fully invoiced
-    -- plan, including the ones that have not started.
+    -- Milestone 1: 20% at kick-off. Billed (PAYE) once the project has at
+    -- least started (ACTIVE/COMPLETED); still PREVU on a DRAFT.
     INSERT INTO jalons_facturation(project_id, label, pourcentage, montant, date_prevue, date_facture, statut, created_at, updated_at, deleted)
     VALUES(p.id, 'Démarrage et installation', 20, round(b*0.20,2),
       d0 + INTERVAL '1 month',
@@ -969,22 +786,13 @@ BEGIN
       CASE WHEN p.status IN ('COMPLETED','ACTIVE') THEN 'PAYE' ELSE 'PREVU' END,
       NOW(), NOW(), false);
 
-    -- Milestone 2: 40 % mid-way.
-    -- This one has three states instead of two: COMPLETED means it was paid,
-    -- ACTIVE means it was invoiced but not paid yet (FACTURE) — and only for a
-    -- project long enough to have reached its middle, hence "dur_months > 8".
-    -- That FACTURE state is what gives the KPI screens a non-zero FAE (revenue
-    -- earned and invoiced but not yet cashed in); with only PAYE and PREVU the
-    -- indicator would always be empty and could not be shown.
+    -- Milestone 2: 40% mid-way. COMPLETED = PAYE; ACTIVE past its midpoint
+    -- (dur_months > 8) = FACTURE (invoiced, not yet cashed — what gives FAE a
+    -- non-zero value); otherwise PREVU.
     INSERT INTO jalons_facturation(project_id, label, pourcentage, montant, date_prevue, date_facture, statut, created_at, updated_at, deleted)
     VALUES(p.id, 'Livraison intermédiaire', 40, round(b*0.40,2),
-      -- Building an interval from a number: || concatenates, so 18/2 becomes the
-      -- text '9 months', and ::INTERVAL turns that text into a real interval.
-      -- Why the detour: PostgreSQL has no "INTERVAL n months" syntax taking a
-      -- variable — INTERVAL only accepts a literal.
-      -- Note dur_months is an INT, so the division is a WHOLE division: 9/2 = 4,
-      -- not 4.5. Half a month of drift on a demo date, and it keeps the value a
-      -- whole number of months.
+      -- No "INTERVAL n months" with a variable in Postgres, hence the
+      -- text-concat-then-cast detour. dur_months/2 is integer division on purpose.
       d0 + (dur_months/2 || ' months')::INTERVAL,
       CASE WHEN p.status = 'COMPLETED' THEN d0 + ((dur_months/2)+1 || ' months')::INTERVAL
            WHEN p.status = 'ACTIVE' AND dur_months > 8 THEN d0 + ((dur_months/2)+1 || ' months')::INTERVAL
@@ -994,9 +802,8 @@ BEGIN
            ELSE 'PREVU' END,
       NOW(), NOW(), false);
 
-    -- Milestone 3: 30 % at delivery. Dated backwards from the end of the project
-    -- (d_end − 1 month), because delivery is tied to the end date, not to the
-    -- start. Only a COMPLETED project can have reached it.
+    -- Milestone 3: 30% at delivery, dated back from the project's end (not
+    -- forward from the start). Only a COMPLETED project reaches it.
     INSERT INTO jalons_facturation(project_id, label, pourcentage, montant, date_prevue, date_facture, statut, created_at, updated_at, deleted)
     VALUES(p.id, 'Recette et déploiement', 30, round(b*0.30,2),
       d_end - INTERVAL '1 month',
@@ -1004,14 +811,9 @@ BEGIN
       CASE WHEN p.status = 'COMPLETED' THEN 'PAYE' ELSE 'PREVU' END,
       NOW(), NOW(), false);
 
-    -- Milestone 4: 10 % at the end of the warranty, three months AFTER the end
-    -- of the project. This is the share the client keeps back until the warranty
-    -- period runs out.
-    -- 20 + 40 + 30 + 10 = 100: the four shares add up to the whole contract.
-    -- Its invoice date falls three months after the project ends, that is AFTER
-    -- the snapshot date §10 uses for a finished project (the end date itself).
-    -- That is why §10 records 90 % invoiced and not 100 %: at the moment the
-    -- snapshot describes, this last milestone had not been billed yet.
+    -- Milestone 4: 10% at end of warranty, 3 months after the project ends —
+    -- billed after §10's snapshot date for a finished project, which is why
+    -- that snapshot records 90% invoiced, not 100%. (20+40+30+10 = 100.)
     INSERT INTO jalons_facturation(project_id, label, pourcentage, montant, date_prevue, date_facture, statut, created_at, updated_at, deleted)
     VALUES(p.id, 'Fin de garantie', 10, round(b*0.10,2),
       d_end + INTERVAL '3 months',
@@ -1022,45 +824,28 @@ BEGIN
 END $$;
 
 -- ── §7  Payments (milestones marked PAYE) ─────────────────────
--- (French original: "Paiements (jalons PAYE)")
--- One payment row for each milestone §6 marked as paid. The two must agree:
--- a milestone flagged PAYE with no payment behind it would make the invoicing
--- follow-up show money received that nobody can trace.
--- The rows are derived from the milestones instead of being written by hand,
--- which is what guarantees they always agree.
+-- One payment per §6 milestone marked PAYE, derived from it so the two can
+-- never disagree.
 INSERT INTO paiements (jalon_id, montant_recu, date_paiement, reference, created_at, updated_at, deleted)
--- Paid in full (montant_recu = the whole milestone) and cashed in fifteen days
--- after the invoice, a normal payment delay.
+-- Paid in full, 15 days after the invoice (a normal delay).
 SELECT jf.id, jf.montant, jf.date_facture + INTERVAL '15 days',
-  -- A believable bank reference built from the data itself: 'VIR-' (virement, a
-  -- bank transfer), the invoice date as YYYYMMDD, then the project id. to_char
-  -- formats a date into text with that pattern, and || glues the pieces.
-  -- Built rather than random so the same run always produces the same reference,
-  -- and so a reference read on screen can be traced back to its project.
+  -- Reference built from the data (not random) so it's reproducible and traceable.
   'VIR-' || to_char(jf.date_facture, 'YYYYMMDD') || '-' || jf.project_id,
   NOW(), NOW(), false
 FROM jalons_facturation jf
--- The "date_facture IS NOT NULL" guard is the important one: the invoice date is
--- used twice above, in the payment date and in the reference. In SQL any
--- arithmetic or concatenation with NULL gives NULL, so without this filter a
--- paid milestone with no invoice date would produce a payment with no date and a
--- reference reading simply nothing.
+-- date_facture is used twice above; NULL would silently produce a payment
+-- with no date and an empty reference, hence the guard.
 WHERE jf.statut = 'PAYE' AND jf.date_facture IS NOT NULL AND jf.deleted = FALSE
 ON CONFLICT DO NOTHING;
 
 -- ── §8  Contract amendments ("avenants") ──────────────────────
--- An amendment is a signed change to the contract: it adds money and man-days.
--- Only eleven projects get one, and four of those get a second: an amendment on
--- every project would be unrealistic, and it would hide the difference the
--- screens are meant to show, between initial_budget and revised_budget.
--- Note what this section does NOT do: it does not touch projects.revised_budget.
--- The revised amounts were written directly in §4, so the two are consistent
--- only because they were written to be. Changing one without the other would
--- make the amendment list disagree with the project sheet.
+-- Eleven projects get one amendment, four of those get a second, so the demo
+-- shows a real gap between initial_budget and revised_budget rather than an
+-- amendment on every project. Note: this does not touch
+-- projects.revised_budget — that was written directly in §4, so the two stay
+-- consistent only because they were written to agree.
 INSERT INTO avenants (project_id, numero, objet, montant, workload_days, date_avenant, created_at, updated_at, deleted)
--- The number is built from the project code ('AV-S2I-2022-001-001'), so it is
--- unique and readable without looking anything up. round(..., 0) keeps the added
--- man-days a whole number of days.
+-- Number built from the project code so it's unique and self-explanatory.
 SELECT p.id, 'AV-' || p.code || '-001',
   'Extension du périmètre fonctionnel suite à la demande du client',
   round(p.initial_budget * 0.06, 2), round(p.sold_workload_days * 0.05, 0),
@@ -1072,9 +857,8 @@ WHERE p.code IN ('S2I-2022-001','S2I-2022-002','S2I-2023-003','S2I-2023-004',
   AND p.deleted = FALSE
 ON CONFLICT DO NOTHING;
 
--- A second amendment, for four of those projects only. It is smaller than the
--- first (4 % instead of 6 %) and dated four months later, so a project sheet
--- shows a plausible history rather than two identical rows.
+-- Second amendment for four of those projects: smaller (4%) and four months
+-- later, for a plausible history.
 INSERT INTO avenants (project_id, numero, objet, montant, workload_days, date_avenant, created_at, updated_at, deleted)
 SELECT p.id, 'AV-' || p.code || '-002',
   'Intégration d''un module complémentaire non prévu au contrat initial',
@@ -1086,147 +870,72 @@ WHERE p.code IN ('S2I-2022-001','S2I-2022-027','S2I-2023-028','S2I-2023-048')
 ON CONFLICT DO NOTHING;
 
 -- ── §9  Charges planifiées + réelles  (DO $$ — boucle) ────────
--- (French original: "Charges planifiées + réelles (DO $$ — loop)")
--- Planned workload and real workload, month by month, for every developer of
--- every project.
---   plan_charges    = the days the project manager PLANNED that person would
---                     spend on the project during that month.
---   charges_reelles = the days that person actually REPORTED, and who validated
---                     them.
--- Almost every figure in the application compares the two: the consumed
--- man-days of the KPI screens, the "reste à faire" (work remaining) of V22 and
--- the drift in days all come from this pair of tables. Leave them empty and all
--- of those indicators read zero on all 50 projects.
---
--- Written as three nested loops rather than as literal rows because the volume
--- is the point: 50 projects × their developers × up to four years of months is
--- several thousand rows. That is what makes the charts, the filters and the
--- pagination of the workload module worth showing at all.
---
--- DO $$ ... $$ opens an anonymous block of PL/pgSQL, the procedural language of
--- PostgreSQL. Plain SQL has no variables, no IF and no WHILE, and this section
--- needs all three. The $$ pair only quotes the body, so the apostrophes inside
--- it need no escaping.
+-- Planned and real workload, month by month, for every developer of every
+-- project. Almost every KPI/EVM figure is computed from this pair of tables;
+-- leave them empty and everything reads zero.
+-- Three nested loops (not literal rows) because the volume — thousands of
+-- rows — is what makes the workload charts/filters/pagination worth showing.
 DO $$
 DECLARE
-  -- RECORD = a row variable whose shape is decided by the query that fills it.
-  -- Used here because the two FOR loops below select different column lists, and
-  -- no single named type would fit both.
   proj  RECORD;    -- the project being processed
   mbr   RECORD;    -- one developer of that project
   m     DATE;      -- the month being processed, always the 1st of the month
   p_days NUMERIC;  -- days planned for that person, that month
   a_days NUMERIC;  -- days really reported for that person, that month
-  v_by  BIGINT;    -- fallback validator, see just below
+  v_by  BIGINT;    -- fallback validator, see below
 BEGIN
-  -- Looked up ONCE, before the loops, and not inside them. Why: it is a
-  -- constant, and running it inside would repeat the same query several thousand
-  -- times.
-  -- What it is for: charges_reelles.validated_by says WHO signed off the time
-  -- sheet. It is used below as the fallback for a project that has no manager.
-  -- The column is nullable, so NULL would be accepted by the database — but a
-  -- row carrying a validation date with no validator is a time sheet validated
-  -- by nobody, and that is exactly the hole an auditor looks for.
+  -- Looked up once (constant) rather than inside the loops.
+  -- charges_reelles.validated_by is the fallback for a project with no
+  -- manager — a validation date with no validator would be a red flag for an auditor.
   SELECT id INTO v_by FROM users WHERE email = 'momo-chef@pms.local';
 
-  -- Outer loop: every project, DRAFT ones included. A project being prepared
-  -- can already have a team and a plan, and that is what a draft looks like; it
-  -- simply gets no REAL charges, because the inner IF below only writes those
-  -- for months that have passed.
+  -- Every project, DRAFT included: a project being prepared can have a team
+  -- and a plan already; the inner IF below is what withholds REAL charges.
   FOR proj IN
     SELECT p.id, p.start_date, p.end_date, p.status, p.code, p.chef_projet_id
     FROM projects p WHERE p.deleted = FALSE
   LOOP
-    -- Middle loop: the DEVELOPPEUR members of that project, and only them.
-    -- The project manager is skipped on purpose: §5 also writes a CHEF_PROJET
-    -- row into team_assignments for every project, and counting him here would
-    -- add one more full-time person to all 50 projects. Every consumed-days
-    -- figure, every margin and every EVM indicator in the application would then
-    -- be inflated by that phantom workload.
+    -- DEVELOPPEUR members only — the manager is skipped since §5 already
+    -- gives him a CHEF_PROJET row; counting him here would inflate every
+    -- project's workload by one phantom person.
     FOR mbr IN
       SELECT ta.user_id
       FROM team_assignments ta
       WHERE ta.project_id = proj.id AND ta.deleted = FALSE
         AND ta.role_in_team = 'DEVELOPPEUR'
     LOOP
-      -- date_trunc('month', d) moves a date back to the 1st of its own month.
-      -- The "period" column is a MONTH KEY, so every row describing a given
-      -- month must carry the exact same date. Without this, a project starting
-      -- on the 17th would store period = the 17th; the partial unique index
-      -- uk_pc_active (project_id, user_id, period) from V7 would then fail to
-      -- see a second entry for that same month as a duplicate, and the monthly
-      -- totals of the workload screen would count the month twice.
+      -- period is a MONTH KEY; date_trunc keeps every row on the 1st, so
+      -- V7's partial unique index (project_id, user_id, period) works correctly.
       m := date_trunc('month', proj.start_date);
-      -- Inner loop: one turn per month of the project.
-      -- LEAST returns the smallest of its arguments, COALESCE the first one that
-      -- is not NULL. So the loop stops at the end of the project, or on
-      -- 2026-08-01, whichever comes first.
-      -- That second bound is the hard horizon of the demo data. Without it, a
-      -- project with a distant end date — or with none at all — would keep
-      -- generating months for years into the future and fill the two tables with
-      -- rows no screen ever shows.
-      -- Note the COALESCE is belt and braces here: PostgreSQL's LEAST already
-      -- ignores a NULL argument, and 2026-08-01 is in practice always the
-      -- smaller of the two, so it is what really ends the loop.
+      -- One turn per month, stopping at the project's end or 2026-08-01
+      -- (the demo's hard horizon), whichever comes first.
       WHILE m < LEAST(COALESCE(proj.end_date, '2026-12-01'::DATE), '2026-08-01'::DATE) LOOP
-        -- Planifié : entre 14 et 21 jours (avec variance naturelle)
-        -- Planned: between 14 and 21 days, with natural variance.
-        -- random() returns a fraction between 0 and 1, so floor(random() * 8) is
-        -- a whole number from 0 to 7, and p_days lands between 14 and 21.
-        -- Why not one fixed number: an identical plan on every row would draw
-        -- every chart of the workload module as a flat line, and the screens
-        -- would demonstrate nothing.
-        -- Why this range: V7 puts CHECK (planned_days > 0 AND planned_days <= 31)
-        -- on the column, and 14 to 21 days is a believable share of a working
-        -- month for somebody who is not on the project full time.
+        -- Planned: 14-21 days with natural variance, so charts aren't a flat
+        -- line. Range matches V7's CHECK (planned_days <= 31) and a believable
+        -- part-time share of a month.
         p_days := 14 + (floor(random() * 8))::NUMERIC;
 
-        -- ON CONFLICT DO NOTHING with no target covers every unique index of the
-        -- table, which here means uk_pc_active (project_id, user_id, period
-        -- WHERE deleted = FALSE) from V7.
-        -- Why it is needed: it makes the section safe to replay. The §-1
-        -- clean-up at the top of this file normally empties the demo rows first,
-        -- but if this file were played by hand on a database where that did not
-        -- happen, the very first month would abort the whole migration on a
-        -- duplicate key instead of being quietly skipped.
+        -- ON CONFLICT with no target covers uk_pc_active (V7); needed so a
+        -- manual replay (without the §-1 clean-up) doesn't abort on the first
+        -- duplicate month.
         INSERT INTO plan_charges(project_id, user_id, period, planned_days, created_at, updated_at, deleted)
         VALUES(proj.id, mbr.user_id, m, p_days, NOW(), NOW(), false)
         ON CONFLICT DO NOTHING;
 
-        -- Réel : pour les mois passés uniquement (< 2026-07-01)
-        -- Real charges: for past months only (before 2026-07-01).
-        -- The planned loop above runs up to July 2026, this one stops at June,
-        -- so the newest month of the demo is PLANNED but not yet REPORTED.
-        -- That one-month gap is deliberate: it is what a month in progress looks
-        -- like, and it is what lets the workload screen be shown with a month
-        -- still waiting for input rather than a suspiciously complete history.
+        -- Real charges: past months only (before 2026-07-01), so the newest
+        -- demo month is planned but not yet reported — a month "in progress".
         IF m < '2026-07-01'::DATE THEN
-          -- The real figure is the planned one shifted by −3 to +3 days:
-          -- floor(random() * 7) gives 0 to 6, and the −3 moves that to −3 to +3.
-          -- Why derive it from p_days instead of drawing a fresh number: the two
-          -- have to stay close to each other. Drawn independently, a plan of 20
-          -- days could meet a reality of 3, and every project in the portfolio
-          -- would look catastrophically off track on the KPI screens.
+          -- Derived from p_days (±3 days) rather than drawn independently, so
+          -- plan and reality stay close instead of looking catastrophically off track.
           a_days := p_days + (-3 + floor(random() * 7))::NUMERIC;
-          -- Squeeze the result between 0 and 22. GREATEST keeps the larger of
-          -- its arguments, LEAST the smaller, so the pair clamps both ends.
-          -- Why 0: a negative number of days worked is meaningless, and V7 has
-          -- CHECK (actual_days >= 0 AND actual_days <= 31) — a −1 would abort
-          -- the migration.
-          -- Why 22: that is roughly the number of working days in a month, so
-          -- nobody in the demo reports more days than the month actually holds.
+          -- Clamped to [0, 22]: V7 forbids negative days, and 22 is roughly a
+          -- month's working days.
           a_days := GREATEST(0, LEAST(a_days, 22));
 
-          -- submitted_at and validated_at are set to the 1st of the month plus
-          -- 23 and 27 days: the time sheet is handed in near the end of the
-          -- month and signed off a few days later.
-          -- Why they are filled at all: a row with no validation date is still a
-          -- draft, and the KPI engine only counts VALIDATED workload. Left NULL,
-          -- every consumed-days figure in the application would be zero even
-          -- though the rows exist.
-          -- validated_by uses COALESCE, so it is the project's own manager when
-          -- there is one, and the account read once at the top of the block
-          -- otherwise — never NULL beside a validation date.
+          -- submitted/validated a few days apart near month-end. Left NULL,
+          -- the KPI engine (which only counts VALIDATED workload) would read
+          -- zero everywhere despite the rows existing. validated_by falls
+          -- back to v_by when the project has no manager.
           INSERT INTO charges_reelles(
             project_id, user_id, period, actual_days,
             submitted_at, validated_at, validated_by,
@@ -1240,10 +949,7 @@ BEGIN
           ON CONFLICT DO NOTHING;
         END IF;
 
-        -- Step to the next month. m is already the 1st of a month, so adding
-        -- one month always lands on the 1st of the next one and the period key
-        -- stays clean. This line is also what ends the WHILE loop: remove it and
-        -- the migration never finishes.
+        -- Advances the WHILE loop; removing this line would make it infinite.
         m := m + INTERVAL '1 month';
       END LOOP;
     END LOOP;
@@ -1251,27 +957,13 @@ BEGIN
 END $$;
 
 -- ── §10  Snapshots KPI ────────────────────────────────────────
--- (French original: "Snapshots KPI")
--- One row of snapshot_kpis = the monthly project review of ONE project at ONE
--- date: the "Situation actuelle" block started by V8 and completed by V22.
---
--- A snapshot is a PHOTOGRAPH, not a live calculation. The figures are frozen as
--- they stood on snapshot_date and are never recomputed afterwards. That is the
--- whole point of the table: it is what gives the review screens a month-by-month
--- history instead of one always-current number that erases its own past.
---
--- This block writes that history for the demo, because no amount of clicking can
--- create a past. Without it the trend charts of the KPI module would hold a
--- single point, and the comparison of one review against the previous one —
--- the reason F-AFF-13 asks for the module — could not be shown at all.
---
--- Three shapes, chosen by the project status:
---   COMPLETED : ONE final snapshot, dated at the end of the project.
---   ACTIVE    : THREE monthly snapshots, so a trend can be drawn.
---   DRAFT     : none. There is nothing to measure on a project that has not
---               started, and a review full of zeros would read as a failing
---               project rather than an unstarted one. That is why the block
---               below is IF / ELSIF with no ELSE.
+-- One row = the monthly project review of ONE project at ONE date — a
+-- PHOTOGRAPH, frozen and never recomputed, unlike the live KPI screen.
+-- Generated here because no amount of clicking can create a past; without it
+-- the trend charts would hold a single point.
+--   COMPLETED: one final snapshot, at the project's end.
+--   ACTIVE: three monthly snapshots, for a trend.
+--   DRAFT: none — nothing to measure yet (hence IF/ELSIF, no ELSE).
 DO $$
 DECLARE
   p       RECORD;   -- the project being processed
@@ -1283,72 +975,34 @@ DECLARE
   total_f NUMERIC;  -- amount already invoiced at that date
   ca_prod NUMERIC;  -- production revenue = budget × progress
 BEGIN
-  -- Note two columns are selected and never used in the body below:
-  -- pr.start_date and pr.marge_nette_vendue. They cost nothing and break
-  -- nothing; the sold margin in particular is the V22 baseline the review
-  -- compares against, and it is read by the application, not by this seed.
   FOR p IN SELECT pr.id, pr.status, pr.initial_budget, pr.revised_budget,
                   pr.start_date, pr.end_date, pr.marge_nette_vendue, pr.sold_workload_days
            FROM projects pr WHERE pr.deleted = FALSE
   LOOP
-    -- Reference budget: the revised amount if an amendment changed it, else the
-    -- original, else 100000. This is deliberately the SAME rule as §6 uses for
-    -- the billing milestones. If the two disagreed, the invoiced share computed
-    -- below would no longer match the invoicing plan, and the two screens would
-    -- contradict each other in front of the jury.
+    -- Same reference-budget rule as §6's milestones, so the invoiced share
+    -- computed below matches the invoicing plan.
     b := COALESCE(p.revised_budget, p.initial_budget, 100000);
 
     IF p.status = 'COMPLETED' THEN
-      -- The final review of a finished project is dated on its end date.
-      -- COALESCE supplies a date for the rare project stored without one;
-      -- snapshot_date is NOT NULL in V8, so a NULL here would stop the migration.
       snap_d   := COALESCE(p.end_date, '2024-12-31');
-      -- 98 to 100 % done: floor(random() * 3) gives 0, 1 or 2.
-      -- Not a flat 100 on purpose. A finished project can still carry a last
-      -- reserve, and a column of identical 100s reads as a constant somebody
-      -- typed, not as data the system measured.
+      -- 98-100% done, not a flat 100: a finished project can still carry a
+      -- last reserve.
       ev       := 98 + floor(random() * 3);            -- 98-100%
-      -- Money really spent: 87 % to 105 % of the budget. The range crosses 100
-      -- deliberately, so the demo portfolio holds both projects that made money
-      -- and projects that overran. A portfolio where every project is profitable
-      -- would prove nothing about the margin screens.
+      -- 87-105% of budget spent — crosses 100 on purpose so the portfolio
+      -- has both profitable and overrun projects.
       consumed := b * (0.87 + random() * 0.18);
-      -- Production revenue: budget × progress. This is the earned value of EVM
-      -- expressed in money — the same formula V22 documents for ca_production.
       ca_prod  := b * ev / 100;
-      -- 90 % invoiced, not 100, and the reason is in §6: the last milestone
-      -- (10 %, end of warranty) is dated THREE MONTHS AFTER the project ends,
-      -- while this snapshot is dated ON the end date. At the moment this review
-      -- describes, only the first three milestones (20 + 40 + 30) had been
-      -- billed. The gap is what makes the FAE indicator below non-zero.
+      -- 90% invoiced, not 100: §6's last milestone (10%, end of warranty) is
+      -- billed 3 months after the project ends, after this snapshot's date —
+      -- the gap that makes FAE non-zero.
       total_f  := b * 0.90;                            -- facturé 90% (garantie à venir)
-      -- Margin = value earned − money spent.
       margin   := ca_prod - consumed;
 
-      -- Reading the VALUES list below, the parts that are not obvious:
-      --  * eac = budget_consome. EAC means "Estimate At Completion", the
-      --    forecast of the final cost. On a project that is OVER, the forecast
-      --    IS the final cost. Writing the budget there instead would quietly
-      --    hide every overrun in the portfolio.
-      --  * delivery_pct = 100 and raf_jh = 0: everything planned was handed over
-      --    and nothing is left to do. Both are literal here because "finished"
-      --    is not a matter of chance.
-      --  * round(x, 2) for money, round(x, 4) for ratios — the exact precisions
-      --    V22 gave those columns. Rounding a ratio to 2 decimals would move a
-      --    million-dinar margin by thousands once the screen multiplies it back.
-      --  * NULLIF(ca_prod, 0) returns NULL when ca_prod is zero, so the division
-      --    yields NULL instead of raising "division by zero". That matters far
-      --    more than one empty cell: a division by zero here aborts the entire
-      --    migration and leaves the database half seeded.
-      --  * COALESCE(p.sold_workload_days, 600) supplies man-days for a project
-      --    whose sold workload was never filled in; without it the man-days
-      --    block of the review would be empty on exactly those projects.
-      --  * fae = ca_prod − total_f: revenue earned but not yet invoiced, the
-      --    10 % of warranty still to bill.
-      -- And note what is NOT written: derive_jh and date_fin_estimee stay NULL.
-      -- On a finished project the drift in days and the forecast end date have
-      -- no meaning left, and V22 made every column nullable precisely so that
-      -- "not measured" could be told apart from "measured, and it is zero".
+      -- eac = budget_consome here: for a finished project the forecast IS the
+      -- final cost. delivery_pct=100/raf_jh=0: nothing left to do.
+      -- round() precisions (2 for money, 4 for ratios) match V22's columns.
+      -- NULLIF(ca_prod,0) avoids a division-by-zero abort.
+      -- derive_jh/date_fin_estimee stay NULL: no meaning left on a finished project.
       INSERT INTO snapshot_kpis(project_id, snapshot_date, budget_planifie, budget_consome,
         eac, marge, taux_consommation, ev_pct, delivery_pct,
         consomme_jh, raf_jh, ca_production, total_facture, fae, marge_actuelle, marge_actuelle_pct,
@@ -1365,57 +1019,25 @@ BEGIN
       ON CONFLICT DO NOTHING;
 
     ELSIF p.status = 'ACTIVE' THEN
-      -- Snapshot mensuel sur 3 derniers mois
-      -- A monthly snapshot at each of the last three month ends.
-      -- FOREACH ... IN ARRAY walks the values of an array one at a time.
-      -- Three FIXED dates rather than a window computed from the current date,
-      -- because the demo has to look the same whenever it is played; a moving
-      -- window would show a different picture every month and a screenshot in
-      -- the report would stop matching the running application.
-      -- Three points and not one: two are the minimum to draw a line, three make
-      -- a trend readable on the chart.
+      -- Three FIXED dates (not a moving window) so the demo looks the same
+      -- every time it's played.
       FOREACH snap_d IN ARRAY ARRAY['2026-04-30'::DATE,'2026-05-31'::DATE,'2026-06-30'::DATE]
       LOOP
-        -- 40 to 84 % done: projects in mid-flight.
-        -- Be aware of what this does NOT guarantee: the value is drawn afresh on
-        -- every turn, so the three snapshots of one project are independent and
-        -- the progress of a project can come out LOWER in May than in April.
+        -- 40-84% done, drawn fresh each turn — progress can dip month to month.
         ev       := 40 + floor(random() * 45);         -- 40-84%
-        -- Money spent: 90 % to 110 % of the value earned, so some projects run
-        -- at a profit and some at a loss at any given month.
         consumed := b * ev / 100 * (0.90 + random() * 0.20);
         ca_prod  := b * ev / 100;
-        -- Invoiced: 80 % of the progress, capped at 70 % of the contract by
-        -- LEAST, which keeps the smaller of its two arguments.
-        -- Why invoicing lags behind progress: a client is billed at milestones,
-        -- not continuously. The gap between ca_production and total_facture is
-        -- exactly the FAE of V22 — revenue earned but not yet billed. If
-        -- invoicing tracked progress one for one, that indicator would always be
-        -- zero and the screen built for it could never be demonstrated.
-        -- Why a cap: it stops an active project from appearing almost fully
-        -- invoiced. Note it is only close to the invoicing plan, not computed
-        -- from it: §6 bills a running project at most 60 % (the 20 % kick-off
-        -- plus the 40 % mid-way milestone), not 70 %.
+        -- Invoicing lags progress (billed at milestones, not continuously) —
+        -- that gap is FAE. Capped at 70% since §6 bills a running project at
+        -- most 60% (20% kick-off + 40% mid-way).
         total_f  := b * LEAST(ev/100 * 0.80, 0.70);
         margin   := ca_prod - consumed;
 
-        -- Reading the VALUES list below, the parts that are not obvious:
-        --  * eac is NOT the money already spent this time. It is the budget
-        --    moved by ±5 %: random() − 0.5 gives −0.5 to +0.5, times 0.10 gives
-        --    −5 % to +5 %. The project is still running, so EAC is a GUESS about
-        --    where it will land, and that guess is precisely what a monthly
-        --    review argues about. ::NUMERIC is required because random() returns
-        --    a floating-point value and round(x, 2) only exists for NUMERIC.
-        --  * delivery_pct = ev + floor(random()*5 - 2), a drift of −2 to +2
-        --    points around the progress. Why they must differ: V22 keeps the two
-        --    side by side exactly so a review can ask why they disagree. Two
-        --    identical columns would make that question impossible to pose.
-        --  * consomme_jh and raf_jh split the sold workload by the progress; the
-        --    remaining part is multiplied by 0.90, so the work left is estimated
-        --    a little cheaper than it was sold — what a team that has learned the
-        --    project actually reports.
-        --  * NULLIF(ca_prod, 0) again guards the division, for the same reason as
-        --    in the COMPLETED branch: a division by zero aborts the migration.
+        -- eac: budget ±5% (a running project's EAC is a guess, which is what
+        -- a review argues about). delivery_pct drifts ±2 points from ev on
+        -- purpose — V22 keeps them side by side so a review can ask why they
+        -- disagree. consomme_jh/raf_jh split sold workload by progress, with
+        -- the remainder priced 10% cheaper (a team that has learned the project).
         INSERT INTO snapshot_kpis(project_id, snapshot_date, budget_planifie, budget_consome,
           eac, marge, taux_consommation, ev_pct, delivery_pct,
           consomme_jh, raf_jh, ca_production, total_facture, fae, marge_actuelle, marge_actuelle_pct,
@@ -1437,39 +1059,17 @@ BEGIN
 END $$;
 
 -- ── §11  Missions ─────────────────────────────────────────────
--- (French original: "Missions")
--- A mission is a trip made for a project: a kick-off meeting, a workshop at the
--- client's office, a steering committee. Table created by V10; the cost of a
--- trip is stored as "composantes" (components) further down — a plane ticket, a
--- per diem, and so on.
---
--- WHY EVERY ROW IS DERIVED FROM THE PROJECTS
--- Each statement is "INSERT INTO ... SELECT ... FROM projects", never a list of
--- literal rows. The dates are computed from each project's own start date, so a
--- mission can never land outside the project it belongs to, and 50 projects are
--- covered by three statements instead of 150 hand-written lines that would drift
--- apart the first time a project date changed.
---
--- A HONEST WORD ABOUT "ON CONFLICT DO NOTHING" IN §11 TO §15
--- On these tables the clause catches nothing. missions, composantes_mission,
--- risks, livrables, parties_prenantes and demandes_changement have no unique key
--- beyond their primary key, and that key is a BIGSERIAL counter which never
--- collides. So replaying this file WOULD duplicate these rows; the clause is
--- only a habit carried over from the sections above, where real unique indexes
--- exist. What actually makes the file safe to replay is the §-1 clean-up block
--- at the top, which deletes the demo rows before anything is written.
+-- A trip for a project (kick-off, workshop, steering committee); the cost of
+-- the trip is broken down as "composantes" further down.
+-- Every row is INSERT ... SELECT FROM projects, dated off each project's own
+-- start date, so 50 projects are covered by three statements that can't drift
+-- apart from the project sheet.
+-- Note: ON CONFLICT DO NOTHING in §11-§15 catches nothing (these tables have
+-- no unique key beyond their BIGSERIAL id) — what makes the file replayable
+-- is the §-1 clean-up, not this clause.
 
--- Mission 1: the kick-off workshop, one week after the project starts, running
--- three days — the 8th to the 10th, both ends counted.
--- "lieu" (the place) is set to the client's name: the team travels to the
--- client's site. lieu is nullable in V10, so a project with no client simply
--- records a trip with no location instead of failing.
--- "status != 'DRAFT'" is the filter that matters: a project that has not started
--- has held no kick-off, and a draft project carrying a past meeting would
--- contradict its own status on the governance screen.
--- The doubled apostrophe in 'l''équipe' is how SQL escapes a single quote inside
--- a single-quoted string; one quote alone would close the string early and turn
--- the rest of the line into a syntax error.
+-- Mission 1: kick-off workshop, one week in, three days. lieu = the client's
+-- name (nullable, for a project with none). Excludes DRAFT: no kick-off held yet.
 INSERT INTO missions(project_id, user_id, objet, lieu, date_debut, date_fin, created_at, updated_at, deleted)
 SELECT p.id, p.chef_projet_id,
   'Réunion de cadrage et atelier de lancement avec l''équipe client',
@@ -1480,11 +1080,8 @@ SELECT p.id, p.chef_projet_id,
 FROM projects p WHERE p.deleted = FALSE AND p.status != 'DRAFT'
 ON CONFLICT DO NOTHING;
 
--- Mission 2: the specification validation workshop, two months in, over two
--- days. Restricted to COMPLETED projects: only a project that went all the way
--- certainly held this workshop. This is also what gives finished projects a
--- richer travel history than running ones, so the mission list is not the same
--- on every project.
+-- Mission 2: spec validation workshop, two months in. COMPLETED only, so
+-- finished projects carry a richer travel history than running ones.
 INSERT INTO missions(project_id, user_id, objet, lieu, date_debut, date_fin, created_at, updated_at, deleted)
 SELECT p.id, p.chef_projet_id,
   'Atelier de validation des spécifications fonctionnelles',
@@ -1495,16 +1092,9 @@ SELECT p.id, p.chef_projet_id,
 FROM projects p WHERE p.deleted = FALSE AND p.status = 'COMPLETED'
 ON CONFLICT DO NOTHING;
 
--- Mission 3: the mid-project steering committee, five months in.
--- date_debut and date_fin are the SAME day: a one-day trip. V10 has
--- CHECK (date_fin >= date_debut), so equal dates are legal — this is not a
--- mistake, and the per diem statement below treats it specially.
--- The explicit list of twelve project codes is what stops the demo looking
--- machine-made: without it all 50 projects would carry the exact same three
--- missions and the screens would show an obviously synthetic pattern.
--- The list matches on the CODE and not on the id, because ids come from a
--- BIGSERIAL counter and differ from one database to the next; hard-coded ids
--- would point at random projects on a freshly created database.
+-- Mission 3: mid-project steering committee, five months in, a one-day trip
+-- (date_debut = date_fin, legal per V10's CHECK). Explicit code list, twelve
+-- projects, so not every project shows the same three missions.
 INSERT INTO missions(project_id, user_id, objet, lieu, date_debut, date_fin, created_at, updated_at, deleted)
 SELECT p.id, p.chef_projet_id,
   'Présentation du comité de pilotage mi-parcours',
@@ -1518,34 +1108,19 @@ FROM projects p WHERE p.deleted = FALSE AND p.status IN ('COMPLETED','ACTIVE')
                  'S2I-2024-011','S2I-2022-021','S2I-2022-027','S2I-2023-028')
 ON CONFLICT DO NOTHING;
 
--- Composantes des missions
--- Mission components: what a trip costs, broken down line by line. V10 allows
--- PERDIEM, BILLET, TIMBRE, TRANSPORT and SEJOUR; the demo uses the two that
--- appear on every real expense claim, so the mission screen has something to
--- total up.
+-- Mission components: V10 allows PERDIEM, BILLET, TIMBRE, TRANSPORT, SEJOUR —
+-- the demo uses the two on every real expense claim.
 
--- A flat 180 TND plane ticket on EVERY mission, one-day trips included.
--- Note the FROM clause: "FROM missions m", not FROM projects. A component hangs
--- on a TRIP, not on a project, so the rows are derived from the missions written
--- just above. This also means the statement must stay after them — run first, it
--- would find nothing to attach to and insert nothing at all.
+-- Flat 180 TND plane ticket on every mission. Hangs off missions (not
+-- projects), so must run after the INSERTs above.
 INSERT INTO composantes_mission(mission_id, type_composante, montant, devise, description, created_at, updated_at, deleted)
 SELECT m.id, 'BILLET', 180.00, 'TND', 'Billet d''avion aller-retour Tunis–destination', NOW(), NOW(), false
 FROM missions m WHERE m.deleted = FALSE
 ON CONFLICT DO NOTHING;
 
--- The per diem (the fixed daily allowance paid to somebody travelling) is
--- 85 TND times the number of days.
--- "m.date_fin - m.date_debut": subtracting two DATE values in PostgreSQL gives a
--- whole number of DAYS, not an interval. The "+ 1" counts both ends, so a trip
--- from the 8th to the 10th is 3 days and not 2 — without it the company would
--- underpay every traveller by exactly one day.
--- The very same expression is repeated inside the description text, glued with
--- || (which joins text), so the wording and the amount can never disagree.
--- "WHERE ... date_fin > date_debut" leaves out the one-day missions of statement
--- 3, which therefore get a ticket and no per diem. Worth knowing: this is a
--- choice about the demo data, NOT something the schema forces. V10 only requires
--- montant > 0, and 85 × 1 day would satisfy that perfectly well.
+-- Per diem: 85 TND × nights (+1 to count both ends: the 8th to the 10th is 3
+-- days). Excludes the one-day missions of statement 3 (a data choice, not
+-- schema-forced — V10 only requires montant > 0).
 INSERT INTO composantes_mission(mission_id, type_composante, montant, devise, description, created_at, updated_at, deleted)
 SELECT m.id, 'PERDIEM', 85.00 * (m.date_fin - m.date_debut + 1), 'TND',
   'Per diem journalier × ' || (m.date_fin - m.date_debut + 1) || ' jour(s)',
@@ -1554,24 +1129,13 @@ FROM missions m WHERE m.deleted = FALSE AND m.date_fin > m.date_debut
 ON CONFLICT DO NOTHING;
 
 -- ── §12  Risques ──────────────────────────────────────────────
--- (French original: "Risques")
--- The risk register of each project: what could go wrong, how likely it is, how
--- bad it would be, and what is planned about it.
--- The table comes from V11, which restricts probabilite and impact to
--- FAIBLE / MOYEN / ELEVE and statut to OUVERT / MITIGE / FERME. Every value
--- written below is one of those; anything else and the CHECK constraints would
--- reject the row and stop the whole migration.
---
--- Two risks go to every started project, two more only to a chosen list, so the
--- registers differ from one project to another instead of being 50 copies.
+-- Risk register per project. V11 restricts probabilite/impact to
+-- FAIBLE/MOYEN/ELEVE and statut to OUVERT/MITIGE/FERME.
+-- Two risks go to every started project, two more to a chosen list, so
+-- registers differ from project to project.
 
--- Risk 1: client environments delivered late. On every started project, because
--- it is the one delay every integrator meets.
--- The CASE ties the state of the RISK to the state of the PROJECT: a finished
--- project has closed its risks (FERME), a running one still carries them
--- (OUVERT). Without it every project, finished or not, would show an open
--- register, and the governance screen could never be shown with a closed risk in
--- it.
+-- Risk 1: client environments delivered late — every started project.
+-- Closed (FERME) once the project is COMPLETED, else OUVERT.
 INSERT INTO risks(project_id, description, probabilite, impact, plan_mitigation, statut, created_at, updated_at, deleted)
 SELECT p.id,
   'Retard de disponibilité des environnements client (recette, intégration)',
@@ -1582,12 +1146,9 @@ SELECT p.id,
 FROM projects p WHERE p.deleted=FALSE AND p.status != 'DRAFT'
 ON CONFLICT DO NOTHING;
 
--- Risk 2: the scope was never firmly agreed — the classic cause of workload
--- drift, and the business reason the avenants of §8 exist at all.
--- Note this CASE ends on MITIGE, not FERME: on a finished project this risk was
--- CONTAINED, not eliminated. Using the third state deliberately means the demo
--- exercises all three values the CHECK allows, so the status filter of the risk
--- screen can be shown actually filtering something.
+-- Risk 2: scope never firmly agreed — the cause behind §8's amendments.
+-- Ends on MITIGE (not FERME) when finished: contained, not eliminated —
+-- exercises all three CHECK values.
 INSERT INTO risks(project_id, description, probabilite, impact, plan_mitigation, statut, created_at, updated_at, deleted)
 SELECT p.id,
   'Périmètre fonctionnel insuffisamment défini — risque de dérive des charges',
@@ -1598,13 +1159,8 @@ SELECT p.id,
 FROM projects p WHERE p.deleted=FALSE AND p.status != 'DRAFT'
 ON CONFLICT DO NOTHING;
 
--- Risk 3: key people leaving mid-project. ACTIVE projects only, and only eight
--- of them: a risk that sits on every project is not a risk, it is a property of
--- the company, and a register where every line is identical teaches the reader
--- nothing.
--- Its statut is the literal 'OUVERT' rather than a CASE, because the WHERE
--- already keeps ACTIVE projects only — there is no finished project here whose
--- state would need deciding.
+-- Risk 3: key people leaving mid-project — 8 ACTIVE projects only, so the
+-- register isn't identical everywhere.
 INSERT INTO risks(project_id, description, probabilite, impact, plan_mitigation, statut, created_at, updated_at, deleted)
 SELECT p.id,
   'Turnover des ressources clés en cours de projet',
@@ -1618,11 +1174,8 @@ WHERE p.deleted=FALSE AND p.status='ACTIVE'
                  'S2I-2023-022','S2I-2022-027','S2I-2023-028','S2I-2023-048')
 ON CONFLICT DO NOTHING;
 
--- Risk 4: integration with the client's legacy systems. The only one rated
--- ELEVE / ELEVE, on six projects.
--- High probability AND high impact is the top-right corner of the risk matrix,
--- so this statement is what makes the heat map of the governance screen show
--- something other than a single flat colour.
+-- Risk 4: legacy system integration — the only ELEVE/ELEVE risk, six
+-- projects, so the governance heat map isn't a single flat colour.
 INSERT INTO risks(project_id, description, probabilite, impact, plan_mitigation, statut, created_at, updated_at, deleted)
 SELECT p.id,
   'Intégration complexe avec les systèmes legacy du client',
@@ -1637,20 +1190,13 @@ WHERE p.deleted=FALSE AND p.status='ACTIVE'
 ON CONFLICT DO NOTHING;
 
 -- ── §13  Livrables ────────────────────────────────────────────
--- (French original: "Livrables")
--- The deliverables of each project: the documents and versions the client is
--- owed, each with a due date and a state. V11 allows EN_ATTENTE, EN_COURS,
--- LIVRE and VALIDE only.
--- These rows matter beyond the governance screen: delivery_pct in V22 is
--- "delivered divided by planned", so this table is what a delivery percentage is
--- actually counted from. Seed it empty and that indicator has no denominator.
---
--- The same five deliverables go to every project, which is realistic: a software
--- company sells the same life cycle each time. What changes from one project to
--- the next is the STATE, decided by the CASE expressions below.
+-- Deliverables owed to the client, each with a due date and state (V11:
+-- EN_ATTENTE, EN_COURS, LIVRE, VALIDE). delivery_pct in V22 is "delivered
+-- divided by planned", so this table is that indicator's denominator.
+-- Same five deliverables on every project; only the STATE (the CASE below) differs.
 
--- 1. Signed specification, due six weeks in. Validated as soon as the project is
--- really running (COMPLETED or ACTIVE), still waiting otherwise.
+-- 1. Signed specification, due six weeks in. Validated once the project has
+-- genuinely started (COMPLETED/ACTIVE).
 INSERT INTO livrables(project_id, titre, description, date_echeance, statut, created_at, updated_at, deleted)
 SELECT p.id, 'Cahier des charges validé',
   'Document de spécifications fonctionnelles générales et détaillées, validé par le client.',
@@ -1660,9 +1206,7 @@ SELECT p.id, 'Cahier des charges validé',
 FROM projects p WHERE p.deleted=FALSE AND p.status != 'DRAFT'
 ON CONFLICT DO NOTHING;
 
--- 2. Technical architecture file, due two months in. Same state rule as the
--- specification, on purpose: both are early documents, so both are done as soon
--- as the project has genuinely started.
+-- 2. Technical architecture, due two months in — same state rule as #1.
 INSERT INTO livrables(project_id, titre, description, date_echeance, statut, created_at, updated_at, deleted)
 SELECT p.id, 'Architecture technique',
   'Dossier d''architecture applicative, infra et sécurité — validé par le comité technique.',
@@ -1672,13 +1216,10 @@ SELECT p.id, 'Architecture technique',
 FROM projects p WHERE p.deleted=FALSE AND p.status != 'DRAFT'
 ON CONFLICT DO NOTHING;
 
--- 3. Beta version, due six months in. Three states instead of two: VALIDE on a
--- finished project, EN_COURS on a running one, EN_ATTENTE otherwise — so the
--- board shows work in progress and not only done-or-not-done.
--- Worth noticing before a jury asks: the WHERE of THIS statement alone carries
--- no "status != 'DRAFT'" filter, unlike the four others. A DRAFT project
--- therefore ends up with exactly one deliverable, in EN_ATTENTE. Nothing breaks
--- and the state is a sensible one, but the difference does not look deliberate.
+-- 3. Beta version, due six months in. Three states (VALIDE/EN_COURS/
+-- EN_ATTENTE) so the board shows in-progress work too. Note: this statement's
+-- WHERE has no "status != 'DRAFT'" filter, so a DRAFT project gets exactly
+-- this one deliverable, EN_ATTENTE.
 INSERT INTO livrables(project_id, titre, description, date_echeance, statut, created_at, updated_at, deleted)
 SELECT p.id, 'Application version bêta',
   'Livraison de la version bêta pour recette interne et tests utilisateurs.',
@@ -1690,15 +1231,10 @@ SELECT p.id, 'Application version bêta',
 FROM projects p WHERE p.deleted=FALSE
 ON CONFLICT DO NOTHING;
 
--- 4. End-user training, due three weeks before the project ends.
--- The due date is computed BACKWARDS from the end and not forwards from the
--- start, because training happens just before hand-over whatever the length of
--- the project.
--- COALESCE(p.end_date, p.start_date + INTERVAL '12 months') supplies an end date
--- for a project stored without one. In SQL any arithmetic on NULL gives NULL, so
--- without it those projects would receive a deliverable with NO due date at all,
--- and the "late deliverables" list could never see them — the exact rows a
--- project manager most needs to find.
+-- 4. End-user training, due three weeks BEFORE the end (training happens just
+-- before hand-over regardless of project length). COALESCE supplies an end
+-- date so a project without one still gets a due date the "late deliverables"
+-- list can find.
 INSERT INTO livrables(project_id, titre, description, date_echeance, statut, created_at, updated_at, deleted)
 SELECT p.id, 'Formation des utilisateurs',
   'Sessions de formation pour les utilisateurs finaux et les administrateurs fonctionnels.',
@@ -1708,11 +1244,9 @@ SELECT p.id, 'Formation des utilisateurs',
 FROM projects p WHERE p.deleted=FALSE AND p.status != 'DRAFT'
 ON CONFLICT DO NOTHING;
 
--- 5. Go-live and signed acceptance report, one week before the end: the last
--- deliverable, and the only one whose finished state is LIVRE rather than
--- VALIDE. The distinction is real — the work is handed over, while the formal
--- validation is the client's signature, which comes later. Using both values
--- also means the demo covers all four states the CHECK of V11 allows.
+-- 5. Go-live and signed acceptance report, one week before the end — the only
+-- one whose done state is LIVRE (handed over) rather than VALIDE (formally
+-- signed off later), exercising all four CHECK states.
 INSERT INTO livrables(project_id, titre, description, date_echeance, statut, created_at, updated_at, deleted)
 SELECT p.id, 'Mise en production et PV de recette',
   'Déploiement en production, PV de recette signé et passation de service.',
@@ -1723,52 +1257,21 @@ FROM projects p WHERE p.deleted=FALSE AND p.status != 'DRAFT'
 ON CONFLICT DO NOTHING;
 
 -- ── §14  Parties prenantes ────────────────────────────────────
--- (French original: "Parties prenantes")
--- The stakeholders of each project: the people on the CLIENT side who decide, or
--- who are affected by what is delivered.
--- They are not users of this application and have no account — which is exactly
--- why parties_prenantes stores a name, a job title, an e-mail and a phone number
--- as plain text instead of pointing at users(id).
--- influence and interet are the two axes of the classic stakeholder matrix; V11
--- restricts both to FAIBLE / MOYEN / ELEVE.
--- Two contacts per project, one decision-maker and one day-to-day counterpart,
--- so the matrix has points in more than one square.
+-- Client-side stakeholders — not application users, so name/job/e-mail/phone
+-- are stored as plain text rather than pointing at users(id). influence and
+-- interet are the two axes of the stakeholder matrix (V11: FAIBLE/MOYEN/ELEVE).
+-- Two contacts per project (a decision-maker and a day-to-day counterpart) so
+-- the matrix has points in more than one square.
 
--- The client's IT director: high influence, high interest — the top-right corner
--- of the matrix, the person to keep closest.
--- || glues text together, so the name reads "DSI <client>".
---
--- THE REGULAR EXPRESSION, regexp_replace(p.client, '[^a-zA-Z]', '', 'g'):
--- it turns the client's name into something usable as a domain name.
---   [a-zA-Z]  is the set of all letters, upper and lower case.
---   the ^ INSIDE the square brackets means NOT, so [^a-zA-Z] matches every
---             character that is not a letter: spaces, apostrophes, digits,
---             hyphens, accented letters.
---   ''        is the replacement — an empty string, so those characters are
---             simply removed.
---   'g'       is the global flag: replace EVERY match, not just the first one.
--- lower() then puts the result in lower case, so "Banque de l'Habitat" becomes
--- "banquedelhabitat" and the address reads dsi@banquedelhabitat.tn.
--- Without the 'g' flag only the FIRST space would be removed and the address
--- would still contain spaces and an apostrophe, which is not a valid e-mail.
--- Be aware accented letters are not in a-z either, so they go too: "Société"
--- gives "socit". Acceptable here because these are fictional demo contacts that
--- nobody writes to.
---
--- THE PHONE NUMBER, '+216 71 ' || (100000 + floor(random()*899999))::INT:
--- +216 is the country code of Tunisia and 71 the Tunis landline prefix; the
--- arithmetic yields a whole number between 100000 and 999999, so the number is
--- never short of a digit. ::INT casts away the decimals floor() already removed,
--- so the text carries no ".0".
--- Because random() is used, this number is DIFFERENT on every run — unlike the
--- bank references of §7, which are built from the data and come out the same
--- every time. Harmless for a number nobody calls, but worth knowing before
--- anybody compares two databases row by row.
---
--- "p.client IS NOT NULL" is the guard that really matters. The client's name is
--- used three times above, and in SQL concatenating anything with NULL gives
--- NULL. A project with no client would produce a row whose "nom" is NULL — and
--- nom is NOT NULL in V11, so that single row would abort the whole migration.
+-- IT director: high influence, high interest.
+-- regexp_replace(p.client, '[^a-zA-Z]', '', 'g') strips everything but
+-- letters (accents included) to build a fake domain, e.g. "Banque de
+-- l'Habitat" -> "banquedelhabitat" -> dsi@banquedelhabitat.tn. Fine here since
+-- these are fictional contacts nobody writes to.
+-- Phone: '+216 71 ' + a random 6-digit number (71 = Tunis landline prefix);
+-- random so it differs on every run, unlike §7's deterministic references.
+-- "p.client IS NOT NULL" guards against a NULL client producing a NULL "nom",
+-- which is NOT NULL in V11 and would abort the migration.
 INSERT INTO parties_prenantes(project_id, nom, fonction, email, telephone, influence, interet, created_at, updated_at, deleted)
 SELECT p.id,
   'DSI ' || p.client,
@@ -1780,12 +1283,9 @@ SELECT p.id,
 FROM projects p WHERE p.deleted=FALSE AND p.status != 'DRAFT' AND p.client IS NOT NULL
 ON CONFLICT DO NOTHING;
 
--- The client's own functional project manager: MEDIUM influence, high interest —
--- he lives the project every day but does not sign the cheques. Placing the two
--- contacts in different squares of the matrix is the whole point of having two.
--- Same construction as above, with '98' instead of '71': that is a Tunisian
--- MOBILE prefix rather than a landline one, the small detail that makes the two
--- contacts read as different people on screen.
+-- Client's functional project manager: medium influence, high interest —
+-- deliberately a different square of the matrix. '98' is a mobile prefix
+-- (vs '71' landline above), so the two contacts read as different people.
 INSERT INTO parties_prenantes(project_id, nom, fonction, email, telephone, influence, interet, created_at, updated_at, deleted)
 SELECT p.id,
   'Chef de projet ' || p.client,
@@ -1798,29 +1298,15 @@ FROM projects p WHERE p.deleted=FALSE AND p.status != 'DRAFT' AND p.client IS NO
 ON CONFLICT DO NOTHING;
 
 -- ── §15  Demandes de changement ───────────────────────────────
--- (French original: "Demandes de changement")
--- Change requests: what the client asked for that was not in the contract.
--- This is the governance counterpart of the avenants of §8 — a change request is
--- the DEMAND, an avenant is the signed contract that follows once it is
--- accepted. Seeing both lets a jury follow one change from request to amendment.
--- V11 restricts priorite to FAIBLE / NORMALE / ELEVEE / CRITIQUE and statut to
--- EN_ATTENTE / APPROUVE / REJETE.
---
--- demandeur_id is the project's own manager. In this company the request reaches
--- the tool through the project manager, who records it; and the column is a
--- foreign key to users, so it HAS to be somebody with an account — the client
--- himself has none, which is precisely the point made in §14.
+-- Change requests: the DEMAND that an avenant (§8) later formalizes into a
+-- signed amendment. V11 restricts priorite to
+-- FAIBLE/NORMALE/ELEVEE/CRITIQUE and statut to EN_ATTENTE/APPROUVE/REJETE.
+-- demandeur_id is the project's manager: the client has no account (§14), so
+-- the request always reaches the tool through him.
 
--- Request 1: an extra reporting module. Priority NORMALE, already APPROUVE.
--- The decision is dated one month after the request (raised at start + 4 months,
--- decided at start + 5 months), which gives the governance screen a realistic
--- delay to display instead of a decision taken the same day.
--- Eleven projects, listed by code, all COMPLETED or ACTIVE.
--- Worth knowing before a jury cross-checks: this list OVERLAPS the eleven
--- projects that receive an avenant in §8 but is not identical — nine codes are
--- common, and two differ on each side. So a few approved change requests here
--- have no matching amendment behind them, and vice versa. The two sections were
--- written independently of each other.
+-- Request 1: extra reporting module. NORMALE, APPROUVE one month after being
+-- raised. Eleven projects — overlaps but doesn't exactly match §8's eleven
+-- (the two sections were written independently).
 INSERT INTO demandes_changement(project_id, demandeur_id, titre, description, priorite, statut, date_demande, date_decision, created_at, updated_at, deleted)
 SELECT p.id, p.chef_projet_id,
   'Ajout d''un module de reporting complémentaire',
@@ -1836,11 +1322,9 @@ WHERE p.deleted=FALSE AND p.status IN ('COMPLETED','ACTIVE')
                  'S2I-2022-027','S2I-2023-028','S2I-2023-048')
 ON CONFLICT DO NOTHING;
 
--- Request 2: a framework upgrade forced by the client's own security policy.
--- Priority ELEVEE and already APPROUVE, decided just ten days after being raised
--- — a security matter is not left sitting in a queue, and the short delay is
--- what makes the priority visible in the data rather than only in the label.
--- ACTIVE projects only, five of them.
+-- Request 2: framework upgrade forced by the client's security policy. ELEVEE,
+-- decided just 10 days after being raised (a security matter isn't left
+-- queued). 5 ACTIVE projects.
 INSERT INTO demandes_changement(project_id, demandeur_id, titre, description, priorite, statut, date_demande, date_decision, created_at, updated_at, deleted)
 SELECT p.id, p.chef_projet_id,
   'Migration vers une nouvelle version du framework',
@@ -1854,16 +1338,9 @@ WHERE p.deleted=FALSE AND p.status = 'ACTIVE'
   AND p.code IN ('S2I-2023-004','S2I-2024-011','S2I-2023-022','S2I-2023-033','S2I-2023-048')
 ON CONFLICT DO NOTHING;
 
--- Request 3: switching to the government SSO (single sign-on: one login shared
--- by several applications). Priority CRITIQUE, and still EN_ATTENTE.
--- Look carefully at the column list of THIS statement: date_decision is ABSENT,
--- where the two statements above both name it. That is the whole point of the
--- statement. A request that has not been decided has no decision date, so the
--- column is left NULL. Writing a date there would claim the request was settled
--- while its statut says it is still open, and the two fields of the same row
--- would contradict each other in front of the reader.
--- Having at least one pending request is also what lets the "waiting for a
--- decision" filter of the governance screen be demonstrated with a result in it.
+-- Request 3: government SSO switch. CRITIQUE, still EN_ATTENTE — date_decision
+-- is deliberately absent from this statement's column list (undecided means no
+-- decision date), giving the "waiting for a decision" filter something to show.
 INSERT INTO demandes_changement(project_id, demandeur_id, titre, description, priorite, statut, date_demande, created_at, updated_at, deleted)
 SELECT p.id, p.chef_projet_id,
   'Intégration avec un nouveau partenaire SSO',

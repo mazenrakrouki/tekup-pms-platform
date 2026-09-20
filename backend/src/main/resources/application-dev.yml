@@ -1,134 +1,58 @@
-# =============================================================================
-# application-dev.yml -- DEVELOPMENT profile of the PMS backend.
-#
-# WHAT THIS FILE IS
-#   The handful of settings that differ when the application runs on a
-#   developer's own machine: a local database, loud logs, and longer tokens so
-#   testing a screen is not interrupted every 15 minutes.
-#
-# WHERE IT SITS IN THE FLOW
-#   Spring Boot reads application.yml first, then this file ON TOP of it. Only
-#   the keys written below are replaced; everything else (Hikari pool, Flyway
-#   setup, Caffeine cache, Actuator, CORS on port 4200, bcrypt strength 12,
-#   server port 8090) still comes from application.yml.
-#   Activated with:  --spring.profiles.active=dev
-#   Or in the IDE:   VM options = -Dspring.profiles.active=dev
-#
-# WHY IT EXISTS -- what would break if you deleted it
-#   Two things would stop working. First, application.yml gives no default for
-#   DB_PASSWORD and JWT_SECRET on purpose, so without this file the app would
-#   refuse to start on a laptop unless both environment variables were set by
-#   hand every time. Second, nothing would be visible: no SQL in the console,
-#   no Spring Security trace, so debugging an authorization problem would mean
-#   guessing.
-#
-# RELATED FILES
-#   application.yml       -- the base every profile builds on
-#   application-prod.yml  -- the container profile (ADR-026); read the two side
-#                            by side to see what is deliberately different
-# =============================================================================
+# Development profile: local database, loud logs, longer tokens so testing isn't interrupted every
+# 15 minutes. Loaded on top of application.yml with --spring.profiles.active=dev; only the keys
+# below are overridden. Also supplies DB_PASSWORD/JWT_SECRET, which the base file leaves without a default.
 
 spring:
   datasource:
-    # A database dedicated to development: "pms_dev", separate from the
-    # "pms_db" default of application.yml. Why a separate database: Flyway
-    # replays migrations here constantly and the data is thrown away, so it
-    # must never be the same database as a demo or a shared instance.
+    # Dedicated "pms_dev" database, separate from pms_db, since Flyway replays migrations here constantly.
     url: jdbc:postgresql://localhost:5432/pms_dev
     username: pms_dev
-    # Written in clear ON PURPOSE, and only in this file. This value is a local
-    # convenience, it never leaves the developer's machine, and the "dev"
-    # profile is never activated on a server. It also overrides the
-    # "${DB_PASSWORD}" of application.yml, which has no default: because this
-    # key wins, the placeholder in the base file is never resolved and the
-    # startup does not fail.
+    # Plain-text on purpose: local-only convenience, never used outside this profile. Overrides the
+    # no-default ${DB_PASSWORD} in application.yml so a laptop doesn't need the env var set.
     password: pms_dev
 
   jpa:
-    # Print every SQL statement Hibernate sends. Why in dev only: this is how
-    # you catch an N+1 problem (one SELECT per row of a list) or a query that
-    # fetches a whole table. In production it would flood the logs and could
-    # write business data into them.
+    # Prints every SQL statement, the way to catch an N+1 or a full-table fetch during dev.
     show-sql: true
     properties:
       hibernate:
-        # Pretty-print those statements over several lines with indentation.
-        # A twelve-join query is unreadable on a single line.
+        # Pretty-prints multi-join statements over several lines.
         format_sql: true
 
   flyway:
-    # Same folder as the base file. It is repeated here so that a developer
-    # reading only this profile sees where the migrations come from; it does
-    # not change anything.
+    # Repeated from the base file for readability; doesn't change behavior.
     locations: classpath:db/migration
-    # Repeated for the same reason: a migration numbered below one already
-    # applied is refused, exactly as in production. Keeping the rule identical
-    # in dev is the point -- the failure must happen on the laptop, not on the
-    # server.
+    # Same rule as prod, kept identical so an ordering failure surfaces on the laptop, not the server.
     out-of-order: false
 
   output:
     ansi:
-      # Force colour codes in the console. Spring normally disables them when
-      # it does not detect a real terminal, which is what happens inside an
-      # IDE console. Without this, an ERROR line looks exactly like an INFO
-      # line in a wall of DEBUG output.
+      # Forces colour codes, since Spring disables them by default inside an IDE console.
       enabled: always   # Colours in the console
 
 pms:
   jwt:
-    # DEVELOPMENT secret only -- never used outside the dev profile.
-    # The base profile no longer has a default value (fail fast when it is not
-    # configured), so this profile provides its own explicitly.
-    # Raw UTF-8 bytes (no base64 decoding) -> at least 64 characters, which is
-    # what makes jjwt pick HMAC-SHA512 rather than silently falling back to
-    # HMAC-SHA256. The string below is 80 characters, so it is comfortably
-    # above that line. See the longer note on pms.jwt.secret in application.yml.
-    # It is safe to keep it in the repository precisely because it is useless
-    # anywhere else: prod reads ${JWT_SECRET} from the environment, so a token
-    # signed with this string is rejected by any real deployment.
+    # Dev-only secret; safe to commit since prod reads ${JWT_SECRET} from the environment and would
+    # reject a token signed with this one. 80 chars, comfortably above the 64 needed for HMAC-SHA512.
     secret: dev-only-secret-not-for-production-dev-only-secret-not-for-production-0123456789
-    # 1 hour instead of the 15 minutes of application.yml. Why: while building
-    # a screen you reload the browser dozens of times, and a token expiring
-    # mid-session sends you back to the login page in the middle of a test.
-    # The short lifetime matters in production, where a leaked token is a real
-    # risk; on a laptop it only slows the work down.
+    # 1 hour instead of 15 minutes, so reloading the browser during dev doesn't bounce you to login.
     access-token-expiration: 3600   # 1 hour in dev (easier for testing)
-    # 1 day instead of 7. Long enough to keep a session over a working day,
-    # short enough that the refresh path is still exercised regularly -- a
-    # refresh that never runs in dev is a refresh that is never tested.
+    # 1 day: long enough for a working session, short enough that the refresh path still gets exercised.
     refresh-token-expiration: 86400 # 1 day in dev
-    # 30 days, deliberately the SAME value as production. Why not shortened
-    # like the other two: this one is shown to the user ("Remember me for 30
-    # days"), so testing it with a different number would test something the
-    # user never sees.
+    # Same as prod on purpose — this value is shown on the login page, so it must test the real behavior.
     remember-me-expiration:  2592000 # 30 days (same as prod, to test the real behaviour)
 
 logging:
   level:
-    # Third-party libraries stay at INFO, otherwise the useful lines below
-    # would drown in framework noise.
     root: INFO
-    # The project's own packages at DEBUG: this is where the business logs of
-    # the services are.
+    # App packages at DEBUG for the business logs.
     com.pms: DEBUG
-    # Spring Security at DEBUG. This is the single most useful line of the
-    # file: it prints which filter ran, which Authentication was built, and
-    # why a request was refused. Without it, a 403 coming from
-    # @PreAuthorize("hasAuthority('X')") is a silent, unexplained failure and
-    # you cannot tell a missing permission (RBAC) from a failed project-scope
-    # check (ProjectScopeInterceptor, ADR-021).
+    # Prints which filter ran and why a request was refused — the fastest way to tell a missing
+    # permission (RBAC) apart from a failed project-scope check (ADR-021).
     org.springframework.security: DEBUG
-    # Flyway at DEBUG: prints every migration as it is applied, with its
-    # version and its checksum. Needed when a new V*.sql does not behave, or
-    # to see exactly where a failed migration stopped.
+    # Prints each migration as it's applied, useful when a new V*.sql misbehaves.
     org.flywaydb: DEBUG
-    # The SQL statements themselves (the companion of show-sql above, but
-    # routed through the logging system rather than standard output).
+    # SQL statements themselves (companion of show-sql, routed through logging).
     org.hibernate.SQL: DEBUG
-    # TRACE on this logger prints the VALUES bound to the "?" placeholders of
-    # each statement. Why it is needed: org.hibernate.SQL alone shows
-    # "where project_id=?" and you cannot tell which project was queried.
-    # Never raise this in production -- the bound values include e-mail
-    # addresses, amounts, and everything else that travels in a query.
+    # Prints the actual values bound to "?" placeholders. Never raise this in prod — it logs emails and amounts.
     org.hibernate.orm.jdbc.bind: TRACE

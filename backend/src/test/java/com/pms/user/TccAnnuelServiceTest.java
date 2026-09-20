@@ -30,20 +30,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Tarifs TCC par année (F-AFF-13 §6.3 règle 4).
- *
- * <p>Ces tests couvrent la mise à jour d'une année déjà enregistrée. La première
- * version du service soft-supprimait toutes les lignes puis réinsérait la liste
- * reçue ; Hibernate exécutant les INSERT avant les UPDATE, la nouvelle ligne d'une
- * année arrivait avant que l'ancienne soit marquée supprimée et l'index unique
- * partiel uk_tcc_annuel_resource_annee la rejetait. Toute modification d'un taux
- * déjà saisi renvoyait donc 409, alors que le TCC est censé changer chaque année.
- *
- * <p>Le test s'exécute sur H2 avec ddl-auto, sans les migrations Flyway : l'index
- * unique n'existe pas ici, et c'est précisément pour cela que le défaut n'avait
- * pas été vu. On vérifie donc l'invariant que l'index protège en production —
- * une année conservée garde sa ligne au lieu d'être remplacée — plutôt que le
- * code HTTP, qui ne dirait rien sans la contrainte.
+ * Tarifs TCC par année (F-AFF-13 §6.3 règle 4). Couvre la mise à jour d'une année
+ * déjà enregistrée : l'ancienne implémentation (delete-then-reinsert) heurtait
+ * l'index unique partiel à cause de l'ordre INSERT-avant-UPDATE d'Hibernate,
+ * renvoyant 409 à tort. Tourne sur H2 sans Flyway (donc sans le vrai index), d'où
+ * l'assertion directe sur l'invariant plutôt que sur le code HTTP.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -166,11 +157,8 @@ class TccAnnuelServiceTest {
         assertThat(after).allSatisfy(t -> assertThat(t.getId()).isEqualTo(idsBefore.get(t.getAnnee())));
     }
 
-    /**
-     * L'envoi est refusé avant tout accès à la base. Le code est 409 et non 400 :
-     * le gestionnaire global mappe IllegalArgumentException sur Conflict pour tout
-     * le projet. C'est la convention en place, on l'atteste telle quelle.
-     */
+    /** Refusé avant tout accès base ; 409 (pas 400) car le handler global mappe
+     * IllegalArgumentException sur Conflict pour tout le projet. */
     @Test
     @DisplayName("Deux fois la même année dans un seul envoi → refus")
     void duplicateYearInOnePayloadIsRejected() throws Exception {

@@ -1,60 +1,24 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// PMS 2026 Enterprise Design System
-// Inspired by: Linear · GitHub · Vercel · Jira Cloud
-// ─────────────────────────────────────────────────────────────────────────────
+// PMS 2026 Enterprise Design System — inspired by Linear, GitHub, Vercel, Jira Cloud.
 
-/* ============================================================================
-   FILE: styles.scss — the one global stylesheet of the front end.
+// Global stylesheet: design tokens (colours, shadows, radii, timings as CSS custom properties),
+// a Bootstrap 5 re-skin, and shared layout classes (.sidebar, .card, .table, .badge-*...) used
+// by every screen. ThemeService toggles data-theme="dark" on <html>; the dark block below reacts.
 
-   WHAT IT IS: the design system of PMS. It defines the design tokens (the
-   colours, shadows, corner radii and animation speeds, stored as CSS custom
-   properties like --c-brand), it re-skins Bootstrap 5 to match them, and it
-   provides the shared layout classes (.sidebar, .main-content, .topbar,
-   .card, .table, .badge-*, ...) used by every screen.
-
-   WHERE IT SITS IN THE FLOW:
-     angular.json lists this file in the "styles" array, so the build tool
-     compiles it and index.html loads it for the whole page. It is GLOBAL: it is
-     not scoped to one component, unlike the styles: [`...`] blocks written
-     inside Angular components. The layout components (app-shell, the sidebar,
-     the topbar) only write class names; the look comes from here.
-     ThemeService writes data-theme="dark" on the <html> tag, and the dark
-     section below then overrides the tokens.
-
-   WHY IT EXISTS: without it every screen would show raw unstyled Bootstrap,
-   dark mode would not exist at all (no component knows the dark colours; they
-   only read the tokens defined here), and each component would have to repeat
-   its own colours, which would drift apart screen after screen.
-   ============================================================================ */
-
-/* @use loads the Bootstrap 5 source (SCSS) and "as *" puts its mixins and
-   functions in this file's namespace, so rules below can extend Bootstrap
-   classes such as .btn or .table instead of re-inventing them.
-   Without this line, .card, .modal, the grid and the responsive utilities used
-   in every template would simply not exist. */
+/* @use puts Bootstrap 5's mixins/functions in this namespace so rules below can extend .btn,
+   .table etc. instead of re-inventing them. */
 @use 'bootstrap/scss/bootstrap' as *;
-/* The Bootstrap Icons font (the <i class="bi bi-..."> tags used everywhere,
-   for example the sidebar icons). @import is used and not @use because this is
-   a plain .css file, which @use cannot load.
-   Without it every icon renders as an empty box. */
+/* Bootstrap Icons (the <i class="bi bi-..."> glyphs). Plain @import since it's a .css file. */
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DESIGN TOKENS — Light mode (default)
 // ─────────────────────────────────────────────────────────────────────────────
-/* :root is the <html> element. Declaring the tokens here makes them readable by
-   every rule in the page AND by the scoped styles of every Angular component,
-   because CSS custom properties are inherited.
-   WHY tokens instead of writing #2563EB in each component: dark mode is then a
-   handful of overrides (see the [data-theme="dark"] block) instead of touching
-   every file. Without them, switching to dark mode would leave white cards on a
-   black background, unreadable. */
+/* Declared on :root (<html>) so every rule and every scoped component style can read them via
+   inheritance. Tokens instead of hard-coded colours mean dark mode is a handful of overrides
+   below rather than touching every file. */
 :root {
-  /* Brand and semantic colours. Each colour comes in a full version and a
-     "-dim" version, which is the same colour at low opacity (rgba) used as a
-     soft background behind the strong text colour — see .badge-active or
-     .metric-icon--brand below. rgba and not a solid tint so the same token
-     works on the white surface and on the dark surface. */
+  // Each colour has a "-dim" (low-opacity rgba) variant used as a soft background behind the
+  // strong colour — see .badge-active / .metric-icon--brand — and rgba keeps it working on both surfaces.
   // Brand
   --c-brand:        #2563EB;
   --c-brand-hover:  #1D4ED8;
@@ -73,12 +37,8 @@
   --c-amber:        #F59E0B;
   --c-amber-dim:    rgba(245,158,11,.12);
 
-  /* Sidebar tokens are kept separate from the content tokens on purpose: the
-     sidebar stays dark even in light mode (the Linear / Jira look). If it used
-     --surface and --text-1 like the rest, it would turn white in light mode and
-     the whole navigation would lose its contrast.
-     --s-width / --s-width-c are the open and collapsed widths; .main-content
-     reuses them for its left margin, so one value change moves both. */
+  // Sidebar tokens are separate from content tokens: the sidebar stays dark even in light mode
+  // (Linear/Jira look). --s-width / --s-width-c are shared with .main-content's left margin.
   // Sidebar — always dark in both themes (Linear/Jira style)
   --s-bg:           #111827;
   --s-border:       rgba(255,255,255,.06);
@@ -99,11 +59,7 @@
   --border:         #E2E8F0;
   --border-2:       #CBD5E1;
 
-  /* Three text levels, from the strongest to the faintest: --text-1 for titles
-     and values, --text-2 for labels and secondary text, --text-3 for captions.
-     Using three fixed levels instead of ad-hoc greys keeps the contrast ratio
-     readable in both themes; a hand-picked grey that works on white becomes
-     invisible on the dark background. */
+  // Three fixed text levels (titles, labels, captions) keep contrast readable in both themes.
   // Text — light
   --text-1:         #0F172A;
   --text-2:         #64748B;
@@ -115,10 +71,8 @@
   --tb-border:      #E2E8F0;
   --tb-h:           56px;
 
-  /* Elevation = the shadow scale, from xs (a card at rest) to xl (a modal).
-     A fixed ladder is used so two cards side by side never look like they are
-     on different planes. The dark block below re-declares the same names with
-     stronger, blacker shadows, because a light shadow is invisible on #0D1117. */
+  // Shadow scale (xs = resting card, xl = modal); the dark block below re-declares these darker,
+  // since a light shadow is invisible on #0D1117.
   // Elevation
   --sh-xs: 0 1px 2px rgba(0,0,0,.04);
   --sh-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.03);
@@ -126,9 +80,7 @@
   --sh-lg: 0 10px 15px -3px rgba(0,0,0,.07), 0 4px 6px -2px rgba(0,0,0,.03);
   --sh-xl: 0 20px 25px -5px rgba(0,0,0,.08), 0 10px 10px -5px rgba(0,0,0,.03);
 
-  /* Corner radii ladder. --r-full: 9999px is the usual trick to get a perfect
-     pill / circle whatever the element size (used for avatars and progress
-     bars): the browser clamps it to half the height. */
+  // --r-full: 9999px is the standard trick for a perfect pill/circle regardless of element size.
   // Radii
   --r-xs:  3px;
   --r-sm:   5px;
@@ -138,10 +90,8 @@
   --r-xl:   16px;
   --r-full: 9999px;
 
-  /* Two animation speeds only: --t for small feedback (hover colour), --t-slow
-     for movement (sidebar width, page margin). One shared value keeps the whole
-     app feeling like a single product; free-hand durations per component make
-     some hovers feel laggy and others twitchy. */
+  // --t for small feedback (hover), --t-slow for movement (sidebar width). Shared values keep
+  // the app feeling consistent instead of per-component durations feeling laggy or twitchy.
   // Transitions
   --t:    140ms ease;
   --t-slow: 220ms ease;
@@ -150,16 +100,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // DARK MODE
 // ─────────────────────────────────────────────────────────────────────────────
-/* Attribute selector: these rules apply only when the element carries
-   data-theme="dark". ThemeService puts that attribute on the <html> tag, so the
-   overrides cascade down to the whole page in one step.
-   WHY only the surface / text / shadow tokens are re-declared and not the brand
-   colours: blue, green and red keep their meaning in both themes, so only the
-   greys need to flip.
-   WHY an attribute rather than a CSS class: it cannot collide with a Bootstrap
-   class name, and it is a single well-known switch to read in the DevTools.
-   EXAMPLE without this block: the toggle in the topbar would change the stored
-   preference and the signal, but the screen would stay white. */
+/* Applies when <html> carries data-theme="dark" (set by ThemeService). Only surface/text/shadow
+   tokens are re-declared — brand colours keep their meaning in both themes. */
 [data-theme="dark"] {
   --bg:        #0D1117;
   --surface:   #161B22;
@@ -191,14 +133,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Bootstrap CSS-variable bridge
 // ─────────────────────────────────────────────────────────────────────────────
-/* Bootstrap 5.3 reads its own variables, all prefixed --bs-. This block points
-   them at our tokens, so Bootstrap components follow the design system without
-   having to override each Bootstrap class one by one.
-   --bs-primary-rgb holds the raw channels "37,99,235" because Bootstrap builds
-   rgba() values from it; giving it a hex string there would produce invalid CSS.
-   EXAMPLE without this bridge: .text-muted, .input-group-text and .nav-pills
-   keep the Bootstrap greys and stay light grey on the dark background, almost
-   unreadable, even though the rest of the page turned dark. */
+/* Points Bootstrap 5.3's own --bs-* variables at our tokens so Bootstrap components follow the
+   design system automatically. --bs-primary-rgb needs raw channels because Bootstrap builds
+   rgba() from it. */
 :root {
   --bs-primary:         #2563EB;
   --bs-primary-rgb:      37,99,235;
@@ -224,16 +161,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // BASE
 // ─────────────────────────────────────────────────────────────────────────────
-/* border-box means padding and border are counted INSIDE the declared width.
-   Without it, a .form-control declared at width:100% plus its horizontal
-   padding would measure more than its parent and overflow the card. */
+// border-box so padding/border count inside the declared width, not on top of it.
 *,*::before,*::after { box-sizing: border-box; }
 
-/* The page itself never scrolls: height is locked to the window and overflow is
-   hidden. Scrolling happens inside .main-content (and inside .sb-nav) instead.
-   WHY: the sidebar and the topbar must stay in place while the content moves.
-   Without it the whole document would scroll and the topbar would disappear
-   off the top of the screen. */
+/* Page itself never scrolls (height locked, overflow hidden); scrolling happens inside
+   .main-content / .sb-nav instead, so the sidebar and topbar stay fixed in place. */
 html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; }
 
 body {
@@ -246,34 +178,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Angular component tags are unknown elements, and the browser treats an
-   unknown element as inline with no height. Forcing display:block + height:100%
-   passes the full window height from <body> down to the layout.
-   Without it, .app-layout { height:100% } resolves against a zero-height parent
-   and the sidebar collapses to nothing. */
+// Angular tags are unknown elements (inline, zero height by default); block + height:100%
+// passes the window height down so .app-layout's height:100% has something to resolve against.
 app-root, app-shell, app-login { display: block; height: 100%; }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // APP LAYOUT
 // ─────────────────────────────────────────────────────────────────────────────
-/* The wrapper around the sidebar and the content, rendered by the shell
-   component. It is a flex row filling the window height; the layout component
-   toggles the .sidebar-collapsed class on this same element, which is why the
-   collapsed rules below are all written as children of it. */
+// Flex row filling the window height; the shell toggles .sidebar-collapsed on this element,
+// which is why the collapsed rules below are written as its children.
 .app-layout { display: flex; height: 100%; }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SIDEBAR
 // ─────────────────────────────────────────────────────────────────────────────
-/* The fixed navigation column.
-   position:fixed takes it out of the normal flow and pins it to the window, so
-   it does not scroll with the content. Because it no longer takes any space,
-   .main-content has to leave room for it with margin-left (see below) — the two
-   rules must always be changed together.
-   z-index:200 keeps it above the sticky topbar (z-index:100) so the collapsed
-   tooltips are not cut off.
-   overflow:hidden hides the labels while the width animates; without it the
-   text would stick out of the 56px collapsed bar during the animation. */
+/* Fixed navigation column. position:fixed pins it to the window (so .main-content must reserve
+   room via margin-left, see below — change both together). z-index:200 stays above the topbar
+   (100). overflow:hidden keeps labels from poking out of the 56px bar while it animates. */
 .sidebar {
   width: var(--s-width);
   height: 100vh;
@@ -288,13 +209,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
   overflow: hidden;
 }
 
-/* Collapsed state. The layout component adds the .sidebar-collapsed class on
-   the wrapper, and everything below reacts to it: the bar narrows, the content
-   margin follows, and the text labels fade out.
-   WHY hide the labels with opacity + max-width instead of display:none:
-   display:none cannot be animated, so the text would pop out instantly while
-   the bar is still sliding. pointer-events:none stops the invisible text from
-   still catching clicks. */
+// Labels fade via opacity + max-width rather than display:none, which can't animate and would
+// pop the text out instantly while the bar is still sliding. pointer-events:none on the faded text.
 // Collapsed state
 .app-layout.sidebar-collapsed {
   .sidebar { width: var(--s-width-c); }
@@ -315,14 +231,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
     padding: .45rem;
     margin: 1px .375rem;
 
-    /* Pure-CSS tooltip when the bar is collapsed: on hover, an ::after box is
-       created and filled with the text of the link's data-label attribute.
-       WHY this way: once the label is hidden there is nothing left to tell the
-       user what the icon means, and doing it in CSS avoids a tooltip component
-       and any extra JavaScript.
-       position:fixed (not absolute) places it against the window, so the
-       parent's overflow:hidden cannot clip it. Without fixed, the tooltip would
-       be cut at the 56px edge of the bar and stay unreadable. */
+    /* Pure-CSS tooltip for the collapsed bar, built from data-label so no JS is needed.
+       position:fixed (not absolute) escapes the parent's overflow:hidden clip. */
     &[data-label]:hover::after {
       content: attr(data-label);
       position: fixed;
@@ -400,11 +310,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
   }
 }
 
-/* The scrollable list of links between the fixed header and the fixed footer.
-   flex:1 makes it take all the space left, and only this part scrolls, so the
-   brand block and the user block stay visible with a long menu.
-   scrollbar-width / -webkit-scrollbar draw a thin discreet scrollbar; the two
-   forms are needed because Firefox and Chrome use different properties. */
+// flex:1 so only this list scrolls, keeping the brand/user blocks visible with a long menu.
+// scrollbar-width and -webkit-scrollbar both needed: Firefox vs. Chrome use different properties.
 .sb-nav {
   flex: 1;
   overflow-y: auto; overflow-x: hidden;
@@ -440,18 +347,15 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 
   &:hover { background: var(--s-hover-bg); color: var(--s-text-hover); }
 
-  /* .active is added by the Angular router (routerLinkActive) on the link of
-     the current page. It is a visual state only: hiding a menu entry is never
-     done here, it is decided by the permissions coming from the back end. */
+  // .active comes from the router (routerLinkActive); it's a visual state only — which menu
+  // entries even appear is decided by the backend permissions, not by this class.
   &.active {
     background: var(--s-active-bg);
     color: var(--s-active-text);
     font-weight: 500;
 
-    /* The blue bar on the left edge. Drawn with ::before so no extra tag is
-       needed in the template. The parent has position:relative, so left:-.5rem
-       cancels the link's own horizontal margin and puts the bar flush against
-       the edge of the sidebar. */
+    /* Left-edge bar drawn with ::before instead of an extra template tag; left:-.5rem cancels
+       the link's own margin so it sits flush against the sidebar edge. */
     &::before {
       content: '';
       position: absolute;
@@ -518,12 +422,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN CONTENT
 // ─────────────────────────────────────────────────────────────────────────────
-/* The scrolling area that holds the topbar and the routed page.
-   margin-left reserves exactly the width of the fixed sidebar. It uses the same
-   --s-width token, so the two can never drift apart; a hard-coded 240px here
-   would overlap the menu as soon as the tablet rule changes the width to 220px.
-   The transition matches the sidebar's own width transition, so both move
-   together when the bar is collapsed. */
+// margin-left reuses the --s-width token (not a hard-coded 240px) so it can never drift from the
+// sidebar's actual width, and the transition matches the sidebar's so both move together.
 .main-content {
   flex: 1;
   margin-left: var(--s-width);
@@ -541,11 +441,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // TOPBAR
 // ─────────────────────────────────────────────────────────────────────────────
-/* The bar holding the breadcrumb and the user menu.
-   position:sticky keeps it glued to the top of .main-content while the page
-   scrolls, but unlike fixed it still takes its own space, so the content below
-   is never hidden under it.
-   z-index:100 puts it above the page content and below the sidebar (200). */
+// position:sticky (not fixed) keeps it glued to the top while still reserving its own space.
+// z-index:100 sits above page content, below the sidebar (200).
 .topbar {
   position: sticky; top: 0; z-index: 100;
   height: var(--tb-h);
@@ -569,18 +466,13 @@ app-root, app-shell, app-login { display: block; height: 100%; }
     padding: .1rem .3rem; border-radius: 4px;
     transition: color .15s, background .15s;
     &:hover { color: var(--c-brand); background: var(--c-brand-dim); }
-    /* :focus-visible shows the focus ring only when the user navigates with the
-       keyboard, not after a mouse click. Keeping it is an accessibility point:
-       without a visible ring, someone moving with the Tab key cannot tell where
-       they are on the page. */
+    // :focus-visible shows the ring only for keyboard navigation, not mouse clicks.
     &:focus-visible { outline: 2px solid var(--c-brand); outline-offset: 2px; }
   }
 }
 
-/* margin-left:auto inside a flex row eats all the free space on the left, which
-   pushes this group to the far right. Simpler and more robust than
-   float or a fixed width, because the breadcrumb on the left changes length
-   from one page to another. */
+// margin-left:auto pushes this group to the far right; simpler than float since the breadcrumb
+// on the left varies in length per page.
 .tb-right {
   margin-left: auto;
   display: flex; align-items: center; gap: .25rem;
@@ -620,10 +512,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE SCAFFOLD
 // ─────────────────────────────────────────────────────────────────────────────
-/* Shared page frame: every routed screen wraps its content in .page-body and
-   starts with a .page-header. Keeping the padding and the title size here means
-   all screens line up on the same grid; if each page set its own padding, the
-   titles would sit at slightly different heights from one module to the next. */
+// Shared page frame (.page-body + .page-header) so every screen lines up on the same grid
+// instead of each page picking its own padding.
 .page-body { padding: 1.5rem; }
 
 .page-header {
@@ -640,12 +530,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // CARDS
 // ─────────────────────────────────────────────────────────────────────────────
-/* Re-skin of the Bootstrap .card with our tokens. It is written as a plain
-   override of the Bootstrap class, not as a new class name, so every existing
-   template keeps working and follows the theme automatically.
-   The explicit color: var(--text-1) matters: without it, text inside a card
-   would keep the Bootstrap body colour and stay dark grey on the dark surface
-   in dark mode. */
+// Overrides Bootstrap's .card directly (not a new class) so every template themes automatically.
+// The explicit color avoids the Bootstrap body colour staying dark grey on the dark surface.
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -663,10 +549,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
   display: flex; align-items: center;
 }
 
-/* A card that is also a link (the module tiles on the home page).
-   The !important flags are needed because Bootstrap's own .card hover rules and
-   utility classes used on the same element win on specificity otherwise, and
-   the card would not lift on hover. */
+// A card that's also a link (home page module tiles). !important beats Bootstrap's own .card
+// hover rules, which otherwise win on specificity.
 .module-card {
   transition: box-shadow var(--t), border-color var(--t);
 
@@ -680,9 +564,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // METRIC CARDS (KPI tiles)
 // ─────────────────────────────────────────────────────────────────────────────
-/* KPI tile used on the dashboards (for example the EVM indicators).
-   height:100% makes every tile in one Bootstrap row end at the same bottom line
-   even when one label wraps onto two lines; without it the row looks ragged. */
+// KPI tile used on dashboards. height:100% keeps every tile in a row bottom-aligned even when
+// one label wraps to two lines.
 .metric-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -720,9 +603,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
   display: flex; align-items: center; gap: .25rem;
 }
 
-/* Colour variants of the tile icon: a soft "-dim" background with the strong
-   colour on top. Each variant is a separate class so the template chooses the
-   meaning (money, risk, delay...) and the palette stays in this file. */
+// Colour variants of the tile icon; a separate class per meaning (money, risk, delay...) keeps
+// the palette centralized here.
 .metric-icon--brand   { background: var(--c-brand-dim);   color: var(--c-brand); }
 .metric-icon--success { background: var(--c-success-dim); color: var(--c-success); }
 .metric-icon--teal     { background: var(--c-teal-dim);    color: var(--c-teal); }
@@ -746,10 +628,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // BUTTONS
 // ─────────────────────────────────────────────────────────────────────────────
-/* Base look for every Bootstrap button.
-   display:inline-flex + gap is what aligns an icon and its label on the same
-   line with a constant space; with the default inline-block the icon sits
-   slightly too low and the space depends on the whitespace in the HTML. */
+// inline-flex + gap aligns an icon and label with a constant space; default inline-block sits
+// the icon slightly low and makes the gap depend on HTML whitespace.
 .btn {
   font-size: 13px; font-weight: 500;
   border-radius: var(--r);
@@ -787,14 +667,9 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 .form-label { font-size: 12px; font-weight: 600; color: var(--text-1); margin-bottom: .35rem; }
 
-/* Inputs and selects.
-   The :focus rule replaces the Bootstrap ring with a brand-coloured one and
-   repeats background and color: Bootstrap resets both on focus, so without
-   repeating them the field would flash white with dark text in dark mode while
-   it is being typed in.
-   The box-shadow is the focus ring; outline:none removes the browser's default
-   one, which would otherwise be drawn on top of it. Focus stays visible either
-   way, so accessibility is preserved. */
+// :focus repeats background/color because Bootstrap resets both on focus, which would otherwise
+// flash the field white in dark mode; box-shadow supplies the brand-coloured ring, outline:none
+// removes the browser's default one drawn on top of it.
 .form-control, .form-select {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -815,12 +690,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 
 .form-control-sm, .form-select-sm { padding: .3rem .625rem; font-size: 12px; }
 
-/* Wrapper for an input with an icon inside (a search field, for example).
-   The wrapper is position:relative so the absolutely positioned icon is placed
-   against it and not against the whole page; the extra left padding on the
-   input keeps the typed text from running under the icon.
-   pointer-events:none lets a click on the icon reach the field behind it, so
-   clicking the magnifier still focuses the input. */
+// Wrapper for an input with an inline icon (e.g. search). position:relative anchors the
+// absolutely-positioned icon; pointer-events:none lets clicks pass through to the input.
 .input-wrap {
   position: relative;
   .input-icon { position: absolute; left: .65rem; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 14px; pointer-events: none; }
@@ -836,13 +707,9 @@ app-root, app-shell, app-login { display: block; height: 100%; }
   font-size: 13px; margin: 0;
 }
 
-/* This selector is Bootstrap's own way of reaching every cell: every row inside
-   any section that is not the <caption>, then every cell in that row. It has to
-   be written the same way here, otherwise Bootstrap's rule is more specific and
-   wins.
-   background-color:transparent is the important part: Bootstrap paints each
-   cell with its own --bs-table-bg, which would hide the card surface and leave
-   white cells in dark mode. */
+/* Matches Bootstrap's own cell selector exactly so this rule doesn't lose on specificity.
+   background-color:transparent overrides Bootstrap's per-cell --bs-table-bg, which would
+   otherwise leave white cells in dark mode. */
 .table > :not(caption) > * > * {
   padding: .65rem 1rem;
   border-bottom-color: var(--border);
@@ -862,12 +729,10 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 
 .table tbody tr {
   transition: background var(--t);
-  /* The hover colour must be set on the CELLS, not on the row: the cells have
-     their own background (transparent, set above), and a background on the <tr>
-     would stay hidden behind them. !important beats the Bootstrap cell rule. */
+  // Hover colour must be set on the cells, not the <tr> — the cells' own transparent background
+  // (set above) would otherwise hide it. !important beats the Bootstrap cell rule.
   &:hover > * { background: var(--surface-2) !important; }
-  /* Removes the last separator line, which would otherwise sit right on top of
-     the card border and look like a double line. */
+  // Drops the last row's separator so it doesn't double up with the card border.
   &:last-child > * { border-bottom: none; }
 }
 
@@ -887,13 +752,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
   border-radius: var(--r-sm);
 }
 
-/* A SCSS mixin: a block of rules written once and pasted into each class below
-   with @include, with the two colours passed as arguments ($bg, $color).
-   WHY a mixin instead of nine copies: the shape of a status badge (size, pill,
-   the small coloured dot) is defined in one place, so all statuses stay
-   identical and only the colour changes.
-   The dot is drawn with ::before, so the templates only write the class name
-   and no extra <span> is needed in every table row. */
+// Mixin so all nine status badges share one shape (size, pill, dot) and only the colour varies.
+// The dot is drawn with ::before, so no extra <span> is needed in the template.
 @mixin status-badge($bg, $color) {
   display: inline-flex; align-items: center; gap: .3em;
   font-size: 11px; font-weight: 600;
@@ -911,10 +771,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
   }
 }
 
-/* One class per business status: project statuses (active, draft, on hold,
-   completed, cancelled) and risk statuses (ouvert = open, mitige = mitigated,
-   ferme = closed, prevu = planned). The colour carries the meaning: green for
-   a good state, amber for something to watch, red for a problem. */
+// One class per business status (project statuses + risk statuses ouvert/mitige/ferme/prevu).
+// Colour carries the meaning: green = good, amber = watch, red = problem.
 .badge-active    { @include status-badge(var(--c-success-dim),  var(--c-success)); }
 .badge-draft     { @include status-badge(var(--surface-3),      var(--text-2));    }
 .badge-on-hold   { @include status-badge(var(--c-warning-dim),  var(--c-warning)); }
@@ -925,11 +783,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 .badge-ferme     { @include status-badge(var(--c-success-dim),  var(--c-success)); }
 .badge-prevu     { @include status-badge(var(--surface-3),      var(--text-2));    }
 
-/* Small label showing a role name. It is decoration only: what a user is
-   allowed to do is decided by the permissions checked on the back-end service
-   methods, never by this badge and never by reading a role name in the UI.
-   Two variants exist because the badge is used on two different backgrounds:
-   .role-badge on the dark sidebar, .role-badge-light on a light card. */
+// Decorative role-name label only — what a user may do is decided by backend permission checks,
+// never by this badge. Two variants for the two backgrounds it appears on (dark sidebar, light card).
 .role-badge {
   display: inline-flex; align-items: center;
   font-size: 10px; font-weight: 600;
@@ -951,10 +806,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // TABS
 // ─────────────────────────────────────────────────────────────────────────────
-/* Segmented tabs, written from scratch rather than using Bootstrap .nav-tabs,
-   because the wanted look is a small pill group and not underlined tabs.
-   The .active tab is the only one with the light surface plus a small shadow,
-   which makes it read as "raised" above the group. */
+// Segmented tabs built from scratch (not Bootstrap .nav-tabs) for a pill-group look instead of
+// underlined tabs; .active reads as "raised" via surface + shadow.
 .pms-tabs {
   display: flex; gap: 2px;
   padding: 3px;
@@ -988,18 +841,15 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 
 .modal-header { border-bottom-color: var(--border); padding: 1rem 1.25rem; .modal-title { font-size: 15px; font-weight: 600; color: var(--text-1); } }
 .modal-footer { border-top-color: var(--border); padding: .875rem 1.25rem; }
-/* The dark veil behind a modal. It is darker in dark mode on purpose: on a
-   near-black page a 45% veil is barely visible, and the dialog would not look
-   separated from the page behind it. */
+// Darker veil in dark mode: a 45% veil is barely visible on a near-black page.
 .modal-backdrop { background: rgba(0,0,0,.45); }
 [data-theme="dark"] .modal-backdrop { background: rgba(0,0,0,.65); }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ALERTS
 // ─────────────────────────────────────────────────────────────────────────────
-/* Alerts are rebuilt on the "-dim background + strong text" pattern used by the
-   badges, instead of Bootstrap's pastel fills, which are fixed light colours
-   and would glow white in dark mode. */
+// Rebuilt on the "-dim background + strong text" pattern (like badges) instead of Bootstrap's
+// pastel fills, which are fixed light colours that would glow white in dark mode.
 .alert { border-radius: var(--r); font-size: 13px; }
 .alert-warning { background: var(--c-warning-dim); border-color: rgba(217,119,6,.25);  color: var(--c-warning); }
 .alert-danger  { background: var(--c-danger-dim);  border-color: rgba(220,38,38,.25);  color: var(--c-danger);  }
@@ -1009,9 +859,7 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // EMPTY STATE
 // ─────────────────────────────────────────────────────────────────────────────
-/* Shown when a list has no rows: an icon, a title and one explaining line.
-   It is a shared block so "no data" always looks the same and is never confused
-   with a loading state or with an error. */
+// Shared block for empty lists so "no data" always looks distinct from loading or error states.
 .empty-state {
   text-align: center; padding: 2.5rem 1.5rem;
 
@@ -1029,10 +877,8 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // SKELETON
 // ─────────────────────────────────────────────────────────────────────────────
-/* A skeleton is the grey placeholder shape shown while data is still loading.
-   The keyframes make it fade in and out so the user sees that the screen is
-   working and not frozen. Reserving the shape also stops the page from jumping
-   when the real rows finally arrive. */
+// Grey placeholder shown while loading; the pulse signals the screen isn't frozen, and
+// reserving the shape stops the page from jumping when real rows arrive.
 @keyframes sk-pulse { 0%,100% { opacity:1 } 50% { opacity:.4 } }
 
 .skeleton {
@@ -1044,12 +890,9 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // PROGRESS
 // ─────────────────────────────────────────────────────────────────────────────
-/* Progress bar, written here instead of using Bootstrap .progress so the height
-   and the pill shape match the rest of the design.
-   overflow:hidden on the track is what clips the inner bar to the rounded
-   corners; without it the coloured bar would poke out as a square at 100%.
-   The inner bar has no colour on purpose: each screen sets it (green when on
-   track, red when late), only the width is animated. */
+// Custom progress bar (not Bootstrap .progress) to match this design's pill shape.
+// overflow:hidden clips the inner bar to the rounded corners; the inner bar has no colour of
+// its own so each screen can set it (green on track, red when late).
 .pms-progress {
   height: 6px; background: var(--surface-3);
   border-radius: var(--r-full); overflow: hidden;
@@ -1060,18 +903,14 @@ app-root, app-shell, app-login { display: block; height: 100%; }
 // ─────────────────────────────────────────────────────────────────────────────
 // DIVIDER
 // ─────────────────────────────────────────────────────────────────────────────
-/* Bootstrap draws <hr> with opacity .25, which almost disappears on the dark
-   background. Forcing opacity:1 and using the border token keeps the separator
-   visible in both themes. */
+// Bootstrap's default <hr> opacity (.25) nearly vanishes on the dark background.
 hr { border-color: var(--border); opacity: 1; }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // UTILITIES
 // ─────────────────────────────────────────────────────────────────────────────
-/* Small helper classes so a template can pick a token directly.
-   !important is deliberate here: these are used next to Bootstrap utilities
-   such as .text-muted or .bg-light, which would otherwise win. It is acceptable
-   on one-property helpers, and it is why they must stay one property each. */
+// !important is deliberate: these run alongside Bootstrap utilities like .text-muted that would
+// otherwise win. Acceptable since each helper touches exactly one property.
 .text-brand  { color: var(--c-brand) !important; }
 .text-1      { color: var(--text-1) !important; }
 .text-2      { color: var(--text-2) !important; }
@@ -1085,14 +924,10 @@ hr { border-color: var(--border); opacity: 1; }
 // ─────────────────────────────────────────────────────────────────────────────
 // RESPONSIVE
 // ─────────────────────────────────────────────────────────────────────────────
-/* Phone layout. Below 768px there is no room for a 240px column, so the sidebar
-   is pushed off screen with translateX(-100%) and the content takes the full
-   width. translateX is used rather than display:none because it can be
-   animated and it keeps the links in the DOM for screen readers.
-   Note the reversed logic: on a phone, NOT having .sidebar-collapsed means the
-   menu is open over the content (with a large shadow to detach it). The same
-   button therefore acts as "narrow the bar" on desktop and as "open the menu"
-   on a phone, with no extra TypeScript. */
+/* Below 768px the sidebar is pushed off-screen with translateX (animatable, keeps links in the
+   DOM for screen readers, unlike display:none). Logic is reversed here: NOT having
+   .sidebar-collapsed means the menu is open over the content — the same toggle button acts as
+   "narrow" on desktop and "open" on phone with no extra TypeScript. */
 @media (max-width: 768px) {
   .app-layout {
     .sidebar { transform: translateX(-100%); transition: transform var(--t-slow); }
@@ -1102,9 +937,8 @@ hr { border-color: var(--border); opacity: 1; }
   .page-body { padding: 1rem; }
 }
 
-/* Tablet: the menu is kept, only narrowed. Because .sidebar and .main-content
-   both read --s-width, changing this single token moves the bar AND the content
-   margin together. This is the main practical reason the widths are tokens. */
+// Tablet: menu stays, just narrowed. Since both .sidebar and .main-content read --s-width,
+// changing this one token moves both together.
 @media (min-width: 769px) and (max-width: 1024px) {
   :root { --s-width: 220px; }
 }
