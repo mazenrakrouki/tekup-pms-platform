@@ -144,8 +144,9 @@ public class RoleAdminService {
 
     /**
      * Deletes a role. Refuses with BusinessRuleException (422) for a system role or one
-     * still carried by at least one user — users.role_id is NOT NULL, so deleting a role in
-     * use would either break that foreign key or leave people with no permissions at all.
+     * still carried by at least one LIVE user — users.role_id is NOT NULL, so deleting a
+     * role a live account uses would either break that foreign key or leave that person with
+     * no permissions at all.
      */
     @PreAuthorize("hasAuthority('MANAGE_ROLES')")
     @Transactional
@@ -160,7 +161,15 @@ public class RoleAdminService {
             throw new BusinessRuleException(
                     "Ce rôle est affecté à " + users + " utilisateur(s) — réaffectez-les avant suppression.");
         }
-        // Real DELETE, not soft — safe because the guards above proved no user points at
+        // The check above only excludes LIVE users — a soft-deleted account's row still
+        // carries this role_id (NOT NULL FK), so the DELETE below would fail on
+        // fk_users_role. Retarget those inert rows first; a deleted account's role has no
+        // behavioral effect, so DEVELOPPEUR (least-privilege, and system roles can never be
+        // deleted, so it always exists) is a safe, fixed landing spot.
+        Role fallback = roleRepository.findByName("DEVELOPPEUR")
+                .orElseThrow(() -> new IllegalStateException("Rôle système DEVELOPPEUR introuvable."));
+        userRepository.reassignDeletedUsersRole(id, fallback.getId());
+        // Real DELETE, not soft — safe because the guards above proved no LIVE user points at
         // this role; role_permissions rows are removed via ON DELETE CASCADE (V1).
         roleRepository.delete(role);
         evictSecurityContextCache();

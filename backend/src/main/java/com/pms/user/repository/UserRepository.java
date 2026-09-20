@@ -4,6 +4,7 @@ import com.pms.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
@@ -131,4 +132,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Also feeds the "userCount" column of the roles admin list. "DeletedFalse" matters: a
     // role held only by deleted accounts must still be deletable.
     long countByRoleIdAndDeletedFalse(Long roleId);
+
+    // A soft-deleted account is excluded from the count above, but its row still holds this
+    // role_id (NOT NULL FK) — deleting a role that account once held would otherwise fail on
+    // fk_users_role. RoleAdminService.delete() calls this first to retarget those inert rows
+    // (a deleted account's role_id has no behavioral effect) before the real DELETE.
+    @Modifying
+    @Query("UPDATE User u SET u.role.id = :fallbackRoleId WHERE u.role.id = :roleId AND u.deleted = true")
+    void reassignDeletedUsersRole(Long roleId, Long fallbackRoleId);
 }

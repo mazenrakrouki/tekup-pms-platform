@@ -52,7 +52,7 @@ import { ToastService } from '../../core/services/toast.service';
       gap: .625rem;
       padding: .75rem .875rem;
       border-radius: 10px;
-      background: var(--surface-1, #fff);
+      background: var(--surface);
       border: 1px solid var(--border);
       box-shadow: 0 8px 24px rgba(0,0,0,.14);
       border-left: 3px solid var(--text-3);
