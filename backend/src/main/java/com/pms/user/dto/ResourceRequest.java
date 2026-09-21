@@ -12,8 +12,9 @@ import java.time.LocalDate;
 /**
  * Creating or updating a resource (a person's cost line).
  *
- * <p>Note what is NOT here: no id, no annualCost. The id travels in the URL, and the annual cost
- * is always recomputed when the row is read (Resource.getAnnualCost()), never stored.
+ * <p>Note what is NOT here: no id, no dailyLoadedCost. The id travels in the URL, and the
+ * loaded man-day cost is always recomputed when the row is read (Resource.getDailyLoadedCost()),
+ * never stored.
  */
 public record ResourceRequest(
         // The account this cost line belongs to; only the id travels. update() never reads this

@@ -49,4 +49,12 @@ public interface TccAnnuelRepository extends JpaRepository<TccAnnuel, Long> {
     // from the grid" question.
     @Query("SELECT t FROM TccAnnuel t JOIN FETCH t.resource r JOIN FETCH r.user WHERE r.user.id IN :userIds AND r.deleted = false AND t.deleted = false")
     List<TccAnnuel> findActiveByUserIdIn(Collection<Long> userIds);
+
+    // Batched for the resources list/detail screens: one query for every row's current-year
+    // override instead of one per resource. Same "year rate first, base rate otherwise" rule
+    // as KpiService, just for "today" instead of a charge's own year — ResourceService uses
+    // this to show each resource's actually-effective rate rather than the base rate, which
+    // is only the fallback for years with no override (this year included).
+    @Query("SELECT t FROM TccAnnuel t WHERE t.resource.id IN :resourceIds AND t.annee = :annee AND t.deleted = false")
+    List<TccAnnuel> findActiveByResourceIdInAndAnnee(Collection<Long> resourceIds, Integer annee);
 }

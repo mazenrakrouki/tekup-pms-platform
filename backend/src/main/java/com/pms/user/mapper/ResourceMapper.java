@@ -21,7 +21,7 @@ public interface ResourceMapper {
 
     /**
      * Copies one Resource into a ResourceResponse (id, userId, userFullName, dailyRate,
-     * tccRate, annualCost, staffingStart/End) without exposing the linked User itself.
+     * tccRate, dailyLoadedCost, staffingStart/End) without exposing the linked User itself.
      *
      * <p>Resource.user is lazy and open-in-view is false, so callers must invoke this mapper
      * while still inside the loading @Transactional method (or use a JOIN FETCH query first) —
@@ -33,11 +33,12 @@ public interface ResourceMapper {
     // qualifiedByName picks the fullName() helper below since MapStruct can't turn a User into
     // a String on its own.
     @Mapping(target = "userFullName", source = "user",     qualifiedByName = "fullName")
-    // annualCost is derived, never stored (dailyRate x (1+tccRate) x 218 days); calling the
-    // getter here pins the rule at the point the value leaves the backend.
-    // Indicative only — KPI/margin figures instead price each charge line with the TccAnnuel
-    // rate of its year (F-AFF-13 §6.3 rule 4), falling back to these base rates otherwise.
-    @Mapping(target = "annualCost",   expression = "java(resource.getAnnualCost())")
+    // dailyLoadedCost is derived, never stored (dailyRate x (1+tccRate)); calling the getter here
+    // pins the rule at the point the value leaves the backend. This starts from the resource's
+    // BASE rate — ResourceService.withCurrentYearRates then overrides dailyRate/tccRate/
+    // dailyLoadedCost together with this year's tcc_annuels row when one exists, so what the
+    // caller actually receives is the effective rate, not necessarily this base figure.
+    @Mapping(target = "dailyLoadedCost", expression = "java(resource.getDailyLoadedCost())")
     ResourceResponse toResponse(Resource resource);
 
     /**

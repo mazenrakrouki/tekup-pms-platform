@@ -24,16 +24,21 @@ public record ResourceResponse(
         // "Firstname Lastname", built by the mapper via User.getFullName(); null when no user.
         String userFullName,
 
-        // Rates exactly as stored (daily_rate NUMERIC(10,2), tcc_rate NUMERIC(5,4), 0.4200 = 42%).
-        // BigDecimal, not double, to keep exact decimal values for money.
+        // The resource's EFFECTIVE rate: this year's tcc_annuels row (ResourceService.
+        // withCurrentYearRates) when one exists, otherwise the base rate stored on Resource
+        // (daily_rate NUMERIC(10,2), tcc_rate NUMERIC(5,4), 0.4200 = 42%). BigDecimal, not
+        // double, to keep exact decimal values for money.
         BigDecimal dailyRate,
         BigDecimal tccRate,
 
-        // Indicative yearly cost, always computed (dailyRate * (1 + tccRate) * 218 working days,
-        // HALF_UP), never stored, so it can never go stale relative to the rates next to it.
-        // Uses the resource's BASE rates only, ignoring per-year tcc_annuels rows (spec F-AFF-13
-        // 6.3 rule 4) — it's a rough list-screen figure; KpiService computes the real margins.
-        BigDecimal annualCost,
+        // Loaded cost of one man-day (JH), always computed (dailyRate * (1 + tccRate), HALF_UP)
+        // from the effective rate above, never stored, so it can never go stale relative to the
+        // rates next to it. The man-day is the unit every other screen and KPI formula in the
+        // app works in — a yearly total would be a figure nothing else uses. This is a list-
+        // screen figure anchored on TODAY's year; KpiService separately computes the real
+        // margins with the rate of the year each charged day actually falls in (spec F-AFF-13
+        // 6.3 rule 4), which can differ from this figure for a past or future charge.
+        BigDecimal dailyLoadedCost,
 
         // Staffing window; staffingEnd is null when still open-ended.
         LocalDate staffingStart,

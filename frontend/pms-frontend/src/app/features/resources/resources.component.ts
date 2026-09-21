@@ -21,7 +21,7 @@ interface TccAnnuel {
 }
 
 // Exact-string union rather than 'string', so a typo'd sort column fails to compile.
-type SortCol = 'name' | 'dailyRate' | 'tccRate' | 'annualCost';
+type SortCol = 'name' | 'dailyRate' | 'tccRate' | 'dailyLoadedCost';
 type SortDir = 'asc' | 'desc';
 
 @Component({
@@ -102,9 +102,9 @@ type SortDir = 'asc' | 'desc';
                     tabindex="0" (click)="toggleSort('tccRate')" (keydown.enter)="toggleSort('tccRate')" (keydown.space)="toggleSort('tccRate'); $event.preventDefault()">
                   <span class="th-inner">{{ 'resources.table.tccRate' | transloco }} <i class="bi caret" [ngClass]="caret('tccRate')"></i></span>
                 </th>
-                <th class="th-sort text-end" [class.is-sorted]="sortCol()==='annualCost'" [attr.aria-sort]="ariaSort('annualCost')"
-                    tabindex="0" (click)="toggleSort('annualCost')" (keydown.enter)="toggleSort('annualCost')" (keydown.space)="toggleSort('annualCost'); $event.preventDefault()">
-                  <span class="th-inner">{{ 'resources.table.annualCost' | transloco }} <i class="bi caret" [ngClass]="caret('annualCost')"></i></span>
+                <th class="th-sort text-end" [class.is-sorted]="sortCol()==='dailyLoadedCost'" [attr.aria-sort]="ariaSort('dailyLoadedCost')"
+                    tabindex="0" (click)="toggleSort('dailyLoadedCost')" (keydown.enter)="toggleSort('dailyLoadedCost')" (keydown.space)="toggleSort('dailyLoadedCost'); $event.preventDefault()">
+                  <span class="th-inner">{{ 'resources.table.dailyLoadedCost' | transloco }} <i class="bi caret" [ngClass]="caret('dailyLoadedCost')"></i></span>
                 </th>
                 <!-- Staffing window is least useful; dropped first on narrow screens. -->
                 <th class="d-none d-lg-table-cell">{{ 'resources.table.period' | transloco }}</th>
@@ -133,8 +133,8 @@ type SortDir = 'asc' | 'desc';
                     <!-- TCC shown to 4 decimals: it's a fraction, rounding to 2 shifts cost >1%. -->
                     <td class="text-end num">{{ r.dailyRate | number:'1.2-2' }}</td>
                     <td class="text-end num">{{ r.tccRate | number:'1.2-4' }}</td>
-                    <!-- annualCost falsy (missing or 0) both read as "nothing to show yet". -->
-                    <td class="text-end num">{{ r.annualCost ? (r.annualCost | number:'1.0-0') : '—' }}</td>
+                    <!-- dailyLoadedCost falsy (missing or 0) both read as "nothing to show yet". -->
+                    <td class="text-end num">{{ r.dailyLoadedCost ? (r.dailyLoadedCost | number:'1.2-2') : '—' }}</td>
                     <td class="d-none d-lg-table-cell text-muted small">
                       {{ r.staffingStart ?? '—' }}
                       @if (r.staffingEnd) { → {{ r.staffingEnd }} } @else { → {{ 'resources.table.ongoing' | transloco }} }
@@ -188,7 +188,8 @@ type SortDir = 'asc' | 'desc';
     <!-- TCC per-year modal; @if (...; as r) both gates and names the non-null resource. -->
     @if (modalResource(); as r) {
       <div class="modal-backdrop fade show"></div>
-      <div class="modal d-block" tabindex="-1" (click)="closeTcc()" (keydown.escape)="closeTcc()">
+      <!-- No backdrop-click dismiss here on purpose: a stray click just outside the dialog must not silently discard a half-filled form. Cancel, the X and Escape still close it. -->
+      <div class="modal d-block" tabindex="-1" (keydown.escape)="closeTcc()">
         <!-- stopPropagation: a click inside the dialog must not bubble up and close it. -->
         <div class="modal-dialog modal-dialog-centered modal-lg" (click)="$event.stopPropagation()">
           <div class="modal-content" style="max-height:calc(100vh - 3.5rem)">
@@ -353,7 +354,7 @@ export class ResourcesComponent implements OnInit {
     switch (col) {
       case 'dailyRate':  return (a.dailyRate ?? 0) - (b.dailyRate ?? 0);
       case 'tccRate':    return (a.tccRate ?? 0) - (b.tccRate ?? 0);
-      case 'annualCost': return (a.annualCost ?? 0) - (b.annualCost ?? 0);
+      case 'dailyLoadedCost': return (a.dailyLoadedCost ?? 0) - (b.dailyLoadedCost ?? 0);
       case 'name':
       default:           return a.userFullName.localeCompare(b.userFullName);
     }
@@ -424,6 +425,12 @@ export class ResourcesComponent implements OnInit {
           this.saving.set(false);
           this.msg.set(this.transloco.translate('resources.msg.saved'));
           this.toast.success(this.transloco.translate('resources.msg.savedToast'));
+          // The grid's dailyRate/tccRate/dailyLoadedCost are THIS year's effective rate, not
+          // r's stale copy — re-fetch so editing e.g. next year's row (no effect on "today")
+          // doesn't wrongly touch the grid, while editing this year's row correctly does.
+          this.http.get<Resource>(`${environment.apiUrl}/resources/${r.id}`).subscribe(fresh => {
+            this.resources.set(this.resources().map(x => x.id === fresh.id ? fresh : x));
+          });
         },
         error: (e: { error?: { detail?: string } }) => {
           this.saving.set(false);

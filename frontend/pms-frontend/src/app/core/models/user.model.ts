@@ -46,10 +46,11 @@ export interface Resource {
   /** TCC (overhead on top of the daily rate: social charges, office, tools), a FRACTION not
    *  a percentage — loaded daily cost is dailyRate x (1 + tccRate). Server rejects >= 10. */
   tccRate: number;
-  /** Indicative loaded yearly cost (dailyRate x (1 + tccRate) x 218 working days), derived
-   *  on read, never stored. An order of magnitude for the screen, not an accounting figure —
-   *  margin calculations use the rate of the year each day was charged to (F-AFF-13). */
-  annualCost?: number;
+  /** Loaded cost of one man-day (JH): dailyRate x (1 + tccRate), derived on read, never
+   *  stored. The man-day, not the year, is the unit every other screen and KPI formula in
+   *  the app works in — margin calculations use the rate of the year each day was charged
+   *  to (F-AFF-13), never this figure. */
+  dailyLoadedCost?: number;
   /** ISO date range the person can be staffed. staffingEnd absent means no planned end
    *  (the normal case) — a far-away placeholder date would be misread as a real one later. */
   staffingStart?: string;

@@ -19,6 +19,9 @@ import com.pms.shared.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +34,8 @@ import java.util.stream.Collectors;
 // ADR-021's ProjectScopeInterceptor only matches /api/projects/{id}/**, not these
 // resource-id URLs, so the data scope is hand-written here: MANAGE_RESOURCES sees
 // everything, VIEW_RESOURCES alone (a project manager) sees only their own projects'
-// people plus themselves (see hasFullAccess/assertVisible below). Annual cost is always
-// derived (Resource.getAnnualCost()), never stored.
+// people plus themselves (see hasFullAccess/assertVisible below). The loaded man-day
+// cost is always derived (Resource.getDailyLoadedCost()), never stored.
 
 @Service
 @RequiredArgsConstructor
@@ -66,12 +69,12 @@ public class ResourceService {
         if (hasFullAccess()) {
             // JOIN FETCH r.user is required: ResourceMapper reads user.getFullName()
             // afterward, and open-in-view is false.
-            return resourceMapper.toResponseList(resourceRepository.findAllActive());
+            return withCurrentYearRates(resourceMapper.toResponseList(resourceRepository.findAllActive()));
         }
         Long pmUserId = currentUserId();
         // Filtered by the database, not in Java — filtering afterward would mean salary
         // data for everybody else was loaded into memory first.
-        return resourceMapper.toResponseList(resourceRepository.findVisibleToProjectManager(pmUserId));
+        return withCurrentYearRates(resourceMapper.toResponseList(resourceRepository.findVisibleToProjectManager(pmUserId)));
     }
 
     /**
@@ -88,7 +91,7 @@ public class ResourceService {
         // Loaded before the scope check so an unknown id answers 404 and an out-of-perimeter
         // one answers 403.
         assertVisible(id);
-        return resourceMapper.toResponse(resource);
+        return withCurrentYearRates(List.of(resourceMapper.toResponse(resource))).get(0);
     }
 
     /**
@@ -166,6 +169,36 @@ public class ResourceService {
     // row per resource and year; when none exists, the base rates on Resource apply.
     // Stored rather than recomputed — there's no formula to reconstruct a rate that was
     // negotiated in a meeting.
+
+    /**
+     * Overrides dailyRate/tccRate/dailyLoadedCost with THIS year's tcc_annuels row where one
+     * exists, so the list/detail screens show each resource's actually-effective rate instead
+     * of the base rate — which is only the fallback for a year with no override, the same
+     * precedence KpiService already applies per charge, just anchored on today instead of a
+     * charge's own year. One query for the whole page rather than one per resource.
+     */
+    private List<ResourceResponse> withCurrentYearRates(List<ResourceResponse> responses) {
+        if (responses.isEmpty()) return responses;
+        List<Long> ids = responses.stream().map(ResourceResponse::id).toList();
+        int thisYear = Year.now().getValue();
+        Map<Long, TccAnnuel> currentByResourceId = tccAnnuelRepository
+                .findActiveByResourceIdInAndAnnee(ids, thisYear).stream()
+                .collect(Collectors.toMap(t -> t.getResource().getId(), t -> t));
+        return responses.stream()
+                .map(r -> withCurrentYearRate(r, currentByResourceId.get(r.id())))
+                .toList();
+    }
+
+    private ResourceResponse withCurrentYearRate(ResourceResponse r, TccAnnuel currentYear) {
+        if (currentYear == null) return r;
+        BigDecimal rate = currentYear.getDailyRate();
+        BigDecimal tcc = currentYear.getTccRate();
+        // Same formula and rounding as Resource.getDailyLoadedCost(), so the figure never
+        // disagrees with itself depending on whether a current-year override exists.
+        BigDecimal loaded = rate.multiply(tcc.add(BigDecimal.ONE)).setScale(2, RoundingMode.HALF_UP);
+        return new ResourceResponse(r.id(), r.userId(), r.userFullName(), rate, tcc, loaded,
+                r.staffingStart(), r.staffingEnd());
+    }
 
     /**
      * Per-year rates of one resource, oldest first, as TccAnnuelDto (year, daily rate, TCC

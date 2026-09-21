@@ -18,7 +18,7 @@
     "person": "Person",
     "dailyRate": "Daily rate (TND)",
     "tccRate": "TCC rate",
-    "annualCost": "Annual loaded cost",
+    "dailyLoadedCost": "Daily loaded cost",
     "period": "Period",
     "yearlyRates": "Yearly rates",
     "ongoing": "ongoing"

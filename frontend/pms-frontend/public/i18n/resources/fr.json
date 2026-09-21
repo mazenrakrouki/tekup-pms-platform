@@ -18,7 +18,7 @@
     "person": "Collaborateur",
     "dailyRate": "Tarif journalier (TND)",
     "tccRate": "Taux TCC",
-    "annualCost": "Coût annuel chargé",
+    "dailyLoadedCost": "Coût journalier chargé",
     "period": "Période",
     "yearlyRates": "Tarifs par année",
     "ongoing": "en cours"

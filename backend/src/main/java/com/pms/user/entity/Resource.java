@@ -62,25 +62,22 @@ public class Resource extends BaseEntity {
     private LocalDate staffingEnd;
 
     /**
-     * Working days per year used only for the indicative yearly estimate below — not an
-     * accounting figure. A constant, not a parameters-table row, so the assumption stays visible
-     * next to the code that uses it.
-     */
-    public static final int JOURS_OUVRES_AN = 218;
-
-    /**
-     * Indicative loaded yearly cost (base rate * (1 + TCC) * working days, rounded to 2 decimals).
+     * Loaded cost of one man-day (JH) with this resource's base rate: rate * (1 + TCC), rounded to
+     * 2 decimals. This replaces an earlier "loaded yearly cost" figure (rate * (1+TCC) * 218
+     * working days/year): every other screen and every KPI formula in the app reasons in man-days,
+     * never in years, so a yearly total was a number nobody else's calculation actually used, and
+     * it depended on a 218-days-per-year constant nothing in the business ties down. The man-day
+     * figure needs no such assumption — it's exactly the per-day multiplier KpiService.chargeCost()
+     * applies to every planned and actual charge.
      * Ignores per-year tcc_annuels rates — real margins go through KpiService instead, which
      * applies the rate of the year each day was actually charged to (spec F-AFF-13 6.3 rule 4).
      * Computed, not stored, so it can never go stale relative to the rates it's built from.
      */
-    public BigDecimal getAnnualCost() {
+    public BigDecimal getDailyLoadedCost() {
         // tccRate.add(ONE) turns the coefficient into a multiplier; without it the result would
-        // be a fraction of the yearly cost instead of the full loaded cost.
+        // be only the TCC surcharge, not the full loaded day rate.
         return dailyRate.multiply(tccRate.add(BigDecimal.ONE))
-                .multiply(BigDecimal.valueOf(JOURS_OUVRES_AN))
-                // HALF_UP, applied once at the end — the same rounding KpiService uses, so the
-                // two never disagree by a cent.
+                // HALF_UP — the same rounding KpiService uses, so the two never disagree by a cent.
                 .setScale(2, java.math.RoundingMode.HALF_UP);
     }
 }
