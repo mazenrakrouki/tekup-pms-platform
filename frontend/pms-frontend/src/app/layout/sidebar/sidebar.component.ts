@@ -80,7 +80,7 @@ interface CmdResult  { kind: 'page' | 'project'; label: string; sub?: string; ic
             <!-- ?. avoids throwing while context is still null right after a page reload. -->
             <div class="sb-user-name">{{ context()?.fullName }}</div>
             <!-- Display label only; no app decision is based on this role name. -->
-            <div class="sb-user-role">{{ roleKey() ? (roleKey() | transloco) : '' }}</div>
+            <div class="sb-user-role">{{ roleKey() ? (roleKey() | transloco) : role() }}</div>
           </div>
         </div>
         <div class="sb-actions">
@@ -213,11 +213,14 @@ export class SidebarComponent {
     },
   ];
 
-/** Translation key of the user's first role (e.g. "roles.ADMIN"); display label only. */
-  readonly roleKey = computed(() => {
-    const role = this.auth.context()?.roles?.[0] ?? '';
-    return role ? `roles.${role}` : '';
-  });
+  // Only these four have a translated "roles.<NAME>" entry (fr.json/en.json); a role an
+  // administrator creates through dynamic RBAC has none.
+  private readonly builtInRoles = ['ADMIN', 'DIRECTEUR', 'CHEF_PROJET', 'DEVELOPPEUR'];
+
+  readonly role = computed(() => this.auth.context()?.roles?.[0] ?? '');
+
+  /** Translation key of the user's role, or '' for a custom role — see roleLabel below. */
+  readonly roleKey = computed(() => this.builtInRoles.includes(this.role()) ? `roles.${this.role()}` : '');
 
   /** First letters of the user's name for the avatar circle; falls back to "??" while loading. */
   readonly initials = computed(() => {

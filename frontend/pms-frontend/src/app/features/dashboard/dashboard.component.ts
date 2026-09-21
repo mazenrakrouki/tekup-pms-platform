@@ -38,7 +38,7 @@ import { environment } from '../../../environments/environment';
         <div class="d-none d-md-flex align-items-center gap-2 me-2">
           <!-- ?. guards context not being loaded yet right after a page refresh. -->
           <span style="font-size:13px;color:var(--text-2);font-weight:500">{{ context()?.fullName }}</span>
-          <span class="role-badge-light">{{ roleKey() ? (roleKey() | transloco) : '' }}</span>
+          <span class="role-badge-light">{{ roleKey() ? (roleKey() | transloco) : role() }}</span>
         </div>
         <!-- Permission-gated, not role-gated; server still refuses the POST regardless. -->
         @if (auth.hasPermission('CREATE_PROJECT')) {
@@ -632,7 +632,11 @@ export class DashboardComponent implements OnInit {
   // Chooses only the LAYOUT, never an authorization decision (that's always a permission
   // check). ?./?? cover the moment right after a refresh, before context is restored.
   readonly role    = computed(() => this.auth.context()?.roles?.[0] ?? '');
-  readonly roleKey = computed(() => this.role() ? `roles.${this.role()}` : '');
+  // Only these four have a translated "roles.<NAME>" entry (fr.json/en.json); a role an
+  // administrator creates through dynamic RBAC has none — roleKey stays '' for those, and
+  // the template shows role() directly instead of an untranslated "roles.xxx" key.
+  private readonly builtInRoles = ['ADMIN', 'DIRECTEUR', 'CHEF_PROJET', 'DEVELOPPEUR'];
+  readonly roleKey = computed(() => this.builtInRoles.includes(this.role()) ? `roles.${this.role()}` : '');
 
   // ---- Raw state, filled by the HTTP answers in ngOnInit() ---------------
   projects        = signal<Project[]>([]);
