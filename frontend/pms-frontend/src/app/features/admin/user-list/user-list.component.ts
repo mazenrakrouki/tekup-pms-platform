@@ -7,6 +7,7 @@ import { User, UserCreateResult } from '../../../core/models/user.model';
 import { PagedResponse } from '../../../core/models/pagination.model';
 import { ConfirmService } from '../../../core/services/confirm.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { PaginationComponent } from '../../../shared/pagination/pagination.component';
 import { environment } from '../../../../environments/environment';
 
@@ -184,6 +185,15 @@ type SortDir = 'asc' | 'desc';
                           <i class="bi bi-person-check"></i>
                         </button>
                       }
+                      <!-- Disabled on your own row: deleting yourself would revoke this very session's token. -->
+                      <button class="btn btn-ghost btn-icon btn-sm"
+                              [disabled]="isSelf(u)"
+                              (click)="remove(u)"
+                              [title]="(isSelf(u) ? 'admin.users.msg.cannotDeleteSelf' : 'admin.users.actions.delete') | transloco"
+                              [attr.aria-label]="(isSelf(u) ? 'admin.users.msg.cannotDeleteSelf' : 'admin.users.actions.deleteAria') | transloco"
+                              style="color:var(--c-danger,#dc3545)">
+                        <i class="bi bi-trash"></i>
+                      </button>
                     </td>
                   </tr>
                 }
@@ -232,7 +242,8 @@ type SortDir = 'asc' | 'desc';
     @if (showResetModal()) {
       <div class="modal-backdrop fade show"></div>
       <!-- Clicking outside the dialog closes it; stopPropagation keeps a click inside from bubbling up to that handler. -->
-      <div class="modal d-block" tabindex="-1" (click)="showResetModal.set(false)">
+      <!-- No backdrop-click dismiss here on purpose: a stray click just outside the dialog must not silently discard a half-filled form. Cancel, the X and Escape still close it. -->
+      <div class="modal d-block" tabindex="-1">
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
@@ -270,7 +281,8 @@ type SortDir = 'asc' | 'desc';
     <!-- Create/edit modal: editingId() decides whether save() sends a POST or a PUT. -->
     @if (showModal()) {
       <div class="modal-backdrop fade show"></div>
-      <div class="modal d-block" tabindex="-1" (click)="showModal.set(false)">
+      <!-- No backdrop-click dismiss here on purpose: a stray click just outside the dialog must not silently discard a half-filled form. Cancel, the X and Escape still close it. -->
+      <div class="modal d-block" tabindex="-1">
         <div class="modal-dialog" (click)="$event.stopPropagation()">
           <div class="modal-content">
             <div class="modal-header">
@@ -345,6 +357,9 @@ type SortDir = 'asc' | 'desc';
 export class UserListComponent implements OnInit {
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
+  // Used only to block deleting your own account (auth.currentUserId) — the real permission
+  // check for the delete call itself is the backend's @PreAuthorize, not this.
+  private readonly auth = inject(AuthService);
   // Programmatic twin of the transloco pipe, for translating strings in TypeScript (toasts, confirm dialogs).
   private readonly t     = inject(TranslocoService);
   // HttpClient via constructor injection; mixed with inject() above simply reflects how the file grew.
@@ -586,6 +601,26 @@ export class UserListComponent implements OnInit {
     this.http.patch(`${environment.apiUrl}/users/${u.id}/reactivate`, {}).subscribe({
       next: () => { this.load(); this.toast.success(this.t.translate('admin.users.msg.reactivated')); },
       error: () => this.toast.error(this.t.translate('admin.users.msg.reactivateError'))
+    });
+  }
+
+  /** True while u is the signed-in admin's own account — the delete button stays disabled for
+   *  it so an admin can't lock themselves out (deleting revokes every token, this session's too). */
+  isSelf(u: User): boolean {
+    return u.id === this.auth.currentUserId;
+  }
+
+  // Soft delete (UserCrudService.delete): the row stays for projects/tasks/time entries that
+  // reference it, only "deleted" flips and every token is revoked. Unlike deactivate(), the
+  // account then disappears from every admin list for good, so the confirm text says so.
+  async remove(u: User): Promise<void> {
+    if (this.isSelf(u)) return;
+    if (!await this.confirm.ask(
+      this.t.translate('admin.users.msg.deleteConfirm', { name: `${u.firstName} ${u.lastName}` }),
+      this.t.translate('admin.users.msg.deleteTitle'))) return;
+    this.http.delete(`${environment.apiUrl}/users/${u.id}`).subscribe({
+      next: () => { this.load(); this.toast.success(this.t.translate('admin.users.msg.deleted')); },
+      error: () => this.toast.error(this.t.translate('admin.users.msg.deleteError'))
     });
   }
 }

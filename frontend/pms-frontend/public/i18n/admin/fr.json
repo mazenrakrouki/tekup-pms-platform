@@ -39,7 +39,9 @@
       "deactivate": "Désactiver",
       "deactivateAria": "Désactiver l'utilisateur",
       "reactivate": "Réactiver",
-      "reactivateAria": "Réactiver l'utilisateur"
+      "reactivateAria": "Réactiver l'utilisateur",
+      "delete": "Supprimer",
+      "deleteAria": "Supprimer l'utilisateur"
     },
     "empty": {
       "noMatchTitle": "Aucun résultat",
@@ -79,7 +81,12 @@
       "reactivateConfirm": "Réactiver {{name}} ?",
       "reactivateTitle": "Réactiver le compte",
       "reactivated": "Utilisateur réactivé.",
-      "reactivateError": "Erreur lors de la réactivation."
+      "reactivateError": "Erreur lors de la réactivation.",
+      "deleteConfirm": "Supprimer définitivement {{name}} ? Cette action est irréversible depuis cet écran : le compte disparaîtra de toutes les listes.",
+      "deleteTitle": "Supprimer le compte",
+      "deleted": "Utilisateur supprimé.",
+      "deleteError": "Erreur lors de la suppression.",
+      "cannotDeleteSelf": "Vous ne pouvez pas supprimer votre propre compte."
     },
     "filterStatusAria": "Filtrer par statut",
     "tempPassword": "Mot de passe temporaire",

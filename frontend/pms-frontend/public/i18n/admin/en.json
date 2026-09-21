@@ -39,7 +39,9 @@
       "deactivate": "Deactivate",
       "deactivateAria": "Deactivate user",
       "reactivate": "Reactivate",
-      "reactivateAria": "Reactivate user"
+      "reactivateAria": "Reactivate user",
+      "delete": "Delete",
+      "deleteAria": "Delete user"
     },
     "empty": {
       "noMatchTitle": "No matches",
@@ -79,7 +81,12 @@
       "reactivateConfirm": "Reactivate {{name}}?",
       "reactivateTitle": "Reactivate the account",
       "reactivated": "User reactivated.",
-      "reactivateError": "Could not reactivate the account."
+      "reactivateError": "Could not reactivate the account.",
+      "deleteConfirm": "Permanently delete {{name}}? This is irreversible from this screen: the account will disappear from every list.",
+      "deleteTitle": "Delete the account",
+      "deleted": "User deleted.",
+      "deleteError": "Could not delete the account.",
+      "cannotDeleteSelf": "You cannot delete your own account."
     },
     "filterStatusAria": "Filter by status",
     "tempPassword": "Temporary password",
